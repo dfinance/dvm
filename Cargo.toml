@@ -1,0 +1,8 @@
+[package]
+name = "move-vm-in-cosmos"
+version = "0.0.1"
+authors = ["Dm. Yakushev <dmitryyakushev@wings.ai>"]
+edition = "2018"
+
+[dependencies]
+move-lang = {git = "https://github.com/WingsDao/libra.git", path = "/tree/master/language/move-lang" , branch = "20.12.2019"}
