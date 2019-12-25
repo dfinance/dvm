@@ -1,3 +1,6 @@
 .idea
 Cargo.lock
 /target
+*.iml
+src/grpc/vm.rs
+src/grpc/vm_grpc.rs
