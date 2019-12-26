@@ -15,31 +15,25 @@ impl VM {
 impl VMService for VM {
     fn execute_contracts(
         &self,
-        o: ::grpc::RequestOptions,
-        p: VMExecuteRequest,
+        _o: ::grpc::RequestOptions,
+        _p: VMExecuteRequest,
     ) -> ::grpc::SingleResponse<VMExecuteResponses> {
-        return ::grpc::SingleResponse::err(::grpc::Error::Panic(String::from(
-            "not implemented yet!",
-        )));
+        ::grpc::SingleResponse::err(::grpc::Error::Panic(String::from("not implemented yet!")))
     }
 
     fn get_imports(
         &self,
-        o: ::grpc::RequestOptions,
-        p: VMImportsRequest,
+        _o: ::grpc::RequestOptions,
+        _p: VMImportsRequest,
     ) -> ::grpc::SingleResponse<VMImportsResponses> {
-        return ::grpc::SingleResponse::err(::grpc::Error::Panic(String::from(
-            "not implemented yet!",
-        )));
+        ::grpc::SingleResponse::err(::grpc::Error::Panic(String::from("not implemented yet!")))
     }
 
     fn get_values(
         &self,
-        o: ::grpc::RequestOptions,
-        p: VMValuesRequest,
+        _o: ::grpc::RequestOptions,
+        _p: VMValuesRequest,
     ) -> ::grpc::SingleResponse<VMValuesResponses> {
-        return ::grpc::SingleResponse::err(::grpc::Error::Panic(String::from(
-            "not implemented yet!",
-        )));
+        ::grpc::SingleResponse::err(::grpc::Error::Panic(String::from("not implemented yet!")))
     }
 }

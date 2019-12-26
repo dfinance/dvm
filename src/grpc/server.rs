@@ -8,7 +8,6 @@ use std::env;
 use std::net::ToSocketAddrs;
 use std::thread;
 
-use crate::grpc::vm::*;
 use crate::grpc::vm_grpc::*;
 
 // TODO: impl normal Error instead of use String
@@ -56,7 +55,7 @@ pub struct ServerCfg {
 }
 
 pub fn get_cfg_vars() -> Result<ServerCfg, Error> {
-    let name = env::var("NAME").unwrap_or(String::from("unnamed vm-server"));
+    let name = env::var("NAME").unwrap_or_else(|_| String::from("unnamed vm-server"));
     let listen = env::var("LISTEN").expect("Expected LISTEN variable in format addr:port");
     Ok(ServerCfg {
         name,

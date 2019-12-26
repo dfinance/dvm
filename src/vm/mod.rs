@@ -7,9 +7,6 @@ use libra_types::{
     transaction::{Module, Script},
     write_set::WriteSet,
 };
-use vm_cache_map::Arena;
-use vm_runtime::loaded_data::loaded_module::LoadedModule;
-
 
 pub trait VM {
     fn create_account(&self, address: AccountAddress) -> Result<WriteSet>;

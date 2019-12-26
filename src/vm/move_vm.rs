@@ -1,30 +1,26 @@
 use crate::vm::VM;
 use anyhow::{Error, Result};
-use bytecode_verifier::VerifiedModule;
 use libra_config::config::{VMConfig, VMPublishingOption};
 use libra_state_view::StateView;
+use libra_types::transaction::TransactionArgument;
 use libra_types::{
     account_address::AccountAddress,
     transaction::{Module, Script},
     write_set::WriteSet,
 };
-use std::sync::{Arc, RwLock};
 use stdlib::stdlib_modules;
 use vm::{
-    gas_schedule::{CostTable, GasUnits, MAXIMUM_NUMBER_OF_GAS_UNITS},
+    gas_schedule::{CostTable, MAXIMUM_NUMBER_OF_GAS_UNITS},
     transaction_metadata::TransactionMetadata,
     CompiledModule,
 };
 use vm_cache_map::Arena;
 use vm_runtime::{
-    chain_state::TransactionExecutionContext,
-    code_cache::{module_cache::VMModuleCache, script_cache::ScriptCache},
-    data_cache::BlockDataCache,
-    execution_context::InterpreterContext,
-    loaded_data::loaded_module::LoadedModule,
+    chain_state::TransactionExecutionContext, data_cache::BlockDataCache,
+    execution_context::InterpreterContext, loaded_data::loaded_module::LoadedModule,
     runtime::VMRuntime,
-    txn_executor::convert_txn_args,
 };
+use vm_runtime_types::value::Value;
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();
@@ -96,7 +92,7 @@ impl VM for MoveVm {
         let module_id = compiled_module.self_id();
 
         if context.exists_module(&module_id) {
-            Err(Error::msg("Duplicate module name"))?;
+            return Err(Error::msg("Duplicate module name"));
         }
 
         Ok(context.make_write_set(vec![(module_id, module)])?)
@@ -113,9 +109,21 @@ impl VM for MoveVm {
             &TransactionMetadata::default(),
             &self.cost_table,
             script,
-            convert_txn_args(args),
+            convert_txn_args(args)?,
         )?;
 
         Ok(context.make_write_set(vec![])?)
     }
+}
+
+/// Convert the transaction arguments into move values.
+fn convert_txn_args(args: Vec<TransactionArgument>) -> Result<Vec<Value>> {
+    args.into_iter()
+        .map(|arg| match arg {
+            TransactionArgument::U64(i) => Ok(Value::u64(i)),
+            TransactionArgument::Address(a) => Ok(Value::address(a)),
+            TransactionArgument::Bool(b) => Ok(Value::bool(b)),
+            TransactionArgument::ByteArray(b) => Ok(Value::byte_array(b)),
+        })
+        .collect()
 }

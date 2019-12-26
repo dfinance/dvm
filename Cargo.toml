@@ -7,18 +7,18 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
-move-lang = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-libra-crypto = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-vm-runtime-types = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-language-e2e-tests = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-vm = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-vm-cache-map = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-vm-runtime = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-libra-state-view = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-libra-config = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-libra-types = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-stdlib = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
-bytecode-verifier = {git = "https://github.com/WingsDao/libra.git", branch = "20.12.2019"}
+move-lang = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+libra-crypto = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+vm-runtime-types = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+language-e2e-tests = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+vm = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+vm-cache-map = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+vm-runtime = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+libra-state-view = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+libra-config = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+libra-types = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+stdlib = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
+bytecode-verifier = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
 anyhow = "1.0.25"
 lazy_static = "1.4.0"
 
