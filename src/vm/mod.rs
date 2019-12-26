@@ -8,6 +8,7 @@ use libra_types::{
     write_set::WriteSet,
 };
 
+// XXX: not used currently
 pub trait VM {
     fn create_account(&self, address: AccountAddress) -> Result<WriteSet>;
     fn publish_module(&self, module: Module) -> Result<WriteSet>;

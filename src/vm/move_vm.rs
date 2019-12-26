@@ -1,3 +1,6 @@
+extern crate lazy_static;
+use lazy_static::lazy_static;
+
 use crate::vm::VM;
 use anyhow::{Error, Result};
 use libra_config::config::{VMConfig, VMPublishingOption};
