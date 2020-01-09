@@ -8,7 +8,6 @@ use language_e2e_tests::data_store::FakeDataStore;
 
 use move_vm_in_cosmos::{cfg, grpc, move_lang};
 use grpc::{*, vm_service_server::*};
-use move_vm_in_cosmos::ds::MockDataSource;
 
 struct MoveVmService {
     inner: move_lang::MoveVm,
@@ -58,7 +57,7 @@ impl VmService for MoveVmService {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cfg = cfg::env::get_cfg_vars().into_sock_addr()?;
-    let vm = vm::MoveVm::new(Box::new(FakeDataStore::default()));
+    let vm = move_lang::MoveVm::new(Box::new(FakeDataStore::default()));
     let service = MoveVmService { inner: vm };
 
     println!("{:?} listening on {1}", cfg.name, cfg.address);

@@ -23,6 +23,3 @@ impl StateView for MockDataSource {
         false
     }
 }
-
-
-

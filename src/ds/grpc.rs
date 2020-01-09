@@ -5,8 +5,7 @@ use anyhow::Error;
 use libra_types::write_set::WriteSet;
 
 // TODO impl grpc data source
-pub struct GrpcDataSource {
-}
+pub struct GrpcDataSource {}
 
 impl StateView for GrpcDataSource {
     fn get(&self, _access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
@@ -15,7 +14,6 @@ impl StateView for GrpcDataSource {
 
     fn multi_get(&self, _access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
         unimplemented!()
-
     }
 
     fn is_genesis(&self) -> bool {

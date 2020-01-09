@@ -1,5 +1,5 @@
-mod mock;
 mod grpc;
+mod mock;
 
 use anyhow::Error;
 use libra_types::write_set::WriteSet;
