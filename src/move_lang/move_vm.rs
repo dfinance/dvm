@@ -1,7 +1,6 @@
 extern crate lazy_static;
 use lazy_static::lazy_static;
 
-use crate::vm::VM;
 use anyhow::{Error, Result};
 use libra_config::config::{VMConfig, VMPublishingOption};
 use libra_state_view::StateView;
@@ -33,6 +32,13 @@ fn allocator() -> &'static Arena<LoadedModule> {
     &*ALLOCATOR
 }
 
+// XXX: not used currently
+pub trait VM {
+    fn create_account(&self, address: AccountAddress) -> Result<WriteSet>;
+    fn publish_module(&self, module: Module) -> Result<WriteSet>;
+    fn execute_script(&self, script: Script) -> Result<WriteSet>;
+}
+
 pub struct MoveVm {
     runtime: VMRuntime<'static>,
     view: Box<dyn StateView>,
@@ -45,7 +51,7 @@ impl MoveVm {
             publishing_options: VMPublishingOption::Open,
         };
 
-        let mut runtime = VMRuntime::new(&allocator(), &config);
+        let mut runtime = VMRuntime::new(allocator(), &config);
 
         let modules = stdlib_modules();
         for module in modules {
