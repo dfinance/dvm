@@ -6,7 +6,6 @@ edition = "2018"
 
 build = "src/build.rs"
 
-
 [dependencies]
 move-lang = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}
 libra-crypto = {git = "https://github.com/WingsDao/libra.git", branch = "26.12.2019"}

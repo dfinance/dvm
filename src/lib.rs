@@ -4,5 +4,4 @@ pub extern crate tonic;
 
 pub mod cfg;
 pub mod grpc;
-pub mod vm;
-pub mod ds;
+pub mod move_lang;

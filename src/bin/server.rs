@@ -3,12 +3,15 @@
 use std::collections::HashMap;
 use tonic::{transport::Server, Request, Response, Status};
 
-use move_vm_in_cosmos::{cfg, grpc, vm};
+// TODO: XXX: remove this dep?
+use language_e2e_tests::data_store::FakeDataStore;
+
+use move_vm_in_cosmos::{cfg, grpc, move_lang};
 use grpc::{*, vm_service_server::*};
 use move_vm_in_cosmos::ds::MockDataSource;
 
 struct MoveVmService {
-    inner: vm::MoveVm,
+    inner: move_lang::MoveVm,
 }
 
 unsafe impl Send for MoveVmService {}
@@ -55,7 +58,7 @@ impl VmService for MoveVmService {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cfg = cfg::env::get_cfg_vars().into_sock_addr()?;
-    let vm = vm::MoveVm::new(Box::new(MockDataSource::default()));
+    let vm = vm::MoveVm::new(Box::new(FakeDataStore::default()));
     let service = MoveVmService { inner: vm };
 
     println!("{:?} listening on {1}", cfg.name, cfg.address);
