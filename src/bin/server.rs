@@ -10,7 +10,7 @@ use move_vm_in_cosmos::{cfg, grpc, move_lang};
 use grpc::{*, vm_service_server::*};
 
 struct MoveVmService {
-    inner: move_lang::MoveVm,
+    _inner: move_lang::MoveVm,
 }
 
 unsafe impl Send for MoveVmService {}
@@ -58,7 +58,7 @@ impl VmService for MoveVmService {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cfg = cfg::env::get_cfg_vars().into_sock_addr()?;
     let vm = move_lang::MoveVm::new(Box::new(FakeDataStore::default()));
-    let service = MoveVmService { inner: vm };
+    let service = MoveVmService { _inner: vm };
 
     println!("{:?} listening on {1}", cfg.name, cfg.address);
 
