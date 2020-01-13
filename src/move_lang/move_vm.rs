@@ -185,6 +185,7 @@ mod test {
     use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use libra_types::identifier::Identifier;
     use libra_types::account_config::{core_code_address, association_address, transaction_fee_address};
+    use crate::move_lang::compiler::Code;
 
     #[test]
     fn test_create_account() {
@@ -206,7 +207,7 @@ mod test {
         ds.merge_write_set(merge_set).unwrap();
 
         let program = "module M {}";
-        let unit = build(program, &account).unwrap();
+        let unit = build(Code::module("M", program), &account).unwrap();
         let module = Module::new(unit.serialize());
         let merge_set = vm.publish_module(module.clone()).unwrap();
 
@@ -297,7 +298,7 @@ mod test {
             0x0::LibraAccount::mint_to_address(payee, amount)
         }
         ";
-        let unit = build(program, &account).unwrap();
+        let unit = build(Code::script(program), &account).unwrap();
         let script = Script::new(
             unit.serialize(),
             vec![
