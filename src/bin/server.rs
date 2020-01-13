@@ -36,22 +36,6 @@ impl VmService for MoveVmService {
         };
         Ok(Response::new(reply))
     }
-
-    async fn get_imports(
-        &self,
-        request: Request<VmImportsRequest>,
-    ) -> Result<Response<VmImportsResponses>, Status> {
-        println!("Got a request from {:?}", request.remote_addr());
-
-        // TODO: just do some logic here
-        let reply = VmImportsResponses {
-            imports: vec![VmImportsResponse {
-                gas_used: 0,
-                keys: Vec::default(),
-            }],
-        };
-        Ok(Response::new(reply))
-    }
 }
 
 #[tokio::main]

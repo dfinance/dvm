@@ -22,7 +22,7 @@ impl StateView for GrpcDataSource {
 }
 
 impl MergeWriteSet for GrpcDataSource {
-    fn merge_write_set(&mut self, _write_set: WriteSet) -> Result<(), Error> {
+    fn merge_write_set(&mut self, _write_set: &WriteSet) -> Result<(), Error> {
         unimplemented!()
     }
 }

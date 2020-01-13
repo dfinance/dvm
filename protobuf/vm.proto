@@ -59,16 +59,22 @@ message VMValue {
     string key = 3; // Key to store value.
 }
 
+// Contract arguments.
+message VMArgs {
+    VMTypeTag type = 1; // Argument type.
+    string value = 2; // Argument value.
+}
+
 // VM contract object to process.
 message VMContract {
     bytes address = 1; // owner of contract (module) or script executor.
-    bytes code = 2; // compiled contract code.
-    bytes name = 3; // name of module (if contract is module).
+    uint64 gas_unit_price = 2; // maximal total gas specified by wallet to spend for this transaction.
+    uint64 gas_used = 3; // maximal price can be paid per gas.
+    bytes code = 4; // compiled contract code.
+    string name = 5; // name of module (if contract is module).
+    ContractType contract_type = 6; // Type of contract
+    repeated VMArgs args = 7; // Contract arguments.
 }
-
-//
-// Requests
-//
 
 // Response from VM contains write_set, events, gas used and status for specific contract.
 message VMExecuteResponse {
@@ -84,51 +90,13 @@ message VMExecuteResponses {
     repeated VMExecuteResponse executions = 1; // Result of executions.
 }
 
-// Request to get values from VM
-message VMValuesRequest {
-    repeated VMContract contracts = 1; // Array of contracts to extract needed values.
-    map<string, VMContract> imports = 2; // Related contracts (imports).
-    uint64 option = 3; // Configurable mode of command execution.
-}
-
-// Contains collected keys needed by contracts inside VMValuesRequest.
-message VMValuesResponse {
-    repeated string keys = 1; // Keys of required values by contract.
-    uint64 gas_used = 2; // Gas used by keys extraction operation.
-}
-
-// Contains responses of values used in contracts in case of multiplay contracts.
-message VMValuesResponses {
-    repeated VMValuesResponse values = 1; // Values responses.
-}
-
-// Request to VM to extract all imports from code.
-message VMImportsRequest {
-    repeated VMContract contracts = 1; // Contracts to extract imports.
-}
-
-// Response from VM with extracted imports from contract.
-message VMImportsResponse {
-    repeated string keys = 1; // Keys of imports (modules).
-    uint64 gas_used = 2; // Gas used during extract operations.
-}
-
-// Responses from VM with extracted imports in case of multiplay contracts.
-message VMImportsResponses {
-    repeated VMImportsResponse imports = 1; // Array of imports.
-}
-
 // Execute request for VM
 message VMExecuteRequest {
-    repeated VMContract contracts = 1; //
-    map<string, VMContract> imports = 2; // contracts that will be import during execution (if need)
-    map<string, VMValue> values = 3; // values will be used during execution of contract
+    repeated VMContract contracts = 1; // contracts to execute.
     uint64 options = 4; // options to execute.
 }
 
 // GRPC service
 service VMService {
     rpc ExecuteContracts (VMExecuteRequest) returns (VMExecuteResponses) {}
-    rpc GetImports(VMImportsRequest) returns (VMImportsResponses) {}
-    rpc GetValues(VMValuesRequest) returns (VMValuesResponses) {}
 }
