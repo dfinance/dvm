@@ -1,15 +1,24 @@
 //! Server implementation on tonic & tokio.
-//! Run with `LISTEN="http://[::1]:50051" cargo run --bin client`
 
 use std::collections::HashMap;
-use move_vm_in_cosmos::{cfg, grpc};
+
+use structopt::StructOpt;
+use http::Uri;
+
+use move_vm_in_cosmos::grpc;
 use grpc::{*, vm_service_client::*};
+
+#[derive(Debug, StructOpt)]
+struct Options {
+    #[structopt(name = "server_address", help = "Server internet address")]
+    server_address: Uri,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cfg = cfg::env::get_cfg_vars();
+    let options = Options::from_args();
 
-    let mut client = VmServiceClient::connect(cfg.address.clone()).await?;
+    let mut client = VmServiceClient::connect(options.server_address).await?;
     //  req: execute_contracts
     {
         let request = tonic::Request::new(VmExecuteRequest {
