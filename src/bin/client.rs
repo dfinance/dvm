@@ -1,12 +1,9 @@
 //! Server implementation on tonic & tokio.
 
-use std::collections::HashMap;
-
 use structopt::StructOpt;
 use http::Uri;
 
 use move_vm_in_cosmos::grpc;
-use move_vm_in_cosmos::{cfg, grpc};
 use grpc::{*, vm_service_client::*};
 
 #[derive(Debug, StructOpt)]
