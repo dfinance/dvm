@@ -6,3 +6,4 @@ pub mod cfg;
 pub mod ds;
 pub mod grpc;
 pub mod move_lang;
+pub mod service;
