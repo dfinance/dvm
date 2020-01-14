@@ -28,20 +28,22 @@ enum VMTypeTag {
     ByteArray = 2; // Bytes
     Address   = 3; // Address
     Struct    = 4; // Structure (could be several arguments for event call).
+    U8 = 5; // U8
+    U128 = 6; // U128
 }
 
 // Describing VMType for events.
 message VMType {
     VMTypeTag tag = 1; // Type.
-    StructTag struct_tag = 2; // If type is Struct put struct into variable, otherwise not, optional value.
+    VMStructTag struct_tag = 2; // If type is Struct put struct into variable, otherwise not, optional value.
 }
 
 // Structure tag (for vm events contains structures).
-message StructTag {
+message VMStructTag {
     bytes  address = 1; // address of module owner
     string module = 2; // module where event happens.
     string name = 3; // name of event (not sure yet, need to test).
-    VMType type_params = 4; // event parameters (recursive).
+    repeated VMType type_params = 4; // event parameters (recursive).
 }
 
 // VM event returns after contract execution.
@@ -52,27 +54,44 @@ message VMEvent {
     bytes event_data = 4; // Event data in bytes to parse.
 }
 
+// Write set operation type.
+enum VmWriteOp {
+    Value = 0; // Insert or update value
+    Deletion = 1; // Delete.
+}
+
+// Storage path
+message VMAccessPath {
+    bytes address = 1; // account address.
+    bytes path = 2; // storage path.
+}
+
 // VM value should be passed before execution and return after execution (with opcodes), write_set in nutshell.
 message VMValue {
+    VmWriteOp type = 2; // Type of operation
     bytes value = 1; // Value returns from vm.
-    string type = 2; // Type of value
-    string key = 3; // Key to store value.
+    VMAccessPath path = 3; // Access path.
+}
+
+// Contract arguments.
+message VMArgs {
+    VMTypeTag type = 1; // Argument type.
+    string value = 2; // Argument value.
 }
 
 // VM contract object to process.
 message VMContract {
     bytes address = 1; // owner of contract (module) or script executor.
-    bytes code = 2; // compiled contract code.
-    bytes name = 3; // name of module (if contract is module).
+    uint64 max_gas_amount = 2; // maximal total gas specified by wallet to spend for this transaction.
+    uint64 gas_unit_price = 3; // maximal price can be paid per gas.
+    bytes code = 4; // compiled contract code.
+    ContractType contract_type = 6; // Type of contract
+    repeated VMArgs args = 7; // Contract arguments.
 }
-
-//
-// Requests
-//
 
 // Response from VM contains write_set, events, gas used and status for specific contract.
 message VMExecuteResponse {
-    map<string, VMValue> write_set = 1; // using string instead of bytes for now, as map support only ints and strings as keys
+    repeated VMValue write_set = 1; // using string instead of bytes for now, as map support only ints and strings as keys
     repeated VMEvent events = 2; // list of events executed during contract execution
     uint64 gas_used = 3; // Gas used during execution.
     ContractStatus status = 4; // Status of contract execution.
@@ -84,51 +103,13 @@ message VMExecuteResponses {
     repeated VMExecuteResponse executions = 1; // Result of executions.
 }
 
-// Request to get values from VM
-message VMValuesRequest {
-    repeated VMContract contracts = 1; // Array of contracts to extract needed values.
-    map<string, VMContract> imports = 2; // Related contracts (imports).
-    uint64 option = 3; // Configurable mode of command execution.
-}
-
-// Contains collected keys needed by contracts inside VMValuesRequest.
-message VMValuesResponse {
-    repeated string keys = 1; // Keys of required values by contract.
-    uint64 gas_used = 2; // Gas used by keys extraction operation.
-}
-
-// Contains responses of values used in contracts in case of multiplay contracts.
-message VMValuesResponses {
-    repeated VMValuesResponse values = 1; // Values responses.
-}
-
-// Request to VM to extract all imports from code.
-message VMImportsRequest {
-    repeated VMContract contracts = 1; // Contracts to extract imports.
-}
-
-// Response from VM with extracted imports from contract.
-message VMImportsResponse {
-    repeated string keys = 1; // Keys of imports (modules).
-    uint64 gas_used = 2; // Gas used during extract operations.
-}
-
-// Responses from VM with extracted imports in case of multiplay contracts.
-message VMImportsResponses {
-    repeated VMImportsResponse imports = 1; // Array of imports.
-}
-
 // Execute request for VM
 message VMExecuteRequest {
-    repeated VMContract contracts = 1; //
-    map<string, VMContract> imports = 2; // contracts that will be import during execution (if need)
-    map<string, VMValue> values = 3; // values will be used during execution of contract
+    repeated VMContract contracts = 1; // contracts to execute.
     uint64 options = 4; // options to execute.
 }
 
 // GRPC service
 service VMService {
     rpc ExecuteContracts (VMExecuteRequest) returns (VMExecuteResponses) {}
-    rpc GetImports(VMImportsRequest) returns (VMImportsResponses) {}
-    rpc GetValues(VMValuesRequest) returns (VMValuesResponses) {}
 }

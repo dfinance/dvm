@@ -2,17 +2,15 @@ extern crate lazy_static;
 
 use lazy_static::lazy_static;
 
-use anyhow::{Error, Result};
 use libra_state_view::StateView;
-use libra_types::transaction::TransactionArgument;
+use libra_types::transaction::{TransactionArgument, TransactionOutput};
 use libra_types::{
     account_address::AccountAddress,
     transaction::{Module, Script},
-    write_set::WriteSet,
 };
 use stdlib::stdlib_modules;
 use vm::{
-    gas_schedule::{CostTable, MAXIMUM_NUMBER_OF_GAS_UNITS},
+    gas_schedule::{CostTable, GasUnits, GasAlgebra, GasPrice},
     transaction_metadata::TransactionMetadata,
     CompiledModule,
 };
@@ -26,6 +24,9 @@ use vm_runtime_types::value::Value;
 use std::fmt;
 use libra_types::language_storage::ModuleId;
 use libra_types::identifier::IdentStr;
+use libra_types::vm_error::{VMStatus, StatusCode};
+use vm::errors::{vm_error, Location};
+use crate::move_lang::gas_schedule::cost_table;
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();
@@ -35,18 +36,55 @@ fn allocator() -> &'static Arena<LoadedModule> {
     &*ALLOCATOR
 }
 
+#[derive(Debug)]
+pub struct ExecutionMeta {
+    max_gas_amount: u64,
+    gas_unit_price: u64,
+    sender: AccountAddress,
+}
+
+impl ExecutionMeta {
+    pub fn new(max_gas_amount: u64, gas_unit_price: u64, sender: AccountAddress) -> ExecutionMeta {
+        ExecutionMeta {
+            max_gas_amount,
+            gas_unit_price,
+            sender,
+        }
+    }
+
+    pub fn test() -> ExecutionMeta {
+        ExecutionMeta {
+            max_gas_amount: 1_000_000,
+            gas_unit_price: 1,
+            sender: Default::default(),
+        }
+    }
+}
+
+impl Into<TransactionMetadata> for ExecutionMeta {
+    fn into(self) -> TransactionMetadata {
+        let mut tx_meta = TransactionMetadata::default();
+        tx_meta.sender = self.sender;
+        tx_meta.max_gas_amount = GasUnits::new(self.max_gas_amount);
+        tx_meta.gas_unit_price = GasPrice::new(self.gas_unit_price);
+        tx_meta
+    }
+}
+
+pub type VmResult = Result<TransactionOutput, VMStatus>;
+
 // XXX: not used currently
 pub trait VM {
-    fn create_account(&self, address: AccountAddress) -> Result<WriteSet>;
-    fn publish_module(&self, module: Module) -> Result<WriteSet>;
-    fn execute_script(&self, executor: AccountAddress, script: Script) -> Result<WriteSet>;
+    fn create_account(&self, meta: ExecutionMeta, address: AccountAddress) -> VmResult;
+    fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult;
+    fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult;
     fn execute_function(
         &self,
-        executor: AccountAddress,
+        meta: ExecutionMeta,
         module_id: &ModuleId,
         function_name: &IdentStr,
         args: Vec<TransactionArgument>,
-    ) -> Result<WriteSet>;
+    ) -> VmResult;
 }
 
 pub struct MoveVm {
@@ -67,7 +105,7 @@ impl MoveVm {
         MoveVm {
             runtime,
             view,
-            cost_table: CostTable::zero(),
+            cost_table: cost_table(),
         }
     }
 
@@ -77,9 +115,10 @@ impl MoveVm {
 
     fn make_execution_context<'a>(
         &self,
+        meta: &TransactionMetadata,
         cache: &'a BlockDataCache,
     ) -> TransactionExecutionContext<'a> {
-        TransactionExecutionContext::new(*MAXIMUM_NUMBER_OF_GAS_UNITS, cache)
+        TransactionExecutionContext::new(meta.max_gas_amount, cache)
     }
 }
 
@@ -90,81 +129,84 @@ impl fmt::Debug for MoveVm {
 }
 
 impl VM for MoveVm {
-    fn create_account(&self, address: AccountAddress) -> Result<WriteSet> {
+    fn create_account(&self, meta: ExecutionMeta, address: AccountAddress) -> VmResult {
         let cache = self.make_data_cache();
-        let mut context = self.make_execution_context(&cache);
+        let meta = meta.into();
 
-        self.runtime.create_account(
-            &mut context,
-            &TransactionMetadata::default(),
-            &self.cost_table,
-            address,
-        )?;
-        Ok(context.make_write_set()?)
+        let mut context = self.make_execution_context(&meta, &cache);
+        let res = self
+            .runtime
+            .create_account(&mut context, &meta, &self.cost_table, address);
+
+        context.get_transaction_output(&meta, res)
     }
 
-    fn publish_module(&self, module: Module) -> Result<WriteSet> {
+    fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
         let cache = self.make_data_cache();
-        let mut context = self.make_execution_context(&cache);
+        let meta = meta.into();
+        let mut context = self.make_execution_context(&meta, &cache);
 
         let module = module.into_inner();
-        let compiled_module = CompiledModule::deserialize(&module)?;
-        let module_id = compiled_module.self_id();
+        let res = CompiledModule::deserialize(&module).and_then(|compiled_module| {
+            let module_id = compiled_module.self_id();
+            if InterpreterContext::exists_module(&context, &module_id) {
+                return Err(vm_error(
+                    Location::default(),
+                    StatusCode::DUPLICATE_MODULE_NAME,
+                ));
+            }
 
-        if InterpreterContext::exists_module(&context, &module_id) {
-            return Err(Error::msg("Duplicate module name"));
-        }
+            InterpreterContext::publish_module(&mut context, module_id, module)
+        });
 
-        InterpreterContext::publish_module(&mut context, module_id, module)?;
-        Ok(context.make_write_set()?)
+        context.get_transaction_output(&meta, res)
     }
 
-    fn execute_script(&self, executor: AccountAddress, script: Script) -> Result<WriteSet> {
+    fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult {
         let cache = self.make_data_cache();
-        let mut context = self.make_execution_context(&cache);
+        let meta = meta.into();
+
+        let mut context = self.make_execution_context(&meta, &cache);
 
         let (script, args) = script.into_inner();
-        let mut meta = TransactionMetadata::default();
-        meta.sender = executor;
 
-        self.runtime.execute_script(
-            &mut context,
-            &meta,
-            &self.cost_table,
-            script,
-            convert_txn_args(args)?,
-        )?;
+        let res = convert_txn_args(args).and_then(|args| {
+            self.runtime
+                .execute_script(&mut context, &meta, &self.cost_table, script, args)
+        });
 
-        Ok(context.make_write_set()?)
+        context.get_transaction_output(&meta, res)
     }
 
     fn execute_function(
         &self,
-        executor: AccountAddress,
+        meta: ExecutionMeta,
         module_id: &ModuleId,
         function_name: &IdentStr,
         args: Vec<TransactionArgument>,
-    ) -> Result<WriteSet, Error> {
+    ) -> VmResult {
         let cache = self.make_data_cache();
-        let mut context = self.make_execution_context(&cache);
+        let meta = meta.into();
 
-        let mut meta = TransactionMetadata::default();
-        meta.sender = executor;
+        let mut context = self.make_execution_context(&meta, &cache);
 
-        self.runtime.execute_function(
-            &mut context,
-            &meta,
-            &self.cost_table,
-            module_id,
-            &function_name,
-            convert_txn_args(args)?,
-        )?;
-        Ok(context.make_write_set()?)
+        let res = convert_txn_args(args).and_then(|args| {
+            self.runtime.execute_function(
+                &mut context,
+                &meta,
+                &self.cost_table,
+                module_id,
+                &function_name,
+                args,
+            )
+        });
+
+        context.get_transaction_output(&meta, res)
     }
 }
 
 /// Convert the transaction arguments into move values.
-fn convert_txn_args(args: Vec<TransactionArgument>) -> Result<Vec<Value>> {
+fn convert_txn_args(args: Vec<TransactionArgument>) -> Result<Vec<Value>, VMStatus> {
     args.into_iter()
         .map(|arg| match arg {
             TransactionArgument::U64(i) => Ok(Value::u64(i)),
@@ -186,6 +228,8 @@ mod test {
     use libra_types::identifier::Identifier;
     use libra_types::account_config::{core_code_address, association_address, transaction_fee_address};
     use crate::move_lang::compiler::Code;
+    use crate::move_lang::move_vm::ExecutionMeta;
+    use libra_types::vm_error::StatusCode::DUPLICATE_MODULE_NAME;
 
     #[test]
     fn test_create_account() {
@@ -193,8 +237,8 @@ mod test {
         let vm = MoveVm::new(Box::new(ds.clone()));
         let account = AccountAddress::random();
         assert!(ds.get_account(&account).unwrap().is_none());
-        let merge_set = vm.create_account(account).unwrap();
-        ds.merge_write_set(merge_set).unwrap();
+        let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
+        ds.merge_write_set(output.write_set()).unwrap();
         assert_eq!(ds.get_account(&account).unwrap().unwrap().balance(), 0);
     }
 
@@ -203,28 +247,34 @@ mod test {
         let mut ds = MockDataSource::default();
         let vm = MoveVm::new(Box::new(ds.clone()));
         let account = AccountAddress::random();
-        let merge_set = vm.create_account(account).unwrap();
-        ds.merge_write_set(merge_set).unwrap();
+        let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
+        ds.merge_write_set(output.write_set()).unwrap();
 
         let program = "module M {}";
         let unit = build(Code::module("M", program), &account).unwrap();
         let module = Module::new(unit.serialize());
-        let merge_set = vm.publish_module(module.clone()).unwrap();
+        let output = vm
+            .publish_module(ExecutionMeta::test(), module.clone())
+            .unwrap();
 
         let compiled_module = CompiledModule::deserialize(&module.code()).unwrap();
         let module_id = compiled_module.self_id();
 
         assert!(ds.get_module(&module_id).unwrap().is_none());
 
-        ds.merge_write_set(merge_set).unwrap();
+        ds.merge_write_set(output.write_set()).unwrap();
 
         let loaded_module = ds.get_module(&module_id).unwrap().unwrap();
         assert_eq!(loaded_module, module);
 
         //try public module duplicate;
         assert_eq!(
-            "Duplicate module name",
-            format!("{}", vm.publish_module(module).err().unwrap())
+            DUPLICATE_MODULE_NAME,
+            vm.publish_module(ExecutionMeta::test(), module)
+                .unwrap()
+                .status()
+                .vm_status()
+                .major_status
         );
     }
 
@@ -233,30 +283,44 @@ mod test {
         let mut ds = MockDataSource::default();
         let vm = MoveVm::new(Box::new(ds.clone()));
 
-        ds.merge_write_set(vm.create_account(association_address()).unwrap())
-            .unwrap();
-        ds.merge_write_set(vm.create_account(transaction_fee_address()).unwrap())
-            .unwrap();
-        ds.merge_write_set(vm.create_account(core_code_address()).unwrap())
-            .unwrap();
+        ds.merge_write_set(
+            vm.create_account(ExecutionMeta::test(), association_address())
+                .unwrap()
+                .write_set(),
+        )
+        .unwrap();
+        ds.merge_write_set(
+            vm.create_account(ExecutionMeta::test(), transaction_fee_address())
+                .unwrap()
+                .write_set(),
+        )
+        .unwrap();
+        ds.merge_write_set(
+            vm.create_account(ExecutionMeta::test(), core_code_address())
+                .unwrap()
+                .write_set(),
+        )
+        .unwrap();
+
         ds.merge_write_set(
             vm.execute_function(
-                association_address(),
+                ExecutionMeta::new(1_000, 1, association_address()),
                 &COIN_MODULE,
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-            .unwrap(),
+            .unwrap()
+            .write_set(),
         )
         .unwrap();
 
         let account = AccountAddress::random();
-        let merge_set = vm.create_account(account).unwrap();
-        ds.merge_write_set(merge_set).unwrap();
+        let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
+        ds.merge_write_set(output.write_set()).unwrap();
 
-        let merge_set = vm
+        let output = vm
             .execute_function(
-                association_address(),
+                ExecutionMeta::new(1_000, 1, association_address()),
                 &ACCOUNT_MODULE,
                 &Identifier::new("mint_to_address").unwrap(),
                 vec![
@@ -265,33 +329,46 @@ mod test {
                 ],
             )
             .unwrap();
-        ds.merge_write_set(merge_set).unwrap();
+        ds.merge_write_set(output.write_set()).unwrap();
     }
 
     #[test]
     fn test_execute_script() {
         let mut ds = MockDataSource::default();
         let vm = MoveVm::new(Box::new(ds.clone()));
-        ds.merge_write_set(vm.create_account(association_address()).unwrap())
-            .unwrap();
-        ds.merge_write_set(vm.create_account(transaction_fee_address()).unwrap())
-            .unwrap();
-        ds.merge_write_set(vm.create_account(core_code_address()).unwrap())
-            .unwrap();
+        ds.merge_write_set(
+            vm.create_account(ExecutionMeta::test(), association_address())
+                .unwrap()
+                .write_set(),
+        )
+        .unwrap();
+        ds.merge_write_set(
+            vm.create_account(ExecutionMeta::test(), transaction_fee_address())
+                .unwrap()
+                .write_set(),
+        )
+        .unwrap();
+        ds.merge_write_set(
+            vm.create_account(ExecutionMeta::test(), core_code_address())
+                .unwrap()
+                .write_set(),
+        )
+        .unwrap();
         ds.merge_write_set(
             vm.execute_function(
-                association_address(),
+                ExecutionMeta::new(100_000, 1, association_address()),
                 &COIN_MODULE,
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-            .unwrap(),
+            .unwrap()
+            .write_set(),
         )
         .unwrap();
 
         let account = AccountAddress::random();
-        let merge_set = vm.create_account(account).unwrap();
-        ds.merge_write_set(merge_set).unwrap();
+        let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
+        ds.merge_write_set(output.write_set()).unwrap();
 
         let program = "
         main(payee: address, amount: u64) {
@@ -306,8 +383,14 @@ mod test {
                 TransactionArgument::U64(1000),
             ],
         );
-        let merge_set = vm.execute_script(association_address(), script).unwrap();
-        ds.merge_write_set(merge_set).unwrap();
+        let output = vm
+            .execute_script(
+                ExecutionMeta::new(100_000, 1, association_address()),
+                script,
+            )
+            .unwrap();
+        ds.merge_write_set(output.write_set()).unwrap();
+        assert!(output.gas_used() > 0);
         assert_eq!(ds.get_account(&account).unwrap().unwrap().balance(), 1000);
     }
 }

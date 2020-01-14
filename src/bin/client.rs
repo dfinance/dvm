@@ -1,7 +1,5 @@
 //! Server implementation on tonic & tokio.
 
-use std::collections::HashMap;
-
 use structopt::StructOpt;
 use http::Uri;
 
@@ -23,20 +21,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     {
         let request = tonic::Request::new(VmExecuteRequest {
             contracts: Vec::default(),
-            imports: HashMap::default(),
             options: Default::default(), // u64
-            values: Default::default(),
         });
         let response = client.execute_contracts(request).await?;
-        println!("RESPONSE:\n{:?}", response);
-    }
-
-    //  req: get_imports
-    {
-        let request = tonic::Request::new(VmImportsRequest {
-            contracts: Vec::default(),
-        });
-        let response = client.get_imports(request).await?;
         println!("RESPONSE:\n{:?}", response);
     }
 
