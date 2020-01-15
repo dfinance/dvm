@@ -22,7 +22,8 @@ struct Options {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = Options::from_args();
 
-    let service = MoveVmService::new(Box::new(MockDataSource::default()));
+    let ds = MockDataSource::default();
+    let service = MoveVmService::with_auto_commit(Box::new(ds.clone()), Box::new(ds));
 
     println!("Listening on {}", options.address);
 

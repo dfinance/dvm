@@ -20,8 +20,10 @@ libra-types = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.20
 stdlib = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.2020"}
 bytecode-verifier = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.2020"}
 lcs = {git = "https://github.com/WingsDao/libra.git", package = "libra-canonical-serialization", branch = "09.01.2020"}
+compiler = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.2020"}
 anyhow = "1.0.25"
 lazy_static = "1.4.0"
+hex = "*"
 
 # TODO: migrate to
 # bytes = "0.5.3"

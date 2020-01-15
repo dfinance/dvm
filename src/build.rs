@@ -2,7 +2,7 @@
 
 extern crate tonic_build;
 
-const PB_PATH: &str = "protobuf/vm.proto";
+const PB_PATH: &str = "vm-proto/protos/vm.proto";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=src/build.rs");

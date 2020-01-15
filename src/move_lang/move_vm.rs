@@ -3,7 +3,7 @@ extern crate lazy_static;
 use lazy_static::lazy_static;
 
 use libra_state_view::StateView;
-use libra_types::transaction::{TransactionArgument, TransactionOutput};
+use libra_types::transaction::{TransactionArgument, TransactionStatus};
 use libra_types::{
     account_address::AccountAddress,
     transaction::{Module, Script},
@@ -18,15 +18,17 @@ use vm_cache_map::Arena;
 use vm_runtime::{
     chain_state::TransactionExecutionContext, data_cache::BlockDataCache,
     execution_context::InterpreterContext, loaded_data::loaded_module::LoadedModule,
-    runtime::VMRuntime,
+    runtime::VMRuntime, TXN_TOTAL_GAS_USAGE, VM_COUNTERS,
 };
 use vm_runtime_types::value::Value;
 use std::fmt;
 use libra_types::language_storage::ModuleId;
 use libra_types::identifier::IdentStr;
 use libra_types::vm_error::{VMStatus, StatusCode};
-use vm::errors::{vm_error, Location};
+use vm::errors::{vm_error, Location, VMResult};
 use crate::move_lang::gas_schedule::cost_table;
+use libra_types::write_set::WriteSet;
+use libra_types::contract_event::ContractEvent;
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();
@@ -71,7 +73,42 @@ impl Into<TransactionMetadata> for ExecutionMeta {
     }
 }
 
-pub type VmResult = Result<TransactionOutput, VMStatus>;
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExecutionResult {
+    pub write_set: WriteSet,
+    pub events: Vec<ContractEvent>,
+    pub gas_used: u64,
+    pub status: TransactionStatus,
+}
+
+impl ExecutionResult {
+    fn new(
+        mut context: TransactionExecutionContext,
+        txn_data: TransactionMetadata,
+        result: VMResult<()>,
+    ) -> VmResult {
+        let gas_used: u64 = txn_data
+            .max_gas_amount()
+            .sub(context.gas_left())
+            .mul(txn_data.gas_unit_price())
+            .get();
+
+        let write_set = context.make_write_set()?;
+        record_stats!(observe | TXN_TOTAL_GAS_USAGE | gas_used);
+
+        Ok(ExecutionResult {
+            write_set,
+            events: context.events().to_vec(),
+            gas_used,
+            status: match result {
+                Ok(()) => TransactionStatus::from(VMStatus::new(StatusCode::EXECUTED)),
+                Err(err) => TransactionStatus::from(err),
+            },
+        })
+    }
+}
+
+pub type VmResult = Result<ExecutionResult, VMStatus>;
 
 // XXX: not used currently
 pub trait VM {
@@ -138,7 +175,7 @@ impl VM for MoveVm {
             .runtime
             .create_account(&mut context, &meta, &self.cost_table, address);
 
-        context.get_transaction_output(&meta, res)
+        ExecutionResult::new(context, meta, res)
     }
 
     fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
@@ -159,7 +196,7 @@ impl VM for MoveVm {
             InterpreterContext::publish_module(&mut context, module_id, module)
         });
 
-        context.get_transaction_output(&meta, res)
+        ExecutionResult::new(context, meta, res)
     }
 
     fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult {
@@ -175,7 +212,7 @@ impl VM for MoveVm {
                 .execute_script(&mut context, &meta, &self.cost_table, script, args)
         });
 
-        context.get_transaction_output(&meta, res)
+        ExecutionResult::new(context, meta, res)
     }
 
     fn execute_function(
@@ -201,7 +238,7 @@ impl VM for MoveVm {
             )
         });
 
-        context.get_transaction_output(&meta, res)
+        ExecutionResult::new(context, meta, res)
     }
 }
 
@@ -233,22 +270,22 @@ mod test {
 
     #[test]
     fn test_create_account() {
-        let mut ds = MockDataSource::default();
+        let ds = MockDataSource::default();
         let vm = MoveVm::new(Box::new(ds.clone()));
         let account = AccountAddress::random();
         assert!(ds.get_account(&account).unwrap().is_none());
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
-        ds.merge_write_set(output.write_set()).unwrap();
+        ds.merge_write_set(output.write_set).unwrap();
         assert_eq!(ds.get_account(&account).unwrap().unwrap().balance(), 0);
     }
 
     #[test]
     fn test_publish_module() {
-        let mut ds = MockDataSource::default();
+        let ds = MockDataSource::default();
         let vm = MoveVm::new(Box::new(ds.clone()));
         let account = AccountAddress::random();
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
-        ds.merge_write_set(output.write_set()).unwrap();
+        ds.merge_write_set(output.write_set).unwrap();
 
         let program = "module M {}";
         let unit = build(Code::module("M", program), &account).unwrap();
@@ -262,7 +299,7 @@ mod test {
 
         assert!(ds.get_module(&module_id).unwrap().is_none());
 
-        ds.merge_write_set(output.write_set()).unwrap();
+        ds.merge_write_set(output.write_set).unwrap();
 
         let loaded_module = ds.get_module(&module_id).unwrap().unwrap();
         assert_eq!(loaded_module, module);
@@ -272,7 +309,7 @@ mod test {
             DUPLICATE_MODULE_NAME,
             vm.publish_module(ExecutionMeta::test(), module)
                 .unwrap()
-                .status()
+                .status
                 .vm_status()
                 .major_status
         );
@@ -280,25 +317,25 @@ mod test {
 
     #[test]
     fn test_execute_function() {
-        let mut ds = MockDataSource::default();
+        let ds = MockDataSource::default();
         let vm = MoveVm::new(Box::new(ds.clone()));
 
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), association_address())
                 .unwrap()
-                .write_set(),
+                .write_set,
         )
         .unwrap();
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), transaction_fee_address())
                 .unwrap()
-                .write_set(),
+                .write_set,
         )
         .unwrap();
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), core_code_address())
                 .unwrap()
-                .write_set(),
+                .write_set,
         )
         .unwrap();
 
@@ -310,13 +347,13 @@ mod test {
                 vec![],
             )
             .unwrap()
-            .write_set(),
+            .write_set,
         )
         .unwrap();
 
         let account = AccountAddress::random();
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
-        ds.merge_write_set(output.write_set()).unwrap();
+        ds.merge_write_set(output.write_set).unwrap();
 
         let output = vm
             .execute_function(
@@ -329,29 +366,29 @@ mod test {
                 ],
             )
             .unwrap();
-        ds.merge_write_set(output.write_set()).unwrap();
+        ds.merge_write_set(output.write_set).unwrap();
     }
 
     #[test]
     fn test_execute_script() {
-        let mut ds = MockDataSource::default();
+        let ds = MockDataSource::default();
         let vm = MoveVm::new(Box::new(ds.clone()));
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), association_address())
                 .unwrap()
-                .write_set(),
+                .write_set,
         )
         .unwrap();
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), transaction_fee_address())
                 .unwrap()
-                .write_set(),
+                .write_set,
         )
         .unwrap();
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), core_code_address())
                 .unwrap()
-                .write_set(),
+                .write_set,
         )
         .unwrap();
         ds.merge_write_set(
@@ -362,13 +399,13 @@ mod test {
                 vec![],
             )
             .unwrap()
-            .write_set(),
+            .write_set,
         )
         .unwrap();
 
         let account = AccountAddress::random();
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
-        ds.merge_write_set(output.write_set()).unwrap();
+        ds.merge_write_set(output.write_set).unwrap();
 
         let program = "
         main(payee: address, amount: u64) {
@@ -389,8 +426,8 @@ mod test {
                 script,
             )
             .unwrap();
-        ds.merge_write_set(output.write_set()).unwrap();
-        assert!(output.gas_used() > 0);
+        ds.merge_write_set(output.write_set).unwrap();
+        assert!(output.gas_used > 0);
         assert_eq!(ds.get_account(&account).unwrap().unwrap().balance(), 1000);
     }
 }

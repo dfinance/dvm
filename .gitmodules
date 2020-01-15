@@ -1,0 +1,3 @@
+[submodule "vm-proto"]
+	path = vm-proto
+	url = https://github.com/WingsDao/vm-proto

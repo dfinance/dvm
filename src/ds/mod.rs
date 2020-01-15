@@ -11,7 +11,7 @@ use libra_types::language_storage::ModuleId;
 use libra_types::transaction::Module;
 
 pub trait MergeWriteSet {
-    fn merge_write_set(&mut self, write_set: &WriteSet) -> Result<(), Error>;
+    fn merge_write_set(&self, write_set: WriteSet) -> Result<(), Error>;
 }
 
 pub trait DataAccess {
