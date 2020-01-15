@@ -20,16 +20,14 @@ libra-types = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.20
 stdlib = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.2020"}
 bytecode-verifier = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.2020"}
 lcs = {git = "https://github.com/WingsDao/libra.git", package = "libra-canonical-serialization", branch = "09.01.2020"}
+compiler = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.2020"}
 anyhow = "1.0.25"
 lazy_static = "1.4.0"
+hex = "*"
 
-# TODO: migrate to
-# bytes = "0.5.3"
-bytes = "0.4"
-
-tonic = "0.1.0-beta.1"
-prost = "0.5"
-prost-types = "0.5"
+tonic = "0.1.0"
+prost = "0.6"
+prost-types = "0.6"
 tokio = { version = "0.2", features = ["macros"] }
 
 # cli
@@ -37,4 +35,4 @@ structopt = "0.3.7"
 http = "0.2.0"
 
 [build-dependencies]
-tonic-build = "0.1.0-beta.1"
+tonic-build = "0.1.0"
