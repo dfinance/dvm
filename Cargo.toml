@@ -23,10 +23,7 @@ lcs = {git = "https://github.com/WingsDao/libra.git", package = "libra-canonical
 compiler = {git = "https://github.com/WingsDao/libra.git", branch = "09.01.2020"}
 anyhow = "1.0.25"
 lazy_static = "1.4.0"
-
-# TODO: migrate to
-# bytes = "0.5.3"
-bytes = "0.4"
+hex = "*"
 
 tonic = "0.1.0"
 prost = "0.6"

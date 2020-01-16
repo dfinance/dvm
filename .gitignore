@@ -1,5 +1,4 @@
 .idea
-Cargo.lock
 /target
 *.iml
 src/grpc/vm.rs

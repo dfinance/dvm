@@ -52,7 +52,7 @@ impl MockDataSource {
 }
 
 impl MergeWriteSet for MockDataSource {
-    fn merge_write_set(&mut self, write_set: &WriteSet) -> Result<(), Error> {
+    fn merge_write_set(&self, write_set: WriteSet) -> Result<(), Error> {
         let data = &mut self.data.lock().unwrap();
         for (access_path, write_op) in write_set {
             match write_op {

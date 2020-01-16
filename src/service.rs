@@ -3,7 +3,7 @@ use tonic::{Request, Response, Status};
 use crate::{grpc, move_lang::MoveVm};
 use grpc::{*, vm_service_server::*};
 use libra_state_view::StateView;
-use crate::move_lang::{VM, ExecutionMeta};
+use crate::move_lang::{ExecutionMeta, VM, VmResult, ExecutionResult};
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
 use anyhow::Error;
@@ -15,9 +15,11 @@ use libra_types::vm_error::{StatusCode, VMStatus};
 use libra_types::write_set::{WriteSet, WriteOp};
 use libra_types::contract_event::ContractEvent;
 use libra_types::language_storage::TypeTag;
+use crate::ds::MergeWriteSet;
 
 pub struct MoveVmService {
     vm: MoveVm,
+    write_set_handler: Option<Box<dyn MergeWriteSet>>, // Used for auto write change set.
 }
 
 unsafe impl Send for MoveVmService {}
@@ -28,40 +30,36 @@ impl MoveVmService {
     pub fn new(view: Box<dyn StateView>) -> MoveVmService {
         MoveVmService {
             vm: MoveVm::new(view),
+            write_set_handler: None,
+        }
+    }
+
+    pub fn with_auto_commit(
+        view: Box<dyn StateView>,
+        write_set_handler: Box<dyn MergeWriteSet>,
+    ) -> MoveVmService {
+        MoveVmService {
+            vm: MoveVm::new(view),
+            write_set_handler: Some(write_set_handler),
         }
     }
 
     pub fn execute_contract(&self, contract: VmContract, _options: u64) -> VmExecuteResponse {
-        let vm_output = Contract::try_from(contract).and_then(|contract| match contract.code {
-            Code::Module(code) => self.vm.publish_module(contract.meta, code),
-            Code::Script(script) => self.vm.execute_script(contract.meta, script),
-        });
-        match vm_output {
-            Ok(output) => {
-                let (status, status_struct) = match output.status().clone() {
-                    TransactionStatus::Discard(status) => (0, Some(convert_status(status))),
-                    TransactionStatus::Keep(_) => (1, None),
-                };
-                output.status().vm_status();
-                VmExecuteResponse {
-                    gas_used: output.gas_used(),
-                    status,
-                    status_struct,
-                    events: convert_events(output.events()),
-                    write_set: convert_write_set(output.write_set()),
+        VmExecuteResponse::from(Contract::try_from(contract).and_then(|contract| {
+            let res = match contract.code {
+                Code::Module(code) => self.vm.publish_module(contract.meta, code),
+                Code::Script(script) => self.vm.execute_script(contract.meta, script),
+            };
+            //Temporary grpc test case
+            if let Some(write_set_handler) = &self.write_set_handler {
+                if let Ok(res) = &res {
+                    write_set_handler
+                        .merge_write_set(res.write_set.clone())
+                        .unwrap();
                 }
             }
-            Err(err) => {
-                // This is't execution error!
-                VmExecuteResponse {
-                    gas_used: 0,
-                    status: 0,
-                    status_struct: Some(convert_status(err)),
-                    events: vec![],
-                    write_set: vec![],
-                }
-            }
-        }
+            res
+        }))
     }
 }
 
@@ -80,77 +78,6 @@ impl VmService for MoveVmService {
             .collect();
         Ok(Response::new(VmExecuteResponses { executions }))
     }
-}
-
-fn convert_status(status: VMStatus) -> VmErrorStatus {
-    VmErrorStatus {
-        major_status: status.major_status as u64,
-        sub_status: status.sub_status.map(|status| status as u64).unwrap_or(0),
-        message: status.message.unwrap_or_default(),
-    }
-}
-
-fn convert_events(events: &[ContractEvent]) -> Vec<VmEvent> {
-    events
-        .iter()
-        .map(|event| VmEvent {
-            key: event.key().to_vec(),
-            sequence_number: event.sequence_number(),
-            r#type: Some(convert_type_tag(event.type_tag())),
-            event_data: event.event_data().to_vec(),
-        })
-        .collect()
-}
-
-fn convert_type_tag(type_tag: &TypeTag) -> VmType {
-    let tag = match type_tag {
-        TypeTag::Bool => (0, None),
-        TypeTag::U64 => (1, None),
-        TypeTag::ByteArray => (2, None),
-        TypeTag::Address => (3, None),
-        TypeTag::Struct(tag) => (
-            4,
-            Some(VmStructTag {
-                address: tag.address.to_vec(),
-                module: tag.module.as_str().to_owned(),
-                name: tag.name.as_str().to_owned(),
-                type_params: tag
-                    .type_params
-                    .iter()
-                    .map(|tag| convert_type_tag(tag))
-                    .collect(),
-            }),
-        ),
-        TypeTag::U8 => (5, None),
-        TypeTag::U128 => (6, None),
-    };
-    VmType {
-        tag: tag.0,
-        struct_tag: tag.1,
-    }
-}
-
-fn convert_write_set(ws: &WriteSet) -> Vec<VmValue> {
-    ws.iter()
-        .map(|(access_path, write_op)| {
-            let path = Some(VmAccessPath {
-                address: access_path.address.to_vec(),
-                path: access_path.path.clone(),
-            });
-            match write_op {
-                WriteOp::Value(blob) => VmValue {
-                    r#type: 0,
-                    value: blob.clone(),
-                    path,
-                },
-                WriteOp::Deletion => VmValue {
-                    r#type: 1,
-                    value: vec![],
-                    path,
-                },
-            }
-        })
-        .collect()
 }
 
 #[derive(Debug)]
@@ -203,4 +130,106 @@ impl TryFrom<VmContract> for Contract {
 
         Ok(Contract { meta, code })
     }
+}
+
+impl From<VmResult> for VmExecuteResponse {
+    fn from(res: Result<ExecutionResult, VMStatus>) -> Self {
+        match res {
+            Ok(res) => {
+                let (status, status_struct) = match res.status {
+                    TransactionStatus::Discard(status) => (0, Some(convert_status(status))),
+                    TransactionStatus::Keep(_) => (1, None),
+                };
+
+                VmExecuteResponse {
+                    gas_used: res.gas_used,
+                    status,
+                    status_struct,
+                    events: convert_events(res.events),
+                    write_set: convert_write_set(res.write_set),
+                }
+            }
+            Err(err) => {
+                // This is't execution error!
+                VmExecuteResponse {
+                    gas_used: 0,
+                    status: 0,
+                    status_struct: Some(convert_status(err)),
+                    events: vec![],
+                    write_set: vec![],
+                }
+            }
+        }
+    }
+}
+
+fn convert_status(status: VMStatus) -> VmErrorStatus {
+    VmErrorStatus {
+        major_status: status.major_status as u64,
+        sub_status: status.sub_status.map(|status| status as u64).unwrap_or(0),
+        message: status.message.unwrap_or_default(),
+    }
+}
+
+fn convert_events(events: Vec<ContractEvent>) -> Vec<VmEvent> {
+    events
+        .into_iter()
+        .map(|event| VmEvent {
+            key: event.key.to_vec(),
+            sequence_number: event.sequence_number,
+            r#type: Some(convert_type_tag(event.type_tag)),
+            event_data: event.event_data,
+        })
+        .collect()
+}
+
+fn convert_type_tag(type_tag: TypeTag) -> VmType {
+    let tag = match type_tag {
+        TypeTag::Bool => (0, None),
+        TypeTag::U64 => (1, None),
+        TypeTag::ByteArray => (2, None),
+        TypeTag::Address => (3, None),
+        TypeTag::Struct(tag) => (
+            4,
+            Some(VmStructTag {
+                address: tag.address.to_vec(),
+                module: tag.module.into_string(),
+                name: tag.name.into_string(),
+                type_params: tag
+                    .type_params
+                    .into_iter()
+                    .map(convert_type_tag)
+                    .collect(),
+            }),
+        ),
+        TypeTag::U8 => (5, None),
+        TypeTag::U128 => (6, None),
+    };
+    VmType {
+        tag: tag.0,
+        struct_tag: tag.1,
+    }
+}
+
+fn convert_write_set(ws: WriteSet) -> Vec<VmValue> {
+    ws.into_iter()
+        .map(|(access_path, write_op)| {
+            let path = Some(VmAccessPath {
+                address: access_path.address.to_vec(),
+                path: access_path.path,
+            });
+            match write_op {
+                WriteOp::Value(blob) => VmValue {
+                    r#type: 0,
+                    value: blob,
+                    path,
+                },
+                WriteOp::Deletion => VmValue {
+                    r#type: 1,
+                    value: vec![],
+                    path,
+                },
+            }
+        })
+        .collect()
 }
