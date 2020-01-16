@@ -3,4 +3,6 @@ mod gas_schedule;
 mod move_vm;
 
 pub use self::move_vm::{MoveVm, VM, VmResult, ExecutionMeta};
-pub use self::compiler::build;
+pub use self::compiler::{
+    build, build_with_deps, Code
+};

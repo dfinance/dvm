@@ -38,9 +38,9 @@ fn allocator() -> &'static Arena<LoadedModule> {
 
 #[derive(Debug)]
 pub struct ExecutionMeta {
-    max_gas_amount: u64,
-    gas_unit_price: u64,
-    sender: AccountAddress,
+    pub max_gas_amount: u64,
+    pub gas_unit_price: u64,
+    pub sender: AccountAddress,
 }
 
 impl ExecutionMeta {
