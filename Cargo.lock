@@ -136,25 +136,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58946044516aa9dc922182e0d6e9d124a31aafe6b421614654eb27cf90cec09c"
 
 [[package]]
-name = "bindgen"
-version = "0.51.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebd71393f1ec0509b553aa012b9b58e81dadbdff7130bd3b8cba576e69b32f75"
-dependencies = [
- "bitflags",
- "cexpr",
- "cfg-if",
- "clang-sys",
- "lazy_static",
- "peeking_take_while",
- "proc-macro2 1.0.7",
- "quote 1.0.2",
- "regex",
- "rustc-hash",
- "shlex",
-]
-
-[[package]]
 name = "bit-set"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -228,7 +209,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "mirai-annotations",
 ]
@@ -248,7 +229,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
@@ -265,7 +246,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "libra-types",
@@ -288,7 +269,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "206fdffcfa2df7cbe15601ef46c813fce0965eb3286db6b56c583b814b51c81c"
 dependencies = [
  "byteorder",
- "either",
  "iovec",
 ]
 
@@ -320,15 +300,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95e28fa049fda1c330bcf9d723be7663a899c4679724b34c81e9f5a326aab8cd"
 
 [[package]]
-name = "cexpr"
-version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fce5b5fb86b0c57c20c834c1b412fd09c77c8a59b9473f86272709e78874cd1d"
-dependencies = [
- "nom",
-]
-
-[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -341,7 +312,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff41a3c2c1e39921b9003de14bf0439c7b63a9039637c291e1a64925d8ddfa45"
 dependencies = [
  "owning_ref",
- "parking_lot 0.4.8",
+ "parking_lot",
 ]
 
 [[package]]
@@ -353,17 +324,6 @@ dependencies = [
  "num-integer",
  "num-traits",
  "time",
-]
-
-[[package]]
-name = "clang-sys"
-version = "0.28.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81de550971c976f176130da4b2978d3b524eaa0fd9ac31f3ceb5ae1231fb4853"
-dependencies = [
- "glob",
- "libc",
- "libloading",
 ]
 
 [[package]]
@@ -397,15 +357,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 dependencies = [
  "bitflags",
-]
-
-[[package]]
-name = "cmake"
-version = "0.1.42"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81fb25b677f8bf1eb325017cb6bb8452f87969db0fedb4f757b297bee78a7c62"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -453,7 +404,7 @@ dependencies = [
 [[package]]
 name = "compiler"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -482,7 +433,7 @@ dependencies = [
  "crossbeam-channel",
  "crossbeam-deque",
  "crossbeam-epoch",
- "crossbeam-queue 0.2.1",
+ "crossbeam-queue",
  "crossbeam-utils 0.7.0",
 ]
 
@@ -517,15 +468,6 @@ dependencies = [
  "lazy_static",
  "memoffset",
  "scopeguard",
-]
-
-[[package]]
-name = "crossbeam-queue"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c979cd6cfe72335896575c6b5688da489e420d36a27a0b9eb0c73db574b4a4b"
-dependencies = [
- "crossbeam-utils 0.6.6",
 ]
 
 [[package]]
@@ -596,7 +538,7 @@ checksum = "f4f47ca1860a761136924ddd2422ba77b2ea54fe8cc75b9040804a0d9d32ad97"
 [[package]]
 name = "datatest-stable"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "regex",
  "structopt",
@@ -756,12 +698,6 @@ checksum = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
 
 [[package]]
 name = "futures"
-version = "0.1.29"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b980f2816d6ee8673b6517b52cb0e808a180efc92e5c19d02cdda79066703ef"
-
-[[package]]
-name = "futures"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6f16056ecbb57525ff698bb955162d0cd03bee84e6241c27ff75c08d8ca5987"
@@ -790,16 +726,6 @@ name = "futures-core"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79564c427afefab1dfb3298535b21eda083ef7935b4f0ecbfcb121f0aec10866"
-
-[[package]]
-name = "futures-cpupool"
-version = "0.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab90cde24b3319636588d0c35fe03b1333857621051837ed769faefb4c2162e4"
-dependencies = [
- "futures 0.1.29",
- "num_cpus",
-]
 
 [[package]]
 name = "futures-executor"
@@ -919,56 +845,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "glob"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
-
-[[package]]
-name = "grpcio"
-version = "0.5.0-alpha.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba77e7b81b58a12e2dff1271c20a1f8cd74916de09355a5777470d911e8de41c"
-dependencies = [
- "futures 0.1.29",
- "grpcio-sys",
- "libc",
- "log",
-]
-
-[[package]]
-name = "grpcio-sys"
-version = "0.5.0-alpha.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8aebf59fdf3668edf163c1948ceca64c4ebb733d71c9055a12219d336bd5d51"
-dependencies = [
- "bindgen",
- "cc",
- "cmake",
- "libc",
- "pkg-config",
- "walkdir",
-]
-
-[[package]]
-name = "h2"
-version = "0.1.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5b34c246847f938a410a03c5458c7fee2274436675e76d8b903c08efc29c462"
-dependencies = [
- "byteorder",
- "bytes 0.4.12",
- "fnv",
- "futures 0.1.29",
- "http 0.1.21",
- "indexmap",
- "log",
- "slab",
- "string",
- "tokio-io",
-]
-
-[[package]]
 name = "h2"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -979,11 +855,11 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-util",
- "http 0.2.0",
+ "http",
  "indexmap",
  "log",
  "slab",
- "tokio 0.2.9",
+ "tokio",
  "tokio-util",
 ]
 
@@ -1035,17 +911,6 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.1.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6ccf5ede3a895d8856620237b2f02972c1bbc78d2965ad7fe8838d4a0ed41f0"
-dependencies = [
- "bytes 0.4.12",
- "fnv",
- "itoa",
-]
-
-[[package]]
-name = "http"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b708cc7f06493459026f53b9a61a7a121a5d1ec6238dee58ea4941132b30156b"
@@ -1057,24 +922,12 @@ dependencies = [
 
 [[package]]
 name = "http-body"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6741c859c1b2463a423a1dbce98d418e6c3c3fc720fb0d45528657320920292d"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.29",
- "http 0.1.21",
- "tokio-buf",
-]
-
-[[package]]
-name = "http-body"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13d5ff830006f7646652e057693569bfe0d51760c0085a071769d142a205111b"
 dependencies = [
  "bytes 0.5.3",
- "http 0.2.0",
+ "http",
 ]
 
 [[package]]
@@ -1082,36 +935,6 @@ name = "httparse"
 version = "1.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd179ae861f0c2e53da70d892f5f3029f9594be0c41dc5269cd371691b1dc2f9"
-
-[[package]]
-name = "hyper"
-version = "0.12.35"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dbe6ed1438e1f8ad955a4701e9a944938e9519f6888d12d8558b645e247d5f6"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.29",
- "futures-cpupool",
- "h2 0.1.26",
- "http 0.1.21",
- "http-body 0.1.0",
- "httparse",
- "iovec",
- "itoa",
- "log",
- "net2",
- "rustc_version",
- "time",
- "tokio 0.1.22",
- "tokio-buf",
- "tokio-executor",
- "tokio-io",
- "tokio-reactor",
- "tokio-tcp",
- "tokio-threadpool",
- "tokio-timer",
- "want 0.2.0",
-]
 
 [[package]]
 name = "hyper"
@@ -1123,18 +946,18 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "h2 0.2.1",
- "http 0.2.0",
- "http-body 0.3.1",
+ "h2",
+ "http",
+ "http-body",
  "httparse",
  "itoa",
  "log",
  "net2",
  "pin-project",
  "time",
- "tokio 0.2.9",
+ "tokio",
  "tower-service",
- "want 0.3.0",
+ "want",
 ]
 
 [[package]]
@@ -1169,7 +992,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1185,7 +1008,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "codespan 0.2.1",
@@ -1229,7 +1052,7 @@ dependencies = [
 [[package]]
 name = "language-e2e-tests"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
@@ -1244,7 +1067,7 @@ dependencies = [
  "once_cell",
  "proptest",
  "proptest-derive",
- "prost 0.5.0",
+ "prost",
  "rand 0.6.5",
  "stdlib",
  "transaction-builder",
@@ -1269,19 +1092,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d515b1f41455adea1313a4a2ac8a8a477634fbae63cc6100e3aebb207ce61558"
 
 [[package]]
-name = "libloading"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2b111a074963af1d37a139918ac6d49ad1d0d5e47f72fd55388619691a7d753"
-dependencies = [
- "cc",
- "winapi 0.3.8",
-]
-
-[[package]]
 name = "libra-canonical-serialization"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "serde",
  "thiserror",
@@ -1290,7 +1103,7 @@ dependencies = [
 [[package]]
 name = "libra-config"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "get_if_addrs",
@@ -1311,7 +1124,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -1342,7 +1155,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto-derive"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "proc-macro2 1.0.7",
  "quote 1.0.2",
@@ -1352,7 +1165,7 @@ dependencies = [
 [[package]]
 name = "libra-logger"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "backtrace",
  "chrono",
@@ -1372,22 +1185,22 @@ dependencies = [
 [[package]]
 name = "libra-metrics"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
- "futures 0.1.29",
- "grpcio",
- "hyper 0.12.35",
+ "futures",
+ "hyper",
  "libra-logger",
  "once_cell",
  "prometheus",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
 name = "libra-nibble"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "serde",
 ]
@@ -1395,7 +1208,7 @@ dependencies = [
 [[package]]
 name = "libra-proptest-helpers"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "crossbeam",
  "proptest",
@@ -1405,7 +1218,7 @@ dependencies = [
 [[package]]
 name = "libra-state-view"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "libra-types",
@@ -1414,7 +1227,7 @@ dependencies = [
 [[package]]
 name = "libra-tools"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "hex 0.3.2",
  "rand 0.6.5",
@@ -1423,12 +1236,11 @@ dependencies = [
 [[package]]
 name = "libra-types"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "bech32",
  "byteorder",
- "bytes 0.4.12",
  "bytes 0.5.3",
  "chrono",
  "hex 0.3.2",
@@ -1443,23 +1255,14 @@ dependencies = [
  "parity-multiaddr",
  "proptest",
  "proptest-derive",
- "prost 0.5.0",
- "prost-build 0.5.0",
+ "prost",
+ "prost-build",
  "radix_trie",
  "rand 0.6.5",
  "ref-cast",
  "serde",
  "thiserror",
  "tiny-keccak",
-]
-
-[[package]]
-name = "lock_api"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79b2de95ecb4691949fea4716ca53cdbcfccb2c612e19644a8bad05edcf9f47b"
-dependencies = [
- "scopeguard",
 ]
 
 [[package]]
@@ -1556,7 +1359,7 @@ checksum = "7968d6cdc3c7a9632e45d738fd07fde89d04bbb0e88e7abb058871a82fa92645"
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "borrow-graph",
  "bytecode-verifier",
@@ -1579,9 +1382,9 @@ dependencies = [
  "anyhow",
  "bytecode-verifier",
  "compiler",
- "futures 0.3.1",
+ "futures",
  "hex 0.4.0",
- "http 0.2.0",
+ "http",
  "language-e2e-tests",
  "lazy_static",
  "libra-canonical-serialization",
@@ -1590,11 +1393,11 @@ dependencies = [
  "libra-state-view",
  "libra-types",
  "move-lang",
- "prost 0.6.0",
- "prost-types 0.6.0",
+ "prost",
+ "prost-types",
  "stdlib",
  "structopt",
- "tokio 0.2.9",
+ "tokio",
  "tonic",
  "tonic-build",
  "vm",
@@ -1625,16 +1428,6 @@ name = "nibble_vec"
 version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d77f3db4bce033f4d04db08079b2ef1c3d02b44e86f25d08886fafa7756ffa"
-
-[[package]]
-name = "nom"
-version = "4.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ad2a91a8e869eeb30b9cb3119ae87773a8f4ae617f41b1eb9c154b2905f7bd6"
-dependencies = [
- "memchr",
- "version_check",
-]
 
 [[package]]
 name = "num-integer"
@@ -1764,18 +1557,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "149d8f5b97f3c1133e3cfcd8886449959e856b557ff281e292b733d7c69e005e"
 dependencies = [
  "owning_ref",
- "parking_lot_core 0.2.14",
-]
-
-[[package]]
-name = "parking_lot"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f842b1982eb6c2fe34036a4fbfb06dd185a3f5c8edfaacdf7d1ea10b07de6252"
-dependencies = [
- "lock_api",
- "parking_lot_core 0.6.2",
- "rustc_version",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -1789,27 +1571,6 @@ dependencies = [
  "smallvec 0.6.13",
  "winapi 0.3.8",
 ]
-
-[[package]]
-name = "parking_lot_core"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b876b1b9e7ac6e1a74a6da34d25c42e17e8862aa409cbbbdcfc8d86c6f3bc62b"
-dependencies = [
- "cfg-if",
- "cloudabi",
- "libc",
- "redox_syscall",
- "rustc_version",
- "smallvec 0.6.13",
- "winapi 0.3.8",
-]
-
-[[package]]
-name = "peeking_take_while"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
 
 [[package]]
 name = "percent-encoding"
@@ -1864,12 +1625,6 @@ name = "pin-utils"
 version = "0.1.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5894c618ce612a3fa23881b152b608bafb8c56cfc22f434a3ba3120b40f7b587"
-
-[[package]]
-name = "pkg-config"
-version = "0.3.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05da548ad6865900e60eaba7f589cc0783590a92e940c26953ff81ddbab2d677"
 
 [[package]]
 name = "ppv-lite86"
@@ -1993,41 +1748,12 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96d14b1c185652833d24aaad41c5832b0be5616a590227c1fbff57c616754b23"
-dependencies = [
- "byteorder",
- "bytes 0.4.12",
- "prost-derive 0.5.0",
-]
-
-[[package]]
-name = "prost"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51e1bdfe79dfa6df7ed34e50060cea5108e2fc4e6d3230658770720e53cb1874"
 dependencies = [
  "bytes 0.5.3",
- "prost-derive 0.6.0",
-]
-
-[[package]]
-name = "prost-build"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb788126ea840817128183f8f603dce02cb7aea25c2a0b764359d8e20010702e"
-dependencies = [
- "bytes 0.4.12",
- "heck",
- "itertools",
- "log",
- "multimap",
- "petgraph",
- "prost 0.5.0",
- "prost-types 0.5.0",
- "tempfile",
- "which",
+ "prost-derive",
 ]
 
 [[package]]
@@ -2042,23 +1768,10 @@ dependencies = [
  "log",
  "multimap",
  "petgraph",
- "prost 0.6.0",
- "prost-types 0.6.0",
+ "prost",
+ "prost-types",
  "tempfile",
  "which",
-]
-
-[[package]]
-name = "prost-derive"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e7dc378b94ac374644181a2247cebf59a6ec1c88b49ac77f3a94b86b79d0e11"
-dependencies = [
- "failure",
- "itertools",
- "proc-macro2 0.4.30",
- "quote 0.6.13",
- "syn 0.15.44",
 ]
 
 [[package]]
@@ -2076,22 +1789,12 @@ dependencies = [
 
 [[package]]
 name = "prost-types"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1de482a366941c8d56d19b650fac09ca08508f2a696119ee7513ad590c8bac6f"
-dependencies = [
- "bytes 0.4.12",
- "prost 0.5.0",
-]
-
-[[package]]
-name = "prost-types"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "738dd42f98597e4d9ea547b46df0fd17b9a16d2653c959feb32f918cc1d120b0"
 dependencies = [
  "bytes 0.5.3",
- "prost 0.6.0",
+ "prost",
 ]
 
 [[package]]
@@ -2335,7 +2038,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08a89b46efaf957e52b18062fb2f4660f8b8a4dde1807ca002690868ef2c85a9"
 dependencies = [
  "crossbeam-deque",
- "crossbeam-queue 0.2.1",
+ "crossbeam-queue",
  "crossbeam-utils 0.7.0",
  "lazy_static",
  "num_cpus",
@@ -2452,15 +2155,6 @@ name = "rustc-demangle"
 version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c691c0e608126e00913e33f0ccf3727d5fc84573623b8d65b2df340b5201783"
-
-[[package]]
-name = "rustc-hash"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7540fc8b0c49f096ee9c961cda096467dce8084bec6bdca2fc83895fd9b28cb8"
-dependencies = [
- "byteorder",
-]
 
 [[package]]
 name = "rustc_version"
@@ -2599,12 +2293,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shlex"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
-
-[[package]]
 name = "slab"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2708,22 +2396,13 @@ checksum = "dba1a27d3efae4351c8051072d619e3ade2820635c3958d826bfea39d59b54c8"
 [[package]]
 name = "stdlib"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "bytecode-source-map",
  "bytecode-verifier",
  "ir-to-bytecode",
  "libra-types",
  "once_cell",
-]
-
-[[package]]
-name = "string"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d24114bfcceb867ca7f71a0d3fe45d45619ec47a6fbfa98cb14e14250bfa5d6d"
-dependencies = [
- "bytes 0.4.12",
 ]
 
 [[package]]
@@ -2971,24 +2650,6 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "0.1.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a09c0b5bb588872ab2f09afa13ee6e9dac11e10a0ec9e8e3ba39a5a5d530af6"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.29",
- "mio",
- "num_cpus",
- "tokio-current-thread",
- "tokio-executor",
- "tokio-io",
- "tokio-reactor",
- "tokio-threadpool",
- "tokio-timer",
-]
-
-[[package]]
-name = "tokio"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffa2fdcfa937b20cb3c822a635ceecd5fc1a27a6a474527e5516aa24b8c8820a"
@@ -3005,48 +2666,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tokio-buf"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fb220f46c53859a4b7ec083e41dec9778ff0b1851c0942b211edb89e0ccdc46"
-dependencies = [
- "bytes 0.4.12",
- "either",
- "futures 0.1.29",
-]
-
-[[package]]
-name = "tokio-current-thread"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d16217cad7f1b840c5a97dfb3c43b0c871fef423a6e8d2118c604e843662a443"
-dependencies = [
- "futures 0.1.29",
- "tokio-executor",
-]
-
-[[package]]
-name = "tokio-executor"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca6df436c42b0c3330a82d855d2ef017cd793090ad550a6bc2184f4b933532ab"
-dependencies = [
- "crossbeam-utils 0.6.6",
- "futures 0.1.29",
-]
-
-[[package]]
-name = "tokio-io"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5090db468dad16e1a7a54c8c67280c5e4b544f3d3e018f0b913b400261f85926"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.29",
- "log",
-]
-
-[[package]]
 name = "tokio-macros"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3054,78 +2673,6 @@ checksum = "50a61f268a3db2acee8dcab514efc813dc6dbe8a00e86076f935f94304b59a7a"
 dependencies = [
  "quote 1.0.2",
  "syn 1.0.13",
-]
-
-[[package]]
-name = "tokio-reactor"
-version = "0.1.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6732fe6b53c8d11178dcb77ac6d9682af27fc6d4cb87789449152e5377377146"
-dependencies = [
- "crossbeam-utils 0.6.6",
- "futures 0.1.29",
- "lazy_static",
- "log",
- "mio",
- "num_cpus",
- "parking_lot 0.9.0",
- "slab",
- "tokio-executor",
- "tokio-io",
- "tokio-sync",
-]
-
-[[package]]
-name = "tokio-sync"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d06554cce1ae4a50f42fba8023918afa931413aded705b560e29600ccf7c6d76"
-dependencies = [
- "fnv",
- "futures 0.1.29",
-]
-
-[[package]]
-name = "tokio-tcp"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d14b10654be682ac43efee27401d792507e30fd8d26389e1da3b185de2e4119"
-dependencies = [
- "bytes 0.4.12",
- "futures 0.1.29",
- "iovec",
- "mio",
- "tokio-io",
- "tokio-reactor",
-]
-
-[[package]]
-name = "tokio-threadpool"
-version = "0.1.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0c32ffea4827978e9aa392d2f743d973c1dfa3730a2ed3f22ce1e6984da848c"
-dependencies = [
- "crossbeam-deque",
- "crossbeam-queue 0.1.2",
- "crossbeam-utils 0.6.6",
- "futures 0.1.29",
- "lazy_static",
- "log",
- "num_cpus",
- "slab",
- "tokio-executor",
-]
-
-[[package]]
-name = "tokio-timer"
-version = "0.2.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1739638e364e558128461fc1ad84d997702c8e31c2e6b18fb99842268199e827"
-dependencies = [
- "crossbeam-utils 0.6.6",
- "futures 0.1.29",
- "slab",
- "tokio-executor",
 ]
 
 [[package]]
@@ -3139,7 +2686,7 @@ dependencies = [
  "futures-sink",
  "log",
  "pin-project-lite",
- "tokio 0.2.9",
+ "tokio",
 ]
 
 [[package]]
@@ -3163,14 +2710,14 @@ dependencies = [
  "bytes 0.5.3",
  "futures-core",
  "futures-util",
- "http 0.2.0",
- "http-body 0.3.1",
- "hyper 0.13.1",
+ "http",
+ "http-body",
+ "hyper",
  "percent-encoding 1.0.1",
  "pin-project",
- "prost 0.6.0",
- "prost-derive 0.6.0",
- "tokio 0.2.9",
+ "prost",
+ "prost-derive",
+ "tokio",
  "tokio-util",
  "tower",
  "tower-balance",
@@ -3188,7 +2735,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ae1da859b1c093ce54a130fbb8c94c920133d0937035e8004610263785aba9e"
 dependencies = [
  "proc-macro2 1.0.7",
- "prost-build 0.6.0",
+ "prost-build",
  "quote 1.0.2",
  "syn 1.0.13",
 ]
@@ -3223,7 +2770,7 @@ dependencies = [
  "pin-project",
  "rand 0.7.3",
  "slab",
- "tokio 0.2.9",
+ "tokio",
  "tower-discover",
  "tower-layer",
  "tower-load",
@@ -3241,7 +2788,7 @@ checksum = "c4887dc2a65d464c8b9b66e0e4d51c2fd6cf5b3373afc72805b0a60bce00446a"
 dependencies = [
  "futures-core",
  "pin-project",
- "tokio 0.2.9",
+ "tokio",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -3272,7 +2819,7 @@ checksum = "0a4030a1dc1ab99ec6fc9475fc18c62f6cc4da035d370fcbd22fe342f9dd16cd"
 dependencies = [
  "futures-core",
  "pin-project",
- "tokio 0.2.9",
+ "tokio",
  "tower-layer",
  "tower-service",
 ]
@@ -3286,7 +2833,7 @@ dependencies = [
  "futures-core",
  "log",
  "pin-project",
- "tokio 0.2.9",
+ "tokio",
  "tower-discover",
  "tower-service",
 ]
@@ -3309,7 +2856,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce50370d644a0364bf4877ffd4f76404156a248d104e2cc234cd391ea5cdc965"
 dependencies = [
- "tokio 0.2.9",
+ "tokio",
  "tower-service",
 ]
 
@@ -3323,7 +2870,7 @@ dependencies = [
  "futures-util",
  "indexmap",
  "log",
- "tokio 0.2.9",
+ "tokio",
  "tower-service",
 ]
 
@@ -3335,7 +2882,7 @@ checksum = "e6727956aaa2f8957d4d9232b308fe8e4e65d99db30f42b225646e86c9b6a952"
 dependencies = [
  "futures-core",
  "pin-project",
- "tokio 0.2.9",
+ "tokio",
  "tower-layer",
  "tower-service",
 ]
@@ -3353,7 +2900,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "127b8924b357be938823eaaec0608c482d40add25609481027b96198b2e4b31e"
 dependencies = [
  "pin-project",
- "tokio 0.2.9",
+ "tokio",
  "tower-layer",
  "tower-service",
 ]
@@ -3414,7 +2961,7 @@ dependencies = [
 [[package]]
 name = "transaction-builder"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "ir-to-bytecode",
  "libra-config",
@@ -3515,15 +3062,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05c78687fb1a80548ae3250346c3db86a80a7cdd77bda190189f2d0a0987c81a"
 
 [[package]]
-name = "version_check"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "914b1a6776c4c929a602fafd8bc742e06365d4bcbe48c30f9cca5824f70dc9dd"
-
-[[package]]
 name = "vm"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -3540,7 +3081,7 @@ dependencies = [
 [[package]]
 name = "vm-cache-map"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "chashmap",
  "typed-arena",
@@ -3549,7 +3090,7 @@ dependencies = [
 [[package]]
 name = "vm-genesis"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
@@ -3572,7 +3113,7 @@ dependencies = [
 [[package]]
 name = "vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "bytecode-verifier",
  "hex 0.3.2",
@@ -3596,7 +3137,7 @@ dependencies = [
 [[package]]
 name = "vm-runtime-types"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=09.01.2020#f3a8b3ef742e1d3fa16ad363e3efb5e9471a787a"
+source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "bit-vec 0.6.1",
  "libra-canonical-serialization",
@@ -3626,17 +3167,6 @@ dependencies = [
  "same-file",
  "winapi 0.3.8",
  "winapi-util",
-]
-
-[[package]]
-name = "want"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6395efa4784b027708f7451087e647ec73cc74f5d9bc2e418404248d679a230"
-dependencies = [
- "futures 0.1.29",
- "log",
- "try-lock",
 ]
 
 [[package]]

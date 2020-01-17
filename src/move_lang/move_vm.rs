@@ -29,6 +29,7 @@ use vm::errors::{vm_error, Location, VMResult};
 use crate::move_lang::gas_schedule::cost_table;
 use libra_types::write_set::WriteSet;
 use libra_types::contract_event::ContractEvent;
+use vm_runtime::system_module_names::{ACCOUNT_MODULE, CREATE_ACCOUNT_NAME};
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();
@@ -171,9 +172,14 @@ impl VM for MoveVm {
         let meta = meta.into();
 
         let mut context = self.make_execution_context(&meta, &cache);
-        let res = self
-            .runtime
-            .create_account(&mut context, &meta, &self.cost_table, address);
+        let res = self.runtime.execute_function(
+            &mut context,
+            &meta,
+            &self.cost_table,
+            &ACCOUNT_MODULE,
+            &CREATE_ACCOUNT_NAME,
+            vec![Value::address(address)],
+        );
 
         ExecutionResult::new(context, meta, res)
     }
