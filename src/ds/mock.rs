@@ -39,6 +39,18 @@ impl StateView for MockDataSource {
     }
 }
 
+impl MockDataSource {
+    pub fn insert(&self, access_path: AccessPath, blob: Vec<u8>) {
+        let data = &mut self.data.lock().unwrap();
+        data.insert(access_path, blob);
+    }
+
+    pub fn delete(&self, access_path: AccessPath) {
+        let data = &mut self.data.lock().unwrap();
+        data.remove(&access_path);
+    }
+}
+
 impl MergeWriteSet for MockDataSource {
     fn merge_write_set(&self, write_set: WriteSet) -> Result<(), Error> {
         let data = &mut self.data.lock().unwrap();
