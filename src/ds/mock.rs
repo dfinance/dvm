@@ -42,7 +42,7 @@ impl StateView for MockDataSource {
 impl MockDataSource {
     pub fn insert(&self, access_path: AccessPath, blob: Vec<u8>) {
         let data = &mut self.data.lock().unwrap();
-        data.insert(access_path.clone(), blob.clone());
+        data.insert(access_path, blob);
     }
 
     pub fn delete(&self, access_path: AccessPath) {

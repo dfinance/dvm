@@ -3,7 +3,8 @@ use tonic::{Request, Response, Status};
 use crate::{grpc, move_lang::MoveVm};
 use grpc::{*, vm_service_server::*};
 use libra_state_view::StateView;
-use crate::move_lang::{ExecutionMeta, VM, VmResult, ExecutionResult};
+use crate::move_lang::{ExecutionMeta, VM, VmResult};
+use crate::move_lang::ExecutionResult;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
 use anyhow::Error;
@@ -195,11 +196,7 @@ fn convert_type_tag(type_tag: TypeTag) -> VmType {
                 address: tag.address.to_vec(),
                 module: tag.module.into_string(),
                 name: tag.name.into_string(),
-                type_params: tag
-                    .type_params
-                    .into_iter()
-                    .map(convert_type_tag)
-                    .collect(),
+                type_params: tag.type_params.into_iter().map(convert_type_tag).collect(),
             }),
         ),
         TypeTag::U8 => (5, None),
