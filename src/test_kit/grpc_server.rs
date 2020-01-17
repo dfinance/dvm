@@ -40,15 +40,18 @@ impl Server {
                             service_signal.clone(),
                         )
                         .await;
-                    shutdown_signal.send(()).unwrap();
                     match service_res {
-                        Ok(_) => break,
+                        Ok(_) => {
+                            shutdown_signal.send(()).unwrap();
+                            break
+                        },
                         Err(err) => {
                             if IoError::last_os_error().kind() == ErrorKind::AddrInUse {
                                 continue;
                             } else {
                                 println!("err:{:?}", err);
                             }
+                            shutdown_signal.send(()).unwrap();
                             break;
                         }
                     }
