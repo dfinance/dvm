@@ -195,11 +195,7 @@ fn convert_type_tag(type_tag: TypeTag) -> VmType {
                 address: tag.address.to_vec(),
                 module: tag.module.into_string(),
                 name: tag.name.into_string(),
-                type_params: tag
-                    .type_params
-                    .into_iter()
-                    .map(convert_type_tag)
-                    .collect(),
+                type_params: tag.type_params.into_iter().map(convert_type_tag).collect(),
             }),
         ),
         TypeTag::U8 => (5, None),

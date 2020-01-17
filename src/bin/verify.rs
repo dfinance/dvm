@@ -23,8 +23,8 @@ fn extract_imported_modules(module: &CompiledModule) -> HashSet<ImportedModule> 
     module
         .module_handles()
         .iter()
-        .map(move |handle| ImportedModule {
-            address: address_pool[handle.address.into_index()].clone(),
+        .map(|handle| ImportedModule {
+            address: address_pool[handle.address.into_index()],
             name: identifiers[handle.name.into_index()].to_string(),
         })
         .collect()
@@ -33,9 +33,6 @@ fn extract_imported_modules(module: &CompiledModule) -> HashSet<ImportedModule> 
 fn collect_imported_modules(program: &VerifiedProgram) -> HashSet<ImportedModule> {
     let mut used_module_handles: HashSet<ImportedModule> = HashSet::new();
     for module in program.modules() {
-        used_module_handles.extend(extract_imported_modules(module.as_inner()));
-    }
-    for module in program.deps() {
         used_module_handles.extend(extract_imported_modules(module.as_inner()));
     }
     used_module_handles
@@ -66,7 +63,7 @@ struct Whitelist {
     mapping: HashMap<AccountAddress, Vec<String>>,
 }
 
-const CATCH_ALL: &'static str = "*";
+const CATCH_ALL: &str = "*";
 
 impl Whitelist {
     fn new(mapping: HashMap<AccountAddress, Vec<String>>) -> Self {
