@@ -43,8 +43,8 @@ impl Server {
                     match service_res {
                         Ok(_) => {
                             shutdown_signal.send(()).unwrap();
-                            break
-                        },
+                            break;
+                        }
                         Err(err) => {
                             if IoError::last_os_error().kind() == ErrorKind::AddrInUse {
                                 continue;

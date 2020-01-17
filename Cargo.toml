@@ -34,6 +34,7 @@ futures = "0.3.0"
 # cli
 structopt = "0.3.7"
 http = "0.2.0"
+maplit = "1.0.2"
 
 [build-dependencies]
 tonic-build = "0.1.0"
