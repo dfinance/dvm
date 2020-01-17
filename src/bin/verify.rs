@@ -4,7 +4,6 @@ use std::fs::read_to_string;
 use bytecode_verifier::verifier::{VerifiedModule, VerifiedProgram};
 use compiler::Compiler;
 use libra_types::account_address::AccountAddress;
-use stdlib;
 use structopt::StructOpt;
 use vm::access::ModuleAccess;
 use vm::CompiledModule;
@@ -39,11 +38,9 @@ fn collect_imported_modules(program: &VerifiedProgram) -> HashSet<ImportedModule
 }
 
 fn compile_source(source: &str, address: AccountAddress) -> (CompiledProgram, Vec<VerifiedModule>) {
-    let deps = stdlib::stdlib_modules().to_vec();
-
     let compiler = Compiler {
         address,
-        extra_deps: deps,
+        skip_stdlib_deps: false,
         ..Compiler::default()
     };
     compiler
