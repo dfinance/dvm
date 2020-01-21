@@ -7,10 +7,10 @@ use crate::test_kit::Lang;
 
 lazy_static! {
     static ref BECH32_MVIR_REGEX: Regex = Regex::new(
-        r#"(?P<prefix>["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})\.[a-zA-Z0-9]+"#,
+        r#"import\s+(?P<prefix>["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})\.[a-zA-Z0-9]+"#,
     ).unwrap();
     static ref BECH32_MOVE_REGEX: Regex = Regex::new(
-        r#"(?P<prefix>["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})::[a-zA-Z0-9]+"#,
+        r#"use\s+(?P<prefix>["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})::[a-zA-Z0-9]+"#,
     ).unwrap();
 }
 
@@ -61,6 +61,27 @@ mod tests {
             r"import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.WingsAccount; import 0x626300000000000000000000746f8c63f19366129fd563f2366e28f342a16210.WingsAccount;",
             replaced_line
         );
+    }
+
+    #[test]
+    fn test_match_arbitrary_import_whitespaces() {
+        let line = "import          cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount;";
+        let replaced_line = replace_bech32_addresses(line, Lang::MvIr);
+        assert_eq!(
+            r"import          0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.WingsAccount;",
+            replaced_line
+        );
+    }
+
+    #[test]
+    fn test_bytearray_addresses_are_not_replaced() {
+        let line = r#"byte_array = h"cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount";"#;
+        let replaced_line = replace_bech32_addresses(line, Lang::MvIr);
+        assert_eq!(
+            line,
+            replaced_line
+        );
+
     }
 
     #[test]
