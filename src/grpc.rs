@@ -2,5 +2,8 @@
 //! see also:
 //! - https://github.com/danburkert/prost
 //! - https://github.com/hyperium/tonic/tree/master/tonic-build
+#![allow(non_camel_case_types)]
 
 tonic::include_proto!("vm_grpc");
+tonic::include_proto!("ds_grpc");
+

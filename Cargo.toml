@@ -28,7 +28,7 @@ hex = "*"
 tonic = "0.1.0"
 prost = "0.6"
 prost-types = "0.6"
-tokio = { version = "0.2", features = ["macros", "rt-core"] }
+tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking" ] }
 futures = "0.3.0"
 
 # cli

@@ -2,16 +2,20 @@
 
 extern crate tonic_build;
 
-const PB_PATH: &str = "vm-proto/protos/vm.proto";
+const PB_PATH: [&'static str; 2] = [
+    "vm-proto/protos/vm.proto",
+    "vm-proto/protos/data-source.proto",
+];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=src/build.rs");
     println!("cargo:rerun-if-changed=Cargo.lock");
 
-    println!("rerun-if-changed={}", PB_PATH);
-    println!("cargo:rerun-if-changed={}", PB_PATH);
-
-    tonic_build::compile_protos(PB_PATH)?;
+    for path in PB_PATH.iter() {
+        println!("rerun-if-changed={}", path);
+        println!("cargo:rerun-if-changed={}", path);
+        tonic_build::compile_protos(path)?;
+    }
 
     Ok(())
 }
