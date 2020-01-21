@@ -6,8 +6,11 @@ use regex::Regex;
 use crate::test_kit::Lang;
 
 lazy_static! {
-    static ref BECH32_REGEX: Regex = Regex::new(
+    static ref BECH32_MVIR_REGEX: Regex = Regex::new(
         r#"(?P<prefix>["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})\.[a-zA-Z0-9]+"#,
+    ).unwrap();
+    static ref BECH32_MOVE_REGEX: Regex = Regex::new(
+        r#"(?P<prefix>["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})::[a-zA-Z0-9]+"#,
     ).unwrap();
 }
 
@@ -33,12 +36,12 @@ fn bech32_into_libra_address(address: &str) -> String {
 }
 
 pub fn replace_bech32_addresses(source: &str, lang: Lang) -> String {
-    if let Lang::Move = lang {
-        todo!("Lang::Move is not implemented")
-    }
-
     let mut transformed_source = source.to_string();
-    for mat in BECH32_REGEX.captures_iter(source).into_iter() {
+    let addresses_regex: Regex = match lang {
+        Lang::MvIr => BECH32_MVIR_REGEX.to_owned(),
+        Lang::Move => BECH32_MOVE_REGEX.to_owned(),
+    };
+    for mat in addresses_regex.captures_iter(source).into_iter() {
         let address = mat.name("prefix").unwrap().as_str();
         let libra_address = bech32_into_libra_address(address);
         transformed_source = transformed_source.replace(address, &format!("0x{}", libra_address));
@@ -75,5 +78,32 @@ mod tests {
             main() {return;}
         ";
         assert_eq!(replace_bech32_addresses(source, Lang::MvIr), source);
+    }
+
+    #[test]
+    fn test_match_valid_import_bech32_lines_move() {
+        let line = "use cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e::WingsAccount; use bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq::WingsAccount;";
+        let replaced_line = replace_bech32_addresses(line, Lang::Move);
+        assert_eq!(
+            r"use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::WingsAccount; use 0x626300000000000000000000746f8c63f19366129fd563f2366e28f342a16210::WingsAccount;",
+            replaced_line
+        );
+    }
+
+    #[test]
+    fn test_leave_libra_addresses_untouched_move() {
+        let source = r"
+            use 0x0::LibraAccount;
+            use 0x0::LibraCoin;
+            main() {return;}
+        ";
+        assert_eq!(replace_bech32_addresses(source, Lang::Move), source);
+
+        let source = r"
+            use 0x00000111110000011111000001111122::LibraAccount;
+            use 0x00000111110000011111000001111122::LibraCoin;
+            main() {return;}
+        ";
+        assert_eq!(replace_bech32_addresses(source, Lang::Move), source);
     }
 }
