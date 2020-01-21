@@ -136,6 +136,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58946044516aa9dc922182e0d6e9d124a31aafe6b421614654eb27cf90cec09c"
 
 [[package]]
+name = "bech32"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdcf67bb7ba7797a081cd19009948ab533af7c355d5caf1d08c777582d351e9c"
+
+[[package]]
 name = "bit-set"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1245,7 +1251,7 @@ version = "0.1.0"
 source = "git+https://github.com/WingsDao/libra.git?branch=17.01.2020#c1ea515182c3cc05dc85a32c9d08db7bc9c75cac"
 dependencies = [
  "anyhow",
- "bech32",
+ "bech32 0.6.0",
  "byteorder",
  "bytes 0.5.3",
  "chrono",
@@ -1392,6 +1398,7 @@ name = "move-vm-in-cosmos"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "bech32 0.7.2",
  "bytecode-verifier",
  "compiler",
  "futures",
@@ -1408,6 +1415,7 @@ dependencies = [
  "move-lang",
  "prost",
  "prost-types",
+ "regex",
  "stdlib",
  "structopt",
  "tokio",

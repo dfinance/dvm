@@ -1,8 +1,10 @@
-use libra_types::account_address::AccountAddress;
 use std::sync::Mutex;
-use crate::move_lang::{Code, build_with_deps};
+
 use bytecode_verifier::VerifiedModule;
 use compiler::Compiler as MvIrCompiler;
+use libra_types::account_address::AccountAddress;
+
+use crate::move_lang::{build_with_deps, Code, replace_bech32_addresses};
 
 pub enum Lang {
     Move,
@@ -70,12 +72,14 @@ impl MvIr {
 
 impl Compiler for MvIr {
     fn build_module(&self, code: &str, address: &AccountAddress) -> Vec<u8> {
+        let code = replace_bech32_addresses(code, Lang::MvIr);
+
         let mut cache = self.cache.lock().unwrap();
         let mut compiler = MvIrCompiler::default();
 
         compiler.extra_deps = cache.clone();
         compiler.address = *address;
-        let module = compiler.into_compiled_module(code).unwrap();
+        let module = compiler.into_compiled_module(&code).unwrap();
         let mut buff = Vec::new();
         module.serialize(&mut buff).unwrap();
 
@@ -84,12 +88,14 @@ impl Compiler for MvIr {
     }
 
     fn build_script(&self, code: &str, address: &AccountAddress) -> Vec<u8> {
+        let code = replace_bech32_addresses(code, Lang::MvIr);
+
         let cache = self.cache.lock().unwrap();
         let mut compiler = MvIrCompiler::default();
 
         compiler.extra_deps = cache.clone();
         compiler.address = *address;
-        let module = compiler.into_compiled_program(code).unwrap();
+        let module = compiler.into_compiled_program(&code).unwrap();
         let mut buff = Vec::new();
 
         module.script.serialize(&mut buff).unwrap();
