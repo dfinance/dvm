@@ -1,5 +1,5 @@
 edition = "2018"
 use_field_init_shorthand = true
 reorder_imports = false
-imports_layout = "Mixed"
+# imports_layout = "Mixed" # nightly feature
 # imports_indent = "Visual"
