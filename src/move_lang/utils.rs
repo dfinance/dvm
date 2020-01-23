@@ -34,35 +34,27 @@ pub fn bech32_into_libra_address(address: &str) -> String {
 }
 
 pub fn libra_address_into_bech32(libra_address: &str) -> Result<String> {
-    if libra_address.starts_with("0x") {
-        return Err(anyhow!("Strip 0x before passing an address"));
-    }
+    ensure!(
+        !libra_address.starts_with("0x"),
+        "Strip 0x before passing an address"
+    );
     let bytes = hex::decode(libra_address).unwrap();
-    if bytes.len() != 32 {
-        return Err(anyhow!(
-            "Invalid libra-encoded bech32 length: {}",
-            bytes.len()
-        ));
-    }
+    ensure!(
+        bytes.len() == 32,
+        "Invalid libra-encoded bech32 length: {}",
+        bytes.len()
+    );
 
     let parts = bytes
         .split(|b| (*b) == 0)
         .filter(|slice| !slice.is_empty())
         .collect::<Vec<&[u8]>>();
-    if parts.len() != 2 {
-        return Err(anyhow!("Malformed bech32"));
-    }
-    let hrp = parts[0];
-    let hrp = match String::from_utf8((&hrp).to_vec()) {
-        Ok(hrp) => hrp,
-        Err(err) => {
-            return Err(anyhow!(err));
-        }
-    };
+    ensure!(parts.len() == 2, "Malformed bech32");
+
+    let hrp = String::from_utf8((&parts[0]).to_vec())?;
     let data = parts[1];
-    if data.len() != 20 {
-        return Err(anyhow!("Invalid data part length: {}", data.len()));
-    }
+    ensure!(data.len() == 20, "Invalid data part length: {}", data.len());
+
     let data_u5 = bech32::convert_bits(data, 8, 5, true)?
         .iter()
         .map(|bit| u5::try_from_u8(bit.to_owned()).unwrap())
