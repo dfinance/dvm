@@ -4,7 +4,7 @@ use bytecode_verifier::VerifiedModule;
 use compiler::Compiler as MvIrCompiler;
 use libra_types::account_address::AccountAddress;
 
-use crate::move_lang::{build_with_deps, Code, replace_bech32_addresses};
+use crate::move_lang::{build_with_deps, Code, find_and_replace_bech32_addresses};
 
 pub enum Lang {
     Move,
@@ -72,7 +72,7 @@ impl MvIr {
 
 impl Compiler for MvIr {
     fn build_module(&self, code: &str, address: &AccountAddress) -> Vec<u8> {
-        let code = replace_bech32_addresses(code, Lang::MvIr);
+        let code = find_and_replace_bech32_addresses(code);
 
         let mut cache = self.cache.lock().unwrap();
         let mut compiler = MvIrCompiler::default();
@@ -88,7 +88,7 @@ impl Compiler for MvIr {
     }
 
     fn build_script(&self, code: &str, address: &AccountAddress) -> Vec<u8> {
-        let code = replace_bech32_addresses(code, Lang::MvIr);
+        let code = find_and_replace_bech32_addresses(code);
 
         let cache = self.cache.lock().unwrap();
         let mut compiler = MvIrCompiler::default();
