@@ -8,7 +8,7 @@ use regex::Regex;
 
 lazy_static! {
     static ref BECH32_REGEX: Regex = Regex::new(
-        r#"["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,}"#,
+        r#"[\s=]+(["!#$%&'()*+,\-./0123456789:;<=>?@A-Z\[\\\]^_`a-z{|}~]{1,83}1[A-Z0-9a-z&&[^boi1]]{6,})"#,
     )
     .unwrap();
 }
@@ -61,8 +61,12 @@ pub fn libra_address_into_bech32(libra_address: &str) -> Result<String> {
 
 pub fn find_and_replace_bech32_addresses(source: &str) -> String {
     let mut transformed_source = source.to_string();
-    for mat in BECH32_REGEX.find_iter(source).into_iter() {
-        let address = mat.as_str();
+    for mat in BECH32_REGEX.captures_iter(source).into_iter() {
+        let address = mat.get(1).unwrap().as_str();
+        if address.starts_with("0x") {
+            // libra match, don't replace
+            continue;
+        }
         let libra_address = bech32_into_libra_address(address);
         transformed_source = transformed_source.replace(address, &format!("0x{}", libra_address));
     }
@@ -106,6 +110,17 @@ mod tests {
             import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.LibraAccount;
             import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.LibraCoin;
             main() {return;}
+        ";
+        assert_eq!(find_and_replace_bech32_addresses(source), source);
+    }
+
+    #[test]
+    fn test_valid_bech32_libra_address_not_replaced() {
+        let source = r"
+            import 0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.WingsAccount;
+            main() {
+                return;
+            }
         ";
         assert_eq!(find_and_replace_bech32_addresses(source), source);
     }
