@@ -3,6 +3,7 @@ extern crate lazy_static;
 use anyhow::Result;
 use bech32::u5;
 use lazy_static::lazy_static;
+use libra_types::account_address::AccountAddress;
 use regex::Regex;
 
 lazy_static! {
@@ -35,16 +36,11 @@ pub fn bech32_into_libra_address(address: &str) -> String {
 
 pub fn libra_address_into_bech32(libra_address: &str) -> Result<String> {
     ensure!(
-        !libra_address.starts_with("0x"),
-        "Strip 0x before passing an address"
+        libra_address.starts_with("0x"),
+        "Pass address with 0x prefix"
     );
-    let bytes = hex::decode(libra_address).unwrap();
-    ensure!(
-        bytes.len() == 32,
-        "Invalid libra-encoded bech32 length: {}",
-        bytes.len()
-    );
-
+    let address = AccountAddress::from_hex_literal(libra_address)?;
+    let bytes = address.to_vec();
     let parts = bytes
         .split(|b| (*b) == 0)
         .filter(|slice| !slice.is_empty())
@@ -107,8 +103,8 @@ mod tests {
         assert_eq!(find_and_replace_bech32_addresses(source), source);
 
         let source = r"
-            import 0x00000111110000011111000001111122.LibraAccount;
-            import 0x00000111110000011111000001111122.LibraCoin;
+            import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.LibraAccount;
+            import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.LibraCoin;
             main() {return;}
         ";
         assert_eq!(find_and_replace_bech32_addresses(source), source);
@@ -134,8 +130,8 @@ mod tests {
         assert_eq!(find_and_replace_bech32_addresses(source), source);
 
         let source = r"
-            use 0x00000111110000011111000001111122::LibraAccount;
-            use 0x00000111110000011111000001111122::LibraCoin;
+            use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::LibraAccount;
+            use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::LibraCoin;
             main() {return;}
         ";
         assert_eq!(find_and_replace_bech32_addresses(source), source);
@@ -151,32 +147,32 @@ mod tests {
     }
 
     #[test]
-    fn test_zero_x_not_stripped() {
+    fn test_zero_x_is_stripped() {
         let invalid_libra_address =
-            "0x636f736d6f730000000000000000000000000000000000000000000000000000";
+            "636f736d6f730000000000000000000000000000000000000000000000000000";
         assert_eq!(
             libra_address_into_bech32(invalid_libra_address)
                 .unwrap_err()
                 .to_string(),
-            "Strip 0x before passing an address"
+            "Pass address with 0x prefix"
         );
     }
 
     #[test]
     fn test_invalid_libra_address_length() {
-        let invalid_libra_address = "636f736d6f73";
+        let invalid_libra_address = "0x636f736d6f73";
         assert_eq!(
             libra_address_into_bech32(invalid_libra_address)
                 .unwrap_err()
                 .to_string(),
-            "Invalid libra-encoded bech32 length: 6"
+            "Malformed bech32"
         );
     }
 
     #[test]
     fn test_invalid_libra_missing_data_part() {
         let invalid_libra_address =
-            "636f736d6f730000000000000000000000000000000000000000000000000000";
+            "0x636f736d6f730000000000000000000000000000000000000000000000000000";
         assert_eq!(
             libra_address_into_bech32(invalid_libra_address)
                 .unwrap_err()
@@ -188,7 +184,7 @@ mod tests {
     #[test]
     fn test_invalid_libra_missing_hrp_part() {
         let invalid_libra_address =
-            "0000000000000000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
+            "0x0000000000000000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
         assert_eq!(
             libra_address_into_bech32(invalid_libra_address)
                 .unwrap_err()
@@ -199,7 +195,7 @@ mod tests {
 
     #[test]
     fn test_convert_valid_libra_into_bech32() {
-        let libra_address = "636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
+        let libra_address = "0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
         assert_eq!(
             libra_address_into_bech32(libra_address).unwrap(),
             "cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e"
