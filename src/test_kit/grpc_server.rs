@@ -13,6 +13,8 @@ use crate::service::MoveVmService;
 use crate::ds::MockDataSource;
 use std::mem;
 
+type MockMoveVmService = MoveVmService<MockDataSource, MockDataSource>;
+
 pub struct Server {
     signal: Signal,
     port: u32,
@@ -32,7 +34,7 @@ impl Server {
                 for port in PORT_RANGE {
                     service_port.store(port, Ordering::SeqCst);
                     let service_res = TService::builder()
-                        .add_service(VmServiceServer::new(MoveVmService::new(Box::new(
+                        .add_service(VmServiceServer::new(MockMoveVmService::new(Box::new(
                             data_source.clone(),
                         ))))
                         .serve_with_shutdown(
