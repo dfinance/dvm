@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
-cargo fmt --all
-cargo clippy --all --tests --examples -- -Dwarnings
+# RustFMT
+# install: rustup component add rustfmt --toolchain stable
+cargo +stable fmt --all
+
+# Clippy
+# install: rustup component add clippy --toolchain stable
+# clippy available in stable channel only
+cargo +stable clippy --all --tests --examples -- -Dwarnings
+
 cargo test --all --tests

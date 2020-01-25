@@ -1,13 +1,14 @@
+use std::collections::HashMap;
+use std::convert::TryFrom;
+
+use anyhow::{Error, Result};
+use libra_types::account_address::AccountAddress;
 use move_lang::{
-    shared::Address, strip_comments_and_verify, parser, compile_program,
-    parser::syntax::parse_file_string, stdlib,
+    compile_program, parser, parser::syntax::parse_file_string, shared::Address, stdlib,
+    strip_comments_and_verify,
 };
-use anyhow::{Result, Error};
 use move_lang::errors::{Errors, report_errors_to_buffer};
 use move_lang::to_bytecode::translate::CompiledUnit;
-use libra_types::account_address::AccountAddress;
-use std::convert::TryFrom;
-use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Code<'a> {
@@ -116,9 +117,14 @@ fn parse_program(source: &Code, deps: &[Code]) -> Result<Result<parser::ast::Pro
 
 #[cfg(test)]
 mod test {
-    use crate::move_lang::build;
     use libra_types::account_address::AccountAddress;
+    use vm::access::{ModuleAccess, ScriptAccess};
+    use vm::CompiledModule;
+    use vm::file_format::CompiledScript;
+
+    use crate::move_lang::build;
     use crate::move_lang::compiler::{build_with_deps, Code};
+    use crate::test_kit::Lang;
 
     #[test]
     pub fn test_build_module_success() {
@@ -166,5 +172,55 @@ mod test {
         )
         .unwrap()
         .serialize();
+    }
+
+    #[test]
+    fn test_parse_mvir_script_with_bech32_addresses() {
+        let program = r"
+            import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount;
+            main() {
+                return;
+            }
+        ";
+
+        let binary = Lang::MvIr
+            .compiler()
+            .build_script(program, &AccountAddress::default());
+        let script = CompiledScript::deserialize(&binary).unwrap();
+
+        let module = script
+            .module_handles()
+            .iter()
+            .find(|h| script.identifier_at(h.name).to_string() == "WingsAccount")
+            .unwrap();
+        let address = script.address_at(module.address);
+        assert_eq!(
+            address.to_string(),
+            "636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb"
+        );
+    }
+
+    #[test]
+    fn test_parse_mvir_module_with_bech32_addresses() {
+        let program = r"
+            module M {
+                import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount;
+            }
+        ";
+        let binary = Lang::MvIr
+            .compiler()
+            .build_module(program, &AccountAddress::default());
+        let main_module = CompiledModule::deserialize(&binary).unwrap();
+
+        let module = main_module
+            .module_handles()
+            .iter()
+            .find(|h| main_module.identifier_at(h.name).to_string() == "WingsAccount")
+            .unwrap();
+        let address = main_module.address_at(module.address);
+        assert_eq!(
+            address.to_string(),
+            "636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb"
+        );
     }
 }
