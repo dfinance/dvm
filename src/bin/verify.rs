@@ -1,10 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
 
-use maplit::hashmap;
 use bytecode_verifier::verifier::{VerifiedModule, VerifiedProgram};
 use compiler::Compiler;
 use libra_types::account_address::AccountAddress;
+use maplit::hashmap;
 use structopt::StructOpt;
 use vm::access::{ModuleAccess, ScriptAccess};
 use vm::CompiledModule;
@@ -18,14 +18,12 @@ struct ImportedModule {
 }
 
 fn extract_imported_modules_from_module(module: &CompiledModule) -> HashSet<ImportedModule> {
-    let address_pool = module.address_pool();
-    let identifiers = module.identifiers();
     module
         .module_handles()
         .iter()
         .map(|handle| ImportedModule {
-            address: address_pool[handle.address.into_index()],
-            name: identifiers[handle.name.into_index()].to_string(),
+            address: *module.address_at(handle.address),
+            name: module.identifier_at(handle.name).to_string(),
         })
         .collect()
 }
