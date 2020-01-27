@@ -125,14 +125,14 @@ pub trait VM {
     ) -> VmResult;
 }
 
-pub struct MoveVm {
+pub struct MoveVm<StateView> {
     runtime: VMRuntime<'static>,
-    view: Box<dyn StateView>,
+    view: Box<StateView>,
     cost_table: CostTable,
 }
 
-impl MoveVm {
-    pub fn new(view: Box<dyn StateView>) -> MoveVm {
+impl<Sv: StateView> MoveVm<Sv> {
+    pub fn new(view: Box<Sv>) -> Self {
         let mut runtime = VMRuntime::new(allocator());
 
         let modules = stdlib_modules();
@@ -140,7 +140,7 @@ impl MoveVm {
             runtime.cache_module(module.clone());
         }
 
-        MoveVm {
+        Self {
             runtime,
             view,
             cost_table: cost_table(),
@@ -160,13 +160,13 @@ impl MoveVm {
     }
 }
 
-impl fmt::Debug for MoveVm {
+impl<T> fmt::Debug for MoveVm<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "MoveVm {{ }}")
     }
 }
 
-impl VM for MoveVm {
+impl<Sv: StateView> VM for MoveVm<Sv> {
     fn create_account(&self, meta: ExecutionMeta, address: AccountAddress) -> VmResult {
         let cache = self.make_data_cache();
         let meta = meta.into();
