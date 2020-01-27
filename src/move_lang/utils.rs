@@ -241,7 +241,7 @@ mod tests {
         .unwrap();
         let requested_module_id = ModuleId::new(
             libra_address,
-            Identifier::new(Box::from("WingsAccount".to_string())).unwrap(),
+            Identifier::new("WingsAccount".to_string().into_boxed_str()).unwrap(),
         );
         let access_path = AccessPath::from(&requested_module_id);
 
