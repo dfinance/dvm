@@ -3,8 +3,11 @@ extern crate lazy_static;
 use anyhow::Result;
 use bech32::u5;
 use lazy_static::lazy_static;
+use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use regex::Regex;
+
+use crate::compiled_protos::ds_grpc::DsAccessPath;
 
 lazy_static! {
     static ref BECH32_REGEX: Regex = Regex::new(
@@ -34,7 +37,17 @@ pub fn bech32_into_libra_address(address: &str) -> String {
     format!("{:0<24}{}", hrp, data)
 }
 
-pub fn libra_address_into_bech32(libra_address: &str) -> Result<String> {
+pub fn libra_access_path_into_ds_access_path(access_path: &AccessPath) -> Result<DsAccessPath> {
+    let address = format!("0x{}", access_path.address.to_string());
+    let bech32_address = libra_address_string_into_bech32(&address)?;
+    let ds_access_path = DsAccessPath {
+        address: bech32_address.into_bytes(),
+        path: access_path.path.clone(),
+    };
+    Ok(ds_access_path)
+}
+
+pub fn libra_address_string_into_bech32(libra_address: &str) -> Result<String> {
     ensure!(
         libra_address.starts_with("0x"),
         "Pass address with 0x prefix"
@@ -75,6 +88,9 @@ pub fn find_and_replace_bech32_addresses(source: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use libra_types::identifier::Identifier;
+    use libra_types::language_storage::ModuleId;
+
     use super::*;
 
     #[test]
@@ -166,7 +182,7 @@ mod tests {
         let invalid_libra_address =
             "636f736d6f730000000000000000000000000000000000000000000000000000";
         assert_eq!(
-            libra_address_into_bech32(invalid_libra_address)
+            libra_address_string_into_bech32(invalid_libra_address)
                 .unwrap_err()
                 .to_string(),
             "Pass address with 0x prefix"
@@ -177,7 +193,7 @@ mod tests {
     fn test_invalid_libra_address_length() {
         let invalid_libra_address = "0x636f736d6f73";
         assert_eq!(
-            libra_address_into_bech32(invalid_libra_address)
+            libra_address_string_into_bech32(invalid_libra_address)
                 .unwrap_err()
                 .to_string(),
             "Malformed bech32"
@@ -189,7 +205,7 @@ mod tests {
         let invalid_libra_address =
             "0x636f736d6f730000000000000000000000000000000000000000000000000000";
         assert_eq!(
-            libra_address_into_bech32(invalid_libra_address)
+            libra_address_string_into_bech32(invalid_libra_address)
                 .unwrap_err()
                 .to_string(),
             "Malformed bech32"
@@ -201,7 +217,7 @@ mod tests {
         let invalid_libra_address =
             "0x0000000000000000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
         assert_eq!(
-            libra_address_into_bech32(invalid_libra_address)
+            libra_address_string_into_bech32(invalid_libra_address)
                 .unwrap_err()
                 .to_string(),
             "Malformed bech32"
@@ -212,8 +228,38 @@ mod tests {
     fn test_convert_valid_libra_into_bech32() {
         let libra_address = "0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
         assert_eq!(
-            libra_address_into_bech32(libra_address).unwrap(),
+            libra_address_string_into_bech32(libra_address).unwrap(),
             "cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e"
+        );
+    }
+
+    #[test]
+    fn test_libra_access_path_into_data_source_request() {
+        let libra_address = AccountAddress::from_hex_literal(
+            "0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb",
+        )
+        .unwrap();
+        let requested_module_id = ModuleId::new(
+            libra_address,
+            Identifier::new(Box::from("WingsAccount".to_string())).unwrap(),
+        );
+        let access_path = AccessPath::from(&requested_module_id);
+
+        let result_address_bytes = vec![
+            99, 111, 115, 109, 111, 115, 49, 115, 120, 113, 116, 120, 97, 51, 109, 48, 110, 104,
+            53, 102, 117, 50, 122, 107, 121, 102, 118, 104, 48, 53, 116, 108, 108, 56, 102, 109,
+            122, 56, 116, 107, 50, 101, 50, 50, 101,
+        ];
+        let result_path_bytes = vec![
+            0, 247, 189, 211, 137, 27, 67, 193, 0, 32, 177, 135, 204, 108, 162, 43, 87, 115, 88,
+            188, 70, 68, 252, 200, 126, 150, 210, 164, 248, 77, 64, 188, 158,
+        ];
+        assert_eq!(
+            libra_access_path_into_ds_access_path(&access_path).unwrap(),
+            DsAccessPath {
+                address: result_address_bytes,
+                path: result_path_bytes
+            }
         );
     }
 }
