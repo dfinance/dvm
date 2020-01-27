@@ -21,15 +21,6 @@ fn vec_u8_into_hex_string(bytes: &[u8]) -> String {
         .join("")
 }
 
-pub(crate) fn get_sender_address(address: &str) -> Result<AccountAddress> {
-    ensure!(
-        address.len() == 66,
-        "Address has to be length of 66 (0x + 64 hex symbols), given {}",
-        address.len()
-    );
-    AccountAddress::from_hex_literal(address)
-}
-
 pub fn bech32_into_libra_address(address: &str) -> String {
     let (hrp, data_bytes) =
         bech32::decode(address).unwrap_or_else(|_| panic!("Invalid bech32 address {}", address));

@@ -78,7 +78,15 @@ mod tests {
     use crate::test_kit::Lang;
 
     use super::*;
-    use crate::move_lang::utils::get_sender_address;
+
+    fn get_sender_address(address: &str) -> Result<AccountAddress> {
+        ensure!(
+            address.len() == 66,
+            "Address has to be length of 66 (0x + 64 hex symbols), given {}",
+            address.len()
+        );
+        AccountAddress::from_hex_literal(address)
+    }
 
     fn verify_source_code(
         source: &str,

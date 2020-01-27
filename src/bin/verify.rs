@@ -4,7 +4,9 @@ use libra_types::account_address::AccountAddress;
 use maplit::hashmap;
 use structopt::StructOpt;
 
-use move_vm_in_cosmos::move_lang::WhitelistVerifier;
+use move_vm_in_cosmos::move_lang;
+use move_vm_in_cosmos::test_kit::Lang;
+use move_vm_in_cosmos::move_lang::{validate_bytecode_instructions, WhitelistVerifier};
 
 #[derive(StructOpt)]
 struct Opts {
@@ -19,9 +21,17 @@ fn main() {
             .into_boxed_str(),
     );
     let address = AccountAddress::default();
-    let whitelist = Whitelist::new(hashmap! {
-        AccountAddress::default() => vec!["LibraAccount"]
-    });
+    let whitelist = hashmap! {
+        AccountAddress::default() => vec!["LibraAccount".to_string()]
+    };
 
-    let verifier = WhitelistVerifier::new(address, vec![], whitelist);
+    let script = move_lang::compile_script(&source, Lang::MvIr, &address);
+    if let Err(err) = validate_bytecode_instructions(&script) {
+        dbg!(err);
+    }
+
+    let whitelister = WhitelistVerifier::new(address, vec![], whitelist);
+    if let Err(err) = whitelister.verify_only_whitelisted_modules(&script) {
+        dbg!(err);
+    }
 }

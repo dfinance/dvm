@@ -5,11 +5,7 @@ use vm::file_format::{Bytecode, CompiledScript};
 
 use crate::test_kit::Lang;
 
-pub(crate) fn compile_script(
-    source: &str,
-    lang: Lang,
-    sender_address: &AccountAddress,
-) -> CompiledScript {
+pub fn compile_script(source: &str, lang: Lang, sender_address: &AccountAddress) -> CompiledScript {
     CompiledScript::deserialize(&lang.compiler().build_script(source, sender_address)).unwrap()
 }
 
