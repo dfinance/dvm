@@ -9,3 +9,4 @@ pub use self::compiler::{build, build_with_deps, Code};
 pub use self::utils::{
     find_and_replace_bech32_addresses, bech32_into_libra_address, libra_address_into_bech32,
 };
+pub use self::verification::{validate_bytecode_instructions, WhitelistVerifier};

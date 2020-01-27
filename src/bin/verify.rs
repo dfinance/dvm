@@ -4,6 +4,8 @@ use libra_types::account_address::AccountAddress;
 use maplit::hashmap;
 use structopt::StructOpt;
 
+use move_vm_in_cosmos::move_lang::WhitelistVerifier;
+
 #[derive(StructOpt)]
 struct Opts {
     fname: String,
@@ -18,7 +20,8 @@ fn main() {
     );
     let address = AccountAddress::default();
     let whitelist = Whitelist::new(hashmap! {
-        AccountAddress::default() => vec!["*".to_string()]
+        AccountAddress::default() => vec!["LibraAccount"]
     });
-    dbg!(is_only_whitelisted_imports(source, address, whitelist));
+
+    let verifier = WhitelistVerifier::new(address, vec![], whitelist);
 }
