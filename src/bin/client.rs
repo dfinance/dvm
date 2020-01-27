@@ -2,9 +2,7 @@
 
 use structopt::StructOpt;
 use http::Uri;
-
-use move_vm_in_cosmos::grpc;
-use grpc::{*, vm_service_client::*};
+use move_vm_in_cosmos::compiled_protos::vm_grpc::{vm_service_client, VmExecuteRequest};
 
 #[derive(Debug, StructOpt)]
 struct Options {
@@ -16,7 +14,7 @@ struct Options {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = Options::from_args();
 
-    let mut client = VmServiceClient::connect(options.server_address).await?;
+    let mut client = vm_service_client::VmServiceClient::connect(options.server_address).await?;
     //  req: execute_contracts
     {
         let request = tonic::Request::new(VmExecuteRequest {

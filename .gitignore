@@ -2,5 +2,5 @@
 .vscode
 /target
 *.iml
-src/grpc/vm.rs
-src/grpc/vm_grpc.rs
+
+src/compiled_protos/*_grpc.rs

@@ -2,8 +2,8 @@
 extern crate vm_runtime;
 #[macro_use]
 extern crate anyhow;
+pub mod compiled_protos;
 pub mod ds;
-pub mod grpc;
 pub mod move_lang;
 pub mod service;
 

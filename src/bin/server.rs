@@ -5,12 +5,11 @@ use structopt::StructOpt;
 
 use tonic::transport::Server;
 
-use move_vm_in_cosmos::grpc;
-use grpc::vm_service_server::*;
 use std::net::SocketAddr;
 
 use move_vm_in_cosmos::ds::MockDataSource;
 use move_vm_in_cosmos::service::MoveVmService;
+use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 
 #[derive(Debug, StructOpt)]
 struct Options {
