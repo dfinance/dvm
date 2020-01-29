@@ -15,8 +15,7 @@ impl Client {
     pub fn new(port: u32) -> Result<Client> {
         let mut runtime = Runtime::new().unwrap();
         let client = runtime.block_on(async {
-            VmServiceClient::connect(format!("http://localhost:{}", port))
-                .await
+            VmServiceClient::connect(format!("http://localhost:{}", port)).await
         })?;
 
         let client = Client {
