@@ -33,7 +33,12 @@ impl TestKit {
     pub fn new(lang: Lang) -> TestKit {
         let data_source = MockDataSource::default();
         let server = Server::new(data_source.clone());
-        let client = Client::new(server.port()).unwrap();
+        let client = Client::new(server.port()).unwrap_or_else(|_| {
+            panic!(
+                "Client couldn't connect to the server at http://localhost:{}",
+                server.port()
+            )
+        });
         TestKit {
             data_source,
             _server: server,
