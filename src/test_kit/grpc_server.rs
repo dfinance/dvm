@@ -78,7 +78,9 @@ impl Drop for Server {
         self.signal.shutdown();
         //We need to send something to the server so that the runtime calls the signal function and stops the process.
         // Otherwise, the service will continue to work in the background.
-        mem::forget(Client::new(self.port));
+        if let Ok(client) = Client::new(self.port) {
+            mem::forget(client);
+        }
         self.shutdown_monitor.recv().unwrap();
     }
 }
