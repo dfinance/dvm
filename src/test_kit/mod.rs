@@ -33,7 +33,7 @@ impl TestKit {
     pub fn new(lang: Lang) -> TestKit {
         let data_source = MockDataSource::default();
         let server = Server::new(data_source.clone());
-        let client = Client::new(server.port());
+        let client = Client::new(server.port()).unwrap();
         TestKit {
             data_source,
             _server: server,
