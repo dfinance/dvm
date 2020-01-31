@@ -2,8 +2,26 @@
 //! see also:
 //! - https://github.com/danburkert/prost
 //! - https://github.com/hyperium/tonic/tree/master/tonic-build
-#![allow(non_camel_case_types)]
 
 tonic::include_proto!("vm_grpc");
 tonic::include_proto!("ds_grpc");
 
+use libra_types::access_path::AccessPath;
+
+impl From<AccessPath> for DsAccessPath {
+    fn from(path: AccessPath) -> Self {
+        Self {
+            address: path.address.to_vec(),
+            path: path.path,
+        }
+    }
+}
+
+impl<'a> From<&'a AccessPath> for DsAccessPath {
+    fn from(path: &'a AccessPath) -> Self {
+        Self {
+            address: path.address.to_vec(),
+            path: path.path.to_vec(),
+        }
+    }
+}
