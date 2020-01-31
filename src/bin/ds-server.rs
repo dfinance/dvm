@@ -28,11 +28,13 @@ impl DsService for DataSourceService {
     ) -> Result<Response<DsRawResponse>, Status> {
         let request: DsAccessPath = request.into_inner();
         let (_addr, _path) = (request.address, &request.path[..]);
+        println!("DS REQ: get_raw {:?}", _addr);
+
         let found = true;
 
         if found {
             Ok(Response::new(DsRawResponse {
-                blob: Vec::with_capacity(0),
+                blob: vec![42],
             }))
         } else {
             Err(Status::invalid_argument("No data for request."))
