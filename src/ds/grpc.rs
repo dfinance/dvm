@@ -1,20 +1,25 @@
-use std::sync::Mutex;
 use core::cell::RefCell;
-use std::sync::Arc;
+use std::borrow::BorrowMut;
+use std::sync::{Arc, RwLock};
+use std::sync::Mutex;
+use std::thread;
+
+use anyhow::Error;
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
-use anyhow::Error;
-
-use crate::grpc::{*, ds_service_client::DsServiceClient};
+use tokio::runtime::Runtime;
 use tonic::transport::Channel;
+
+use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
+use crate::compiled_protos::ds_grpc::DsAccessPath;
 
 pub type ArcRuntime = Arc<Mutex<tokio::runtime::Runtime>>;
 
 // TODO impl grpc data source
 pub struct GrpcDataSource {
     runtime: ArcRuntime,
-    client: RefCell<DsServiceClient<Channel>>,
+    client: Mutex<DsServiceClient<Channel>>,
     /// inner storage used for as temporary values
     inner: crate::ds::MockDataSource,
 }
@@ -45,11 +50,37 @@ impl GrpcDataSource {
 
     pub fn get_blocking(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
         let request = tonic::Request::new(access_path.into());
-        let res = self
-            .runtime
-            .lock()
-            .unwrap()
-            .block_on(self.client.borrow_mut().get_raw(request));
+            //        let mut mut_client = self.client.lock().unwrap().borrow_mut();
+
+        //        let raw_request_future = mut_client.get_raw(request);
+
+        println!("trying to fetch module for access path");
+        //        let mut locked_runtime = self.runtime.lock().unwrap();
+        println!("after locking runtime");
+
+        let res = crossbeam::scope(move |s| {
+            s.spawn(move |_| {
+                let mut mut_client = self.client.lock().unwrap();
+                let mut locked_runtime = self.runtime.lock().unwrap();
+                locked_runtime.block_on(mut_client.get_raw(request))
+            }).join().unwrap()
+        })
+        .unwrap();
+//        let res = thread::spawn(move || {
+//                let mut mut_client = self.client.lock().unwrap();
+//                let mut locked_runtime = self.runtime.lock().unwrap();
+//                locked_runtime.block_on(mut_client.get_raw(request))
+//        }).join().unwrap();
+        dbg!(&res);
+        //        let res = thread::spawn(|| {
+        //            let mut mut_client = self.client.lock().unwrap();
+        //            let mut locked_runtime = self.runtime.lock().unwrap();
+        //            locked_runtime.block_on(mut_client.get_raw(request))
+        //        })
+        //        .join()
+        //        .unwrap();
+        //        let res = locked_runtime.block_on(raw_request_future);
+        dbg!("after block_on in get_raw");
 
         Ok(res
             .map_err(|err| {
@@ -94,7 +125,12 @@ impl GrpcDataSource {
 
 impl StateView for GrpcDataSource {
     fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
+        dbg!("self.get_blocking(access_path)");
         self.get_blocking(access_path)
+        //        thread::spawn(|| &self.get_blocking(access_path))
+        //            .join()
+        //            .unwrap()
+        //        self.get_blocking(access_path)
     }
 
     fn multi_get(&self, _access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {

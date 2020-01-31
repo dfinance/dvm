@@ -30,6 +30,7 @@ use crate::move_lang::gas_schedule::cost_table;
 use libra_types::write_set::WriteSet;
 use libra_types::contract_event::ContractEvent;
 use vm_runtime::system_module_names::{ACCOUNT_MODULE, CREATE_ACCOUNT_NAME};
+use std::convert::Into;
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();

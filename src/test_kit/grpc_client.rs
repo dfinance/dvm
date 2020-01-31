@@ -3,8 +3,9 @@ use std::sync::{Arc, Mutex};
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 use tonic::Request;
-use crate::grpc::{*, vm_service_client::*};
 use crate::test_kit::ArcMut;
+use crate::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
+use crate::compiled_protos::vm_grpc::{VmExecuteRequest, VmExecuteResponses};
 
 pub struct Client {
     runtime: ArcMut<Runtime>,
@@ -15,8 +16,7 @@ impl Client {
     pub fn new(port: u32) -> Result<Client> {
         let mut runtime = Runtime::new().unwrap();
         let client = runtime.block_on(async {
-            VmServiceClient::connect(format!("http://localhost:{}", port))
-                .await
+            VmServiceClient::connect(format!("http://localhost:{}", port)).await
         })?;
 
         let client = Client {

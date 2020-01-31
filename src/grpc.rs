@@ -6,4 +6,3 @@
 
 tonic::include_proto!("vm_grpc");
 tonic::include_proto!("ds_grpc");
-

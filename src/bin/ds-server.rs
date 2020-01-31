@@ -1,14 +1,17 @@
 //! Server implementation on tonic & tokio.
 //! Run with `cargo run --bin ds-server "[::1]:50052"`
 
-use structopt::StructOpt;
-
-use tonic::transport::Server;
-use tonic::{Request, Response, Status};
-
-use move_vm_in_cosmos::grpc;
-use grpc::{*, ds_service_server::*};
 use std::net::SocketAddr;
+
+use structopt::StructOpt;
+use tonic::{Request, Response, Status};
+use tonic::transport::Server;
+
+use move_vm_in_cosmos::compiled_protos::ds_grpc::{
+    DsAccessPath, DsAccessPaths, DsRawResponse, DsRawResponses,
+};
+use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
+use move_vm_in_cosmos::grpc;
 
 #[derive(Debug, StructOpt)]
 struct Options {
@@ -26,6 +29,7 @@ impl DsService for DataSourceService {
         &self,
         request: Request<DsAccessPath>,
     ) -> Result<Response<DsRawResponse>, Status> {
+        dbg!(format!("get_raw {:?}", &request));
         let request: DsAccessPath = request.into_inner();
         let (_addr, _path) = (request.address, &request.path[..]);
         let found = true;
