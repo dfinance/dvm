@@ -1,4 +1,4 @@
-mod compiler;
+pub mod compiler;
 mod grpc_client;
 mod grpc_server;
 
