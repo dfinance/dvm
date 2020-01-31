@@ -1,11 +1,10 @@
-mod grpc;
-mod mock;
+pub mod mock;
+pub mod view;
 
 use anyhow::Error;
 use libra_types::write_set::WriteSet;
 
 pub use mock::MockDataSource;
-pub use grpc::GrpcDataSource;
 
 use libra_types::account_address::AccountAddress;
 use libra_types::account_config::AccountResource;

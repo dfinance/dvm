@@ -1,19 +1,19 @@
 //! Server implementation on tonic & tokio.
 //! Run with `cargo run --bin server "[::1]:50051" "http://[::1]:50052"`
-use std::sync::Mutex;
-use std::sync::Arc;
+use std::sync::mpsc;
 use std::net::SocketAddr;
-use http::Uri;
+use std::cell::RefCell;
 use structopt::StructOpt;
+use http::Uri;
 
 use tokio::runtime::Runtime;
-use tonic::transport::Server;
+use tonic::transport::{Server, Channel};
 
-use move_vm_in_cosmos::grpc;
-use move_vm_in_cosmos::ds::GrpcDataSource;
+use move_vm_in_cosmos::grpc::vm_service_server::*;
+use move_vm_in_cosmos::grpc::ds_service_client::DsServiceClient;
 use move_vm_in_cosmos::ds::MockDataSource;
+use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::service::MoveVmService;
-use grpc::vm_service_server::*;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -25,34 +25,52 @@ struct Options {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let runtime = Arc::new(Mutex::new(Runtime::new()?));
+    let (tx, rx) = mpsc::channel::<rds::Request>();
+    let (rtx, rrx) = mpsc::channel::<rds::Response>();
+    // let (mut ftx, mut frx) = futures::channel::mpsc::unbounded::<rds::Request>();
 
     let options = Options::from_args();
+    let serv_addr = options.address;
+    let ds_addr = options.ds;
 
-    let ws = MockDataSource::default();
+    let mut runtime = Runtime::new().unwrap();
 
-    let ds = {
-        let client = {
-            println!("Connecting to data-source: {}", options.ds);
+    {
+        let ws = MockDataSource::default();
+        let ds = rds::CachingDataSource::new(tx, rrx);
 
-            let ds_uri = options.ds;
-            use crate::grpc::ds_service_client::DsServiceClient;
-            let mut runtime = runtime.lock().unwrap();
-            runtime.block_on(async { DsServiceClient::connect(ds_uri).await })?
-        };
-        GrpcDataSource::new_with(Arc::clone(&runtime), client)
-    };
+        let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws));
 
-    let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws));
+        println!("VM server listening on {}", serv_addr);
+        runtime.spawn(async move {
+            Server::builder()
+                .add_service(VmServiceServer::new(service))
+                .serve(serv_addr)
+                .await
+        });
+    }
 
-    println!("Listening on {}", options.address);
-    let bind_addr = options.address;
-    runtime.lock().unwrap().block_on(async move {
-        Server::builder()
-            .add_service(VmServiceServer::new(service))
-            .serve(bind_addr)
-            .await
-    })?;
+    println!("Connecting to data-source: {}", ds_addr);
+    let client: RefCell<DsServiceClient<Channel>> = runtime
+        .block_on(async { DsServiceClient::connect(ds_addr).await })
+        .expect("Cannot connect to data-source server")
+        .into();
 
-    Ok(())
+    // finally looping over channel connected to the proxy data-source:
+    // 1. receive request from blocking data-source
+    // 2. send asynchronous request to remote data-source
+    // 3. send response to blocking data-source, so unblock it.
+    rx.iter().for_each(move |ap| {
+        let mut client = client.borrow_mut();
+        let request = tonic::Request::new(ap.into());
+        runtime.block_on(async {
+            let res = client.get_raw(request).await;
+            println!("[DS:Loop] have got request, sending async req to DS..");
+            let res = rtx.send(res.map(|resp| resp.into_inner().blob).ok());
+            println!("[DS:Loop] response sent with {:?}", res);
+            // TODO: Are we should break this loop when res is error?
+        });
+    });
+
+    unreachable!();
 }
