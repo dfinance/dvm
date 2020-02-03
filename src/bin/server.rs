@@ -27,7 +27,6 @@ struct Options {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (tx, rx) = mpsc::channel::<rds::Request>();
     let (rtx, rrx) = mpsc::channel::<rds::Response>();
-    // let (mut ftx, mut frx) = futures::channel::mpsc::unbounded::<rds::Request>();
 
     let options = Options::from_args();
     let serv_addr = options.address;
@@ -55,6 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .block_on(async { DsServiceClient::connect(ds_addr).await })
         .expect("Cannot connect to data-source server")
         .into();
+    println!("Connected to data-source");
 
     // finally looping over channel connected to the proxy data-source:
     // 1. receive request from blocking data-source
@@ -65,10 +65,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let request = tonic::Request::new(ap.into());
         runtime.block_on(async {
             let res = client.get_raw(request).await;
-            println!("[DS:Loop] have got request, sending async req to DS..");
             let res = rtx.send(res.map(|resp| resp.into_inner().blob).ok());
-            println!("[DS:Loop] response sent with {:?}", res);
-            // TODO: Are we should break this loop when res is error?
+            if let Err(err) = res {
+                eprintln!("ERR: Internal VM-DS channel error: {:?}", err);
+                // TODO: Are we should break this loop when res is error?
+            }
         });
     });
 

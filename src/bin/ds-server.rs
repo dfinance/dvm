@@ -33,9 +33,7 @@ impl DsService for DataSourceService {
         let found = true;
 
         if found {
-            Ok(Response::new(DsRawResponse {
-                blob: vec![42],
-            }))
+            Ok(Response::new(DsRawResponse { blob: vec![42] }))
         } else {
             Err(Status::invalid_argument("No data for request."))
         }
