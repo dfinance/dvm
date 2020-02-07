@@ -14,6 +14,7 @@ use move_vm_in_cosmos::grpc::ds_service_client::DsServiceClient;
 use move_vm_in_cosmos::ds::MockDataSource;
 use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::service::MoveVmService;
+use std::time::Duration;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -51,8 +52,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Connecting to data-source: {}", ds_addr);
     let client: RefCell<DsServiceClient<Channel>> = runtime
-        .block_on(async { DsServiceClient::connect(ds_addr).await })
-        .expect("Cannot connect to data-source server")
+        .block_on(async {
+            loop {
+                match DsServiceClient::connect(ds_addr.clone()).await {
+                    Ok(client) => return client,
+                    Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
+                }
+            }
+        })
         .into();
     println!("Connected to data-source");
 
