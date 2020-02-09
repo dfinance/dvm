@@ -3,7 +3,14 @@ set -e
 
 # RustFMT
 # install: rustup component add rustfmt --toolchain stable
-cargo +stable fmt --all
+if [ "$GIT_EDITOR" == ":" ]; then
+  FORMATTED_FILES=$(cargo +stable fmt --all --message-format short)
+  if [ "$FORMATTED_FILES" != "" ]; then
+    git add $FORMATTED_FILES
+  fi
+else
+  cargo +stable fmt --all
+fi
 
 # Clippy
 # install: rustup component add clippy --toolchain stable

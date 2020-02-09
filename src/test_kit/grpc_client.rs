@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::sync::{Arc, Mutex};
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
@@ -11,18 +12,17 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(port: u32) -> Client {
+    pub fn new(port: u32) -> Result<Client> {
         let mut runtime = Runtime::new().unwrap();
         let client = runtime.block_on(async {
-            VmServiceClient::connect(format!("http://localhost:{}", port))
-                .await
-                .unwrap()
-        });
+            VmServiceClient::connect(format!("http://localhost:{}", port)).await
+        })?;
 
-        Client {
+        let client = Client {
             runtime: Arc::new(Mutex::new(runtime)),
             client: Arc::new(Mutex::new(client)),
-        }
+        };
+        Ok(client)
     }
 
     pub fn perform_request(&self, request: Request<VmExecuteRequest>) -> VmExecuteResponses {

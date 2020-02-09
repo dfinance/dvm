@@ -21,5 +21,5 @@ VM Mock Client: `cargo run --bin client "http://[::1]:50051"`
 # precommit hook
 
 ```shell script
-ln -s ./check_project.sh ./.git/hooks/pre-commit
+ln -s `git rev-parse --show-toplevel`/check_project.sh `git rev-parse --absolute-git-dir`/hooks/pre-commit
 ```
