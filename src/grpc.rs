@@ -3,10 +3,19 @@
 //! - https://github.com/danburkert/prost
 //! - https://github.com/hyperium/tonic/tree/master/tonic-build
 
-tonic::include_proto!("vm_grpc");
-tonic::include_proto!("ds_grpc");
-
 use libra_types::access_path::AccessPath;
+
+macro_rules! include_proto {
+    ($package: tt) => {
+        include!(concat!(
+            "../src-gen/protobuf",
+            concat!("/", $package, ".rs")
+        ));
+    };
+}
+
+include_proto!("vm_grpc");
+include_proto!("ds_grpc");
 
 impl From<AccessPath> for DsAccessPath {
     fn from(path: AccessPath) -> Self {

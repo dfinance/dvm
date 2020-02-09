@@ -1,7 +1,9 @@
 // see https://doc.rust-lang.org/cargo/reference/build-scripts.html
-
 extern crate tonic_build;
 
+use std::path::Path;
+
+const OUT_DIR: &str = "src-gen/protobuf";
 const PB_PATH: [&'static str; 2] = [
     "vm-proto/protos/vm.proto",
     "vm-proto/protos/data-source.proto",
@@ -14,7 +16,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for path in PB_PATH.iter() {
         println!("rerun-if-changed={}", path);
         println!("cargo:rerun-if-changed={}", path);
-        tonic_build::compile_protos(path)?;
+        let proto_path: &Path = path.as_ref();
+        let proto_dir = proto_path
+            .parent()
+            .expect("proto file should reside in a directory");
+        tonic_build::configure()
+            .out_dir(OUT_DIR)
+            .compile(&[proto_path], &[proto_dir])?
     }
 
     Ok(())
