@@ -1,4 +1,4 @@
-mod compiler;
+pub mod compiler;
 mod gas_schedule;
 mod move_vm;
 mod utils;

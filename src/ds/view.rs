@@ -3,8 +3,6 @@ use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use anyhow::Error;
 
-use crate::ds::mock::MockDataSource;
-
 pub type Request = AccessPath;
 pub type Response = Option<Vec<u8>>;
 
@@ -32,17 +30,16 @@ impl<K: 'static + Send + Sync + Clone, V: Send> ChannelDataSource<K, V> {
 
 pub struct CachingDataSource<K: Send, V: Send> {
     remote: ChannelDataSource<K, V>,
+    /* // TODO: inpl caching
     /// inner storage used for as temporary values
-    /* TODO: inpl caching */
-    #[allow(dead_code)]
-    storage: MockDataSource,
+    storage: HashMap<AccessPath, Vec<u8>>, */
 }
 
 impl CachingDataSource<Request, Response> {
     pub fn new(tx: mpsc::Sender<Request>, rx: mpsc::Receiver<Response>) -> Self {
         Self {
             remote: ChannelDataSource::new(tx, rx),
-            storage: MockDataSource::default(),
+            // storage: Default::default(),
         }
     }
 }

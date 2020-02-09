@@ -2,7 +2,7 @@ pub mod compiler;
 mod grpc_client;
 mod grpc_server;
 
-pub use crate::test_kit::{
+pub use self::{
     compiler::{Lang, Compiler},
     grpc_client::Client,
 };
