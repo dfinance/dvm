@@ -8,3 +8,6 @@ pub mod move_lang;
 pub mod service;
 
 pub mod test_kit;
+
+// reshare libra crates
+pub use libra_types;

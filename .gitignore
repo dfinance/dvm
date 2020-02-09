@@ -1,6 +1,8 @@
+# IDE's files
 .idea
 .vscode
-/target
 *.iml
-src/grpc/vm.rs
-src/grpc/vm_grpc.rs
+# generated sources
+src-gen/protobuf/*.rs
+# compiler's output
+/target

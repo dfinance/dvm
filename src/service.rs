@@ -18,25 +18,28 @@ use libra_types::contract_event::ContractEvent;
 use libra_types::language_storage::TypeTag;
 use crate::ds::MergeWriteSet;
 
-pub struct MoveVmService<Sv, Mws> {
-    vm: MoveVm<Sv>,
-    write_set_handler: Option<Box<Mws>>, // Used for auto write change set.
+pub struct MoveVmService {
+    vm: MoveVm,
+    write_set_handler: Option<Box<dyn MergeWriteSet>>, // Used for auto write change set.
 }
 
-unsafe impl<Sv: Send, Mws: Send> Send for MoveVmService<Sv, Mws> {}
+unsafe impl Send for MoveVmService {}
 
-unsafe impl<Sv: Sync, Mws: Sync> Sync for MoveVmService<Sv, Mws> {}
+unsafe impl Sync for MoveVmService {}
 
-impl<Sv: StateView, Mws: MergeWriteSet> MoveVmService<Sv, Mws> {
-    pub fn new(view: Box<Sv>) -> Self {
-        Self {
+impl MoveVmService {
+    pub fn new(view: Box<dyn StateView>) -> MoveVmService {
+        MoveVmService {
             vm: MoveVm::new(view),
             write_set_handler: None,
         }
     }
 
-    pub fn with_auto_commit(view: Box<Sv>, write_set_handler: Box<Mws>) -> Self {
-        Self {
+    pub fn with_auto_commit(
+        view: Box<dyn StateView>,
+        write_set_handler: Box<dyn MergeWriteSet>,
+    ) -> MoveVmService {
+        MoveVmService {
             vm: MoveVm::new(view),
             write_set_handler: Some(write_set_handler),
         }
@@ -62,11 +65,7 @@ impl<Sv: StateView, Mws: MergeWriteSet> MoveVmService<Sv, Mws> {
 }
 
 #[tonic::async_trait]
-impl<Sv, Mws> VmService for MoveVmService<Sv, Mws>
-where
-    Sv: 'static + Send + Sync + StateView,
-    Mws: 'static + Send + Sync + MergeWriteSet,
-{
+impl VmService for MoveVmService {
     async fn execute_contracts(
         &self,
         request: Request<VmExecuteRequest>,

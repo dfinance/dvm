@@ -1,17 +1,12 @@
-use libra_types::access_path::AccessPath;
-use anyhow::Error;
 use std::collections::HashMap;
-use libra_state_view::StateView;
-use crate::ds::{MergeWriteSet, DataAccess};
-use libra_types::write_set::{WriteSet, WriteOp};
-use libra_types::account_address::AccountAddress;
-use libra_types::account_config::AccountResource;
-use vm_runtime::identifier::create_access_path;
-use libra_types::account_config;
-use tonic::codegen::Arc;
 use std::sync::Mutex;
-use libra_types::language_storage::ModuleId;
-use libra_types::transaction::Module;
+use anyhow::Error;
+
+use tonic::codegen::Arc;
+use libra_state_view::StateView;
+use libra_types::access_path::AccessPath;
+use libra_types::write_set::{WriteSet, WriteOp};
+use crate::ds::MergeWriteSet;
 
 #[derive(Debug, Default, Clone)]
 pub struct MockDataSource {
@@ -65,22 +60,5 @@ impl MergeWriteSet for MockDataSource {
             }
         }
         Ok(())
-    }
-}
-
-impl DataAccess for MockDataSource {
-    fn get_account(&self, address: &AccountAddress) -> Result<Option<AccountResource>, Error> {
-        let entry = self.get(&create_access_path(
-            address,
-            account_config::account_struct_tag(),
-        ))?;
-        Ok(entry
-            .map(|data| lcs::from_bytes(data.as_slice()))
-            .map_or(Ok(None), |v| v.map(Some))?)
-    }
-
-    fn get_module(&self, module_id: &ModuleId) -> Result<Option<Module>, Error> {
-        let entry = self.get(&AccessPath::from(module_id))?;
-        Ok(entry.map(Module::new))
     }
 }
