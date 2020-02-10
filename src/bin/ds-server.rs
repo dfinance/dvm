@@ -1,14 +1,20 @@
 //! Server implementation on tonic & tokio.
 //! Run with `cargo run --bin ds-server "[::1]:50052"`
 
-use structopt::StructOpt;
+#[macro_use]
+extern crate slice_as_array;
 
-use tonic::transport::Server;
-use tonic::{Request, Response, Status};
-
-use move_vm_in_cosmos::grpc;
-use grpc::{*, ds_service_server::*};
 use std::net::SocketAddr;
+
+use language_e2e_tests::account::{Account, AccountData};
+use libra_types::access_path::AccessPath;
+use libra_types::account_address::AccountAddress;
+use structopt::StructOpt;
+use tonic::{Request, Response, Status};
+use tonic::transport::Server;
+
+use grpc::{*, ds_service_server::*};
+use move_vm_in_cosmos::grpc;
 
 #[derive(Debug, StructOpt)]
 struct Options {
@@ -20,23 +26,44 @@ pub struct DataSourceService {
     // TODO: add mock data
 }
 
+fn new_response(blob: &[u8]) -> Response<DsRawResponse> {
+    Response::new(DsRawResponse {
+        blob: blob.to_vec(),
+    })
+}
+
+fn is_resource(access_path: &AccessPath) -> bool {
+    access_path.path[0] == 1
+}
+
+fn get_account_data(balance: u64) -> AccountData {
+    let account = Account::new();
+    AccountData::with_account(account, balance, 0)
+}
+
 #[tonic::async_trait]
 impl DsService for DataSourceService {
+    #[allow(clippy::transmute_ptr_to_ref)]
     async fn get_raw(
         &self,
         request: Request<DsAccessPath>,
     ) -> Result<Response<DsRawResponse>, Status> {
         let request: DsAccessPath = request.into_inner();
-        let (_addr, _path) = (request.address, &request.path[..]);
-        println!("DS REQ: get_raw {:?}", _addr);
+        let addr = slice_as_array::slice_as_array!(&request.address[..], [u8; 32]).unwrap();
+        let address = AccountAddress::new(*addr);
+        println!("DS Request: {:?}", address.to_string());
 
-        let found = true;
-
-        if found {
-            Ok(Response::new(DsRawResponse { blob: vec![42] }))
-        } else {
-            Err(Status::invalid_argument("No data for request."))
+        let access_path = AccessPath::new(address, request.path);
+        let account_data = get_account_data(1000);
+        // if Resource
+        if is_resource(&access_path) {
+            println!("Access path {}", &access_path);
+            return Ok(new_response(
+                &account_data.to_resource().simple_serialize().unwrap(),
+            ));
         }
+        println!("No data for request");
+        Err(Status::invalid_argument("No data for request."))
     }
 
     async fn multi_get_raw(
