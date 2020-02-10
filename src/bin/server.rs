@@ -15,6 +15,7 @@ use move_vm_in_cosmos::ds::MockDataSource;
 use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::service::MoveVmService;
 use std::time::Duration;
+use libra_logger::try_init_for_testing;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -39,6 +40,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let ws = MockDataSource::default();
         let ds = rds::CachingDataSource::new(tx, rrx);
 
+        // enable logging for libra MoveVM
+        std::env::set_var("RUST_LOG", "warn");
+        try_init_for_testing();
         let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws));
 
         println!("VM server listening on {}", serv_addr);
