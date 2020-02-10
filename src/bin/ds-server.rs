@@ -29,6 +29,19 @@ pub struct DataSourceService {
 fn new_response(blob: &[u8]) -> Response<DsRawResponse> {
     Response::new(DsRawResponse {
         blob: blob.to_vec(),
+        error_code: ds_raw_response::ErrorCode::None as i32,
+        error_message: vec![],
+    })
+}
+
+fn new_error_response(
+    error_code: ds_raw_response::ErrorCode,
+    error_message: String,
+) -> Response<DsRawResponse> {
+    Response::new(DsRawResponse {
+        blob: vec![],
+        error_code: error_code as i32,
+        error_message: error_message.into_bytes(),
     })
 }
 
@@ -43,7 +56,6 @@ fn get_account_data(balance: u64) -> AccountData {
 
 #[tonic::async_trait]
 impl DsService for DataSourceService {
-    #[allow(clippy::transmute_ptr_to_ref)]
     async fn get_raw(
         &self,
         request: Request<DsAccessPath>,
@@ -54,16 +66,20 @@ impl DsService for DataSourceService {
         println!("DS Request: {:?}", address.to_string());
 
         let access_path = AccessPath::new(address, request.path);
-        let account_data = get_account_data(1000);
+        Ok(new_error_response(
+            ds_raw_response::ErrorCode::NoData,
+            "No such resource".to_string(),
+        ))
+        //        let account_data = get_account_data(1000);
         // if Resource
-        if is_resource(&access_path) {
-            println!("Access path {}", &access_path);
-            return Ok(new_response(
-                &account_data.to_resource().simple_serialize().unwrap(),
-            ));
-        }
-        println!("No data for request");
-        Err(Status::invalid_argument("No data for request."))
+        //        if is_resource(&access_path) {
+        //            println!("Access path {}", &access_path);
+        //            return Ok(new_response(
+        //                &account_data.to_resource().simple_serialize().unwrap(),
+        //            ));
+        //        }
+        //        println!("No data for request");
+        //        Err(Status::invalid_argument("No data for request."))
     }
 
     async fn multi_get_raw(

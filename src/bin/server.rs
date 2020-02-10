@@ -1,21 +1,21 @@
 //! Server implementation on tonic & tokio.
 //! Run with `cargo run --bin server "[::1]:50051" "http://[::1]:50052"`
-use std::sync::mpsc;
-use std::net::SocketAddr;
 use std::cell::RefCell;
-use structopt::StructOpt;
+use std::net::SocketAddr;
+use std::sync::mpsc;
+use std::time::Duration;
+
 use http::Uri;
-
+use libra_logger::try_init_for_testing;
+use structopt::StructOpt;
 use tokio::runtime::Runtime;
-use tonic::transport::{Server, Channel};
+use tonic::transport::{Channel, Server};
 
-use move_vm_in_cosmos::grpc::vm_service_server::*;
-use move_vm_in_cosmos::grpc::ds_service_client::DsServiceClient;
 use move_vm_in_cosmos::ds::MockDataSource;
 use move_vm_in_cosmos::ds::view as rds;
+use move_vm_in_cosmos::grpc::ds_service_client::DsServiceClient;
+use move_vm_in_cosmos::grpc::vm_service_server::*;
 use move_vm_in_cosmos::service::MoveVmService;
-use std::time::Duration;
-use libra_logger::try_init_for_testing;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -76,8 +76,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let request = tonic::Request::new(ap.into());
         runtime.block_on(async {
             let res = client.get_raw(request).await;
-            let res = rtx.send(res.map(|resp| resp.into_inner().blob).ok());
-            if let Err(err) = res {
+            if let Err(ref err) = res {
+                dbg!(err);
+                return;
+            }
+            let ds_response = res.unwrap().into_inner();
+            //            let channel_res = rtx.send(res.map(|resp| resp.into_inner().blob).ok());
+            if let Err(err) = rtx.send(ds_response) {
                 eprintln!("ERR: Internal VM-DS channel error: {:?}", err);
                 // TODO: Are we should break this loop when res is error?
             }
