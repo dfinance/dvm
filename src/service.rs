@@ -139,7 +139,7 @@ impl From<VmResult> for VmExecuteResponse {
             Ok(res) => {
                 let (status, status_struct) = match res.status {
                     TransactionStatus::Discard(status) => (0, Some(convert_status(status))),
-                    TransactionStatus::Keep(_) => (1, None),
+                    TransactionStatus::Keep(status) => (1, Some(convert_status(status))),
                 };
 
                 VmExecuteResponse {

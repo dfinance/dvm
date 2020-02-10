@@ -34,6 +34,7 @@ fn new_response(blob: &[u8]) -> Response<DsRawResponse> {
     })
 }
 
+#[allow(dead_code)]
 fn new_error_response(
     error_code: ds_raw_response::ErrorCode,
     error_message: String,
