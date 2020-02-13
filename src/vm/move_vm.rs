@@ -144,6 +144,7 @@ impl MoveVm {
             None => return Err(Error::msg("Stdlib not found.")),
         }
 
+        println!("MoveVM is ready.");
         Ok(MoveVm {
             runtime,
             view,

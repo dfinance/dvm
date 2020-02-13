@@ -44,10 +44,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // enable logging for libra MoveVM
         std::env::set_var("RUST_LOG", "warn");
         try_init_for_testing();
-        let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws)).unwrap();
 
         println!("VM server listening on {}", serv_addr);
         runtime.spawn(async move {
+            let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws)).unwrap();
             Server::builder()
                 .add_service(VmServiceServer::new(service))
                 .serve(serv_addr)
