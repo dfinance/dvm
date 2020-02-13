@@ -1,10 +1,10 @@
 use tonic::{Request, Response, Status};
 
-use crate::{grpc, move_lang::MoveVm};
+use crate::{grpc, vm::MoveVm};
 use grpc::{*, vm_service_server::*};
 use libra_state_view::StateView;
-use crate::move_lang::{ExecutionMeta, VM, VmResult};
-use crate::move_lang::ExecutionResult;
+use crate::vm::{ExecutionMeta, VM, VmResult};
+use crate::vm::ExecutionResult;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
 use anyhow::Error;
@@ -28,21 +28,21 @@ unsafe impl Send for MoveVmService {}
 unsafe impl Sync for MoveVmService {}
 
 impl MoveVmService {
-    pub fn new(view: Box<dyn StateView>) -> MoveVmService {
-        MoveVmService {
-            vm: MoveVm::new(view),
+    pub fn new(view: Box<dyn StateView>) -> Result<MoveVmService, Error> {
+        Ok(MoveVmService {
+            vm: MoveVm::new(view)?,
             write_set_handler: None,
-        }
+        })
     }
 
     pub fn with_auto_commit(
         view: Box<dyn StateView>,
         write_set_handler: Box<dyn MergeWriteSet>,
-    ) -> MoveVmService {
-        MoveVmService {
-            vm: MoveVm::new(view),
+    ) -> Result<MoveVmService, Error> {
+        Ok(MoveVmService {
+            vm: MoveVm::new(view)?,
             write_set_handler: Some(write_set_handler),
-        }
+        })
     }
 
     pub fn execute_contract(&self, contract: VmContract, _options: u64) -> VmExecuteResponse {
@@ -54,9 +54,7 @@ impl MoveVmService {
             //Temporary grpc test case
             if let Some(write_set_handler) = &self.write_set_handler {
                 if let Ok(res) = &res {
-                    write_set_handler
-                        .merge_write_set(res.write_set.clone())
-                        .unwrap();
+                    write_set_handler.merge_write_set(res.write_set.clone());
                 }
             }
             res

@@ -16,6 +16,7 @@ use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::grpc::ds_service_client::DsServiceClient;
 use move_vm_in_cosmos::grpc::vm_service_server::*;
 use move_vm_in_cosmos::service::MoveVmService;
+use move_vm_in_cosmos::vm::Lang;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -37,13 +38,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut runtime = Runtime::new().unwrap();
 
     {
-        let ws = MockDataSource::default();
+        let ws = MockDataSource::new(Lang::MvIr);
         let ds = rds::CachingDataSource::new(tx, rrx);
 
         // enable logging for libra MoveVM
         std::env::set_var("RUST_LOG", "warn");
         try_init_for_testing();
-        let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws));
+        let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws)).unwrap();
 
         println!("VM server listening on {}", serv_addr);
         runtime.spawn(async move {

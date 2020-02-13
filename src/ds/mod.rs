@@ -16,7 +16,7 @@ use libra_state_view::StateView;
 use vm_runtime::identifier::create_access_path;
 
 pub trait MergeWriteSet {
-    fn merge_write_set(&self, write_set: WriteSet) -> Result<(), Error>;
+    fn merge_write_set(&self, write_set: WriteSet);
 }
 
 pub trait DataAccess {

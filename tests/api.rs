@@ -1,5 +1,6 @@
 use move_vm_in_cosmos::test_kit::*;
 use libra_types::account_address::AccountAddress;
+use move_vm_in_cosmos::vm::Lang;
 
 #[test]
 fn test_create_account() {

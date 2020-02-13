@@ -29,17 +29,18 @@ impl<'a> Code<'a> {
     }
 }
 
-pub fn build(source: Code, address: &AccountAddress) -> Result<CompiledUnit> {
-    build_with_deps(source, vec![], address)
+pub fn build(source: Code, address: &AccountAddress, disable_std: bool) -> Result<CompiledUnit> {
+    build_with_deps(source, vec![], address, disable_std)
 }
 
 pub fn build_with_deps(
     source: Code,
     deps: Vec<Code>,
     address: &AccountAddress,
+    disable_std: bool,
 ) -> Result<CompiledUnit> {
     let address = Address::try_from(address.as_ref()).map_err(Error::msg)?;
-    let pprog_res = parse_program(&source, &deps)?;
+    let pprog_res = parse_program(&source, &deps, disable_std)?;
     let mut prog = compile_program(pprog_res, Some(address)).map_err(|errs| {
         let mut sources = HashMap::new();
         sources.insert(source.name, source.code.to_owned());
@@ -55,7 +56,7 @@ pub fn build_with_deps(
     Ok(prog.remove(0))
 }
 
-fn parse_module(
+pub fn parse_module(
     src: &str,
     name: &'static str,
 ) -> Result<(Option<parser::ast::FileDefinition>, Errors)> {
@@ -78,7 +79,11 @@ fn parse_module(
     Ok((def_opt, errors))
 }
 
-fn parse_program(source: &Code, deps: &[Code]) -> Result<Result<parser::ast::Program, Errors>> {
+fn parse_program(
+    source: &Code,
+    deps: &[Code],
+    disable_std: bool,
+) -> Result<Result<parser::ast::Program, Errors>> {
     let mut source_definitions = Vec::new();
     let mut lib_definitions = Vec::new();
     let mut errors: Errors = Vec::new();
@@ -97,10 +102,12 @@ fn parse_program(source: &Code, deps: &[Code]) -> Result<Result<parser::ast::Pro
         errors.append(&mut es);
     }
 
-    for module in stdlib() {
-        let (def_opt, _) = parse_module(&module, "std")?;
-        if let Some(def) = def_opt {
-            lib_definitions.push(def);
+    if !disable_std {
+        for module in stdlib() {
+            let (def_opt, _) = parse_module(&module, "std")?;
+            if let Some(def) = def_opt {
+                lib_definitions.push(def);
+            }
         }
     }
 
@@ -122,14 +129,15 @@ mod test {
     use vm::CompiledModule;
     use vm::file_format::CompiledScript;
 
-    use crate::move_lang::build;
-    use crate::move_lang::compiler::{build_with_deps, Code};
-    use crate::test_kit::Lang;
+    use crate::vm::compiler::{
+        mv::{build_with_deps, Code, build},
+        Lang,
+    };
 
     #[test]
     pub fn test_build_module_success() {
         let program = "module M {}";
-        build(Code::module("M", program), &AccountAddress::random())
+        build(Code::module("M", program), &AccountAddress::random(), false)
             .unwrap()
             .serialize();
     }
@@ -137,7 +145,7 @@ mod test {
     #[test]
     pub fn test_build_module_failed() {
         let program = "module M {";
-        let error = build(Code::module("M", program), &AccountAddress::random())
+        let error = build(Code::module("M", program), &AccountAddress::random(), false)
             .err()
             .unwrap();
         assert!(error.to_string().contains("Unexpected token: ''"));
@@ -146,7 +154,7 @@ mod test {
     #[test]
     pub fn test_build_script() {
         let program = "main() {}";
-        build(Code::script(program), &AccountAddress::random())
+        build(Code::script(program), &AccountAddress::random(), false)
             .unwrap()
             .serialize();
     }
@@ -169,6 +177,7 @@ mod test {
             Code::script(program),
             vec![Code::module("M", dep)],
             &AccountAddress::random(),
+            false,
         )
         .unwrap()
         .serialize();
@@ -185,7 +194,8 @@ mod test {
 
         let binary = Lang::MvIr
             .compiler()
-            .build_script(program, &AccountAddress::default());
+            .build_script(program, &AccountAddress::default(), false)
+            .unwrap();
         let script = CompiledScript::deserialize(&binary).unwrap();
 
         let module = script
@@ -209,7 +219,8 @@ mod test {
         ";
         let binary = Lang::MvIr
             .compiler()
-            .build_module(program, &AccountAddress::default());
+            .build_module(program, &AccountAddress::default(), false)
+            .unwrap();
         let main_module = CompiledModule::deserialize(&binary).unwrap();
 
         let module = main_module

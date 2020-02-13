@@ -1,22 +1,19 @@
-pub mod compiler;
 mod grpc_client;
 mod grpc_server;
 
-pub use self::{
-    compiler::{Lang, Compiler},
-    grpc_client::Client,
-};
+pub use self::{grpc_client::Client};
 use crate::grpc::*;
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
 use crate::ds::MockDataSource;
-use crate::move_lang::ExecutionMeta;
+use crate::vm::ExecutionMeta;
 use tonic::Request;
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
+use crate::vm::compiler::{Compiler, Lang};
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 
@@ -31,7 +28,7 @@ pub struct TestKit {
 
 impl TestKit {
     pub fn new(lang: Lang) -> TestKit {
-        let data_source = MockDataSource::default();
+        let data_source = MockDataSource::new(Lang::MvIr);
         let server = Server::new(data_source.clone());
         let client = Client::new(server.port()).unwrap_or_else(|_| {
             panic!(
@@ -48,7 +45,10 @@ impl TestKit {
     }
 
     pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponses {
-        let module = self.compiler.build_module(code, &meta.sender);
+        let module = self
+            .compiler
+            .build_module(code, &meta.sender, false)
+            .unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
                 address: meta.sender.to_vec(),
@@ -69,7 +69,10 @@ impl TestKit {
         meta: ExecutionMeta,
         args: &[&str],
     ) -> VmExecuteResponses {
-        let code = self.compiler.build_script(code, &meta.sender);
+        let code = self
+            .compiler
+            .build_script(code, &meta.sender, false)
+            .unwrap();
 
         let args = parse_args(args)
             .into_iter()

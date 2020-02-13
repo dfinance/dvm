@@ -8,7 +8,7 @@ use structopt::StructOpt;
 
 use grpc::{*, vm_service_client::*};
 use move_vm_in_cosmos::grpc;
-use move_vm_in_cosmos::test_kit::compiler;
+use move_vm_in_cosmos::vm::Lang;
 
 #[derive(Debug, StructOpt)]
 struct Options {
@@ -17,10 +17,10 @@ struct Options {
 }
 
 fn get_execute_script_request() -> Result<VmExecuteRequest, Box<dyn std::error::Error>> {
-    let compiler = compiler::Lang::MvIr.compiler();
+    let compiler = Lang::MvIr.compiler();
     let sender = AccountAddress::random();
     let source = fs::read_to_string("tests/resources/script.mvir").unwrap();
-    let binary_script = compiler.build_script(&source, &sender);
+    let binary_script = compiler.build_script(&source, &sender, false).unwrap();
     let amount_to_withdraw = VmArgs {
         r#type: 1,
         value: "100".to_string(),
