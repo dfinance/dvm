@@ -8,10 +8,10 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::thread;
 use tokio::runtime::Runtime;
 use std::io::{ErrorKind, Error as IoError};
-use crate::grpc::{vm_service_server::*};
 use crate::service::MoveVmService;
 use crate::ds::MockDataSource;
 use std::mem;
+use crate::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 
 pub struct Server {
     signal: Signal,

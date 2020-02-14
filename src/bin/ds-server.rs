@@ -12,6 +12,10 @@ use libra_types::account_address::AccountAddress;
 use structopt::StructOpt;
 use tonic::{Request, Response, Status};
 use tonic::transport::Server;
+use move_vm_in_cosmos::compiled_protos::ds_grpc::{
+    DsRawResponse, ds_raw_response, DsAccessPath, DsAccessPaths, DsRawResponses,
+};
+use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
 
 use grpc::{*, ds_service_server::*};
 use move_vm_in_cosmos::grpc;

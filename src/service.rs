@@ -5,6 +5,8 @@ use grpc::{*, vm_service_server::*};
 use libra_state_view::StateView;
 use crate::vm::{ExecutionMeta, VM, VmResult};
 use crate::vm::ExecutionResult;
+use crate::move_lang::{ExecutionMeta, VM, VmResult, MoveVm};
+use crate::move_lang::ExecutionResult;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
 use anyhow::Error;
@@ -17,6 +19,11 @@ use libra_types::write_set::{WriteSet, WriteOp};
 use libra_types::contract_event::ContractEvent;
 use libra_types::language_storage::TypeTag;
 use crate::ds::MergeWriteSet;
+use crate::compiled_protos::vm_grpc::{
+    VmContract, VmExecuteResponse, VmExecuteRequest, VmExecuteResponses, VmErrorStatus, VmEvent,
+    VmType, VmStructTag, VmValue, VmAccessPath,
+};
+use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
 
 pub struct MoveVmService {
     vm: MoveVm,

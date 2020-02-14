@@ -1,6 +1,10 @@
 mod grpc_client;
 mod grpc_server;
 
+pub use self::{
+    compiler::{Lang, Compiler},
+    grpc_client::Client,
+};
 pub use self::{grpc_client::Client};
 use crate::grpc::*;
 pub use grpc_server::{Server, Signal};
@@ -13,6 +17,9 @@ use libra_types::transaction::{TransactionArgument, parse_as_transaction_argumen
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
+use crate::compiled_protos::vm_grpc::{
+    VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue,
+};
 use crate::vm::compiler::{Compiler, Lang};
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
