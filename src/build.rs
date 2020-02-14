@@ -3,7 +3,7 @@ extern crate tonic_build;
 
 use std::path::Path;
 
-const OUT_DIR: &str = "src-gen/protobuf";
+const OUT_DIR: &str = "src/compiled_protos";
 const PB_PATH: [&'static str; 2] = [
     "vm-proto/protos/vm.proto",
     "vm-proto/protos/data-source.proto",

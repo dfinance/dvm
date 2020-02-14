@@ -6,7 +6,6 @@ pub use self::{
     compiler::{Lang, Compiler},
     grpc_client::Client,
 };
-use crate::grpc::*;
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
@@ -17,6 +16,9 @@ use libra_types::transaction::{TransactionArgument, parse_as_transaction_argumen
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
+use crate::compiled_protos::vm_grpc::{
+    VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue,
+};
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 
