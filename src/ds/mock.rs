@@ -76,7 +76,7 @@ impl MockDataSource {
 impl MergeWriteSet for MockDataSource {
     fn merge_write_set(&self, write_set: WriteSet) {
         let data = &mut self.data.lock().unwrap();
-        for (access_path, write_op) in write_set {
+        for (access_path, write_op) in dbg!(write_set) {
             match write_op {
                 WriteOp::Value(blob) => {
                     data.insert(access_path.clone(), blob.clone());

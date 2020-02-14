@@ -148,12 +148,12 @@ mod test {
         let error = build(Code::module("M", program), &AccountAddress::random(), false)
             .err()
             .unwrap();
-        assert!(error.to_string().contains("Unexpected token: ''"));
+        assert!(error.to_string().contains("Unexpected end-of-file"));
     }
 
     #[test]
     pub fn test_build_script() {
-        let program = "main() {}";
+        let program = "fun main() {}";
         build(Code::script(program), &AccountAddress::random(), false)
             .unwrap()
             .serialize();
@@ -164,13 +164,13 @@ mod test {
         let dep = "\
         address 0x1:
         module M {
-            public foo(): u64 {
+            public fun foo(): u64 {
                 1
             }
         }
         ";
         let program = "\
-        main() {\
+        fun main() {\
             0x1::M::foo();
         }";
         build_with_deps(

@@ -354,8 +354,8 @@ mod test {
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-            .unwrap()
-            .write_set,
+                .unwrap()
+                .write_set,
         );
 
         let account = AccountAddress::random();
@@ -403,8 +403,8 @@ mod test {
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-            .unwrap()
-            .write_set,
+                .unwrap()
+                .write_set,
         );
 
         let account = AccountAddress::random();
