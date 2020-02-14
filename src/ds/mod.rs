@@ -27,7 +27,7 @@ pub trait DataAccess {
 // auto-impl for all StateView impls
 impl<T: StateView> DataAccess for T {
     fn get_account(&self, address: &AccountAddress) -> Result<Option<AccountResource>, Error> {
-        let entry = dbg!(self.get(&create_access_path(address, account_struct_tag()))?);
+        let entry = self.get(&create_access_path(address, account_struct_tag()))?;
         Ok(entry
             .map(|data| lcs::from_bytes(data.as_slice()))
             .map_or(Ok(None), |v| v.map(Some))?)

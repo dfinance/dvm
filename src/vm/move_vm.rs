@@ -19,7 +19,6 @@ use vm_runtime::{
     execution_context::InterpreterContext, loaded_data::loaded_module::LoadedModule,
     runtime::VMRuntime, TXN_TOTAL_GAS_USAGE, VM_COUNTERS,
 };
-use vm_runtime_types::value::Value;
 use std::fmt;
 use libra_types::language_storage::ModuleId;
 use libra_types::identifier::IdentStr;
@@ -30,6 +29,7 @@ use libra_types::write_set::WriteSet;
 use libra_types::contract_event::ContractEvent;
 use vm_runtime::system_module_names::{ACCOUNT_MODULE, CREATE_ACCOUNT_NAME};
 use anyhow::Error;
+use vm_runtime_types::values::Value;
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();
@@ -412,7 +412,7 @@ mod test {
         ds.merge_write_set(output.write_set);
 
         let program = "
-        main(payee: address, amount: u64) {
+        fun main(payee: address, amount: u64) {
             0x0::LibraAccount::mint_to_address(payee, amount)
         }
         ";
