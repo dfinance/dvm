@@ -1,12 +1,9 @@
 use tonic::{Request, Response, Status};
 
-use crate::{grpc, vm::MoveVm};
-use grpc::{*, vm_service_server::*};
+use crate::vm::MoveVm;
 use libra_state_view::StateView;
 use crate::vm::{ExecutionMeta, VM, VmResult};
 use crate::vm::ExecutionResult;
-use crate::move_lang::{ExecutionMeta, VM, VmResult, MoveVm};
-use crate::move_lang::ExecutionResult;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
 use anyhow::Error;

@@ -1,12 +1,6 @@
 mod grpc_client;
 mod grpc_server;
 
-pub use self::{
-    compiler::{Lang, Compiler},
-    grpc_client::Client,
-};
-pub use self::{grpc_client::Client};
-use crate::grpc::*;
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
@@ -21,6 +15,7 @@ use crate::compiled_protos::vm_grpc::{
     VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue,
 };
 use crate::vm::compiler::{Compiler, Lang};
+use crate::test_kit::grpc_client::Client;
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 

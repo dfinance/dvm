@@ -4,8 +4,6 @@ extern crate vm_runtime;
 extern crate anyhow;
 pub mod compiled_protos;
 pub mod ds;
-pub mod move_lang;
-pub mod grpc;
 pub mod service;
 pub mod vm;
 

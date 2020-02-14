@@ -17,8 +17,6 @@ use move_vm_in_cosmos::compiled_protos::ds_grpc::{
 };
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
 
-use grpc::{*, ds_service_server::*};
-use move_vm_in_cosmos::grpc;
 use vm_runtime_types::values::Struct;
 
 #[derive(Debug, StructOpt)]
