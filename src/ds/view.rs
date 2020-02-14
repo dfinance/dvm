@@ -1,8 +1,8 @@
 use std::sync::mpsc;
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
-use crate::grpc::*;
 use anyhow::Error;
+use crate::compiled_protos::ds_grpc::DsRawResponse;
 
 pub type Request = AccessPath;
 pub type Response = DsRawResponse;

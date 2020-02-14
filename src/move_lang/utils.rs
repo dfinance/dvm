@@ -6,9 +6,7 @@ use lazy_static::lazy_static;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use regex::Regex;
-
-// use crate::compiled_protos::ds_grpc::DsAccessPath;
-use crate::grpc::DsAccessPath;
+use crate::compiled_protos::ds_grpc::DsAccessPath;
 
 lazy_static! {
     static ref BECH32_REGEX: Regex = Regex::new(
