@@ -145,20 +145,20 @@ pub struct VmExecuteRequest {
     pub options: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SourceFile {
+pub struct MvIrSourceFile {
     #[prost(bytes, tag = "1")]
-    pub source: std::vec::Vec<u8>,
-    #[prost(enumeration = "ContractType", tag = "2")]
-    pub r#type: i32,
-    #[prost(enumeration = "VmLang", tag = "3")]
-    pub lang: i32,
-    #[prost(bytes, tag = "4")]
+    pub text: std::vec::Vec<u8>,
+    #[prost(bytes, tag = "2")]
     pub address: std::vec::Vec<u8>,
+    #[prost(enumeration = "ContractType", tag = "3")]
+    pub r#type: i32,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CompiledFile {
+pub struct CompilationResult {
     #[prost(bytes, tag = "1")]
     pub bytecode: std::vec::Vec<u8>,
+    #[prost(bytes, tag = "2")]
+    pub error_message: std::vec::Vec<u8>,
 }
 /// Type of contract (module or script).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -205,15 +205,6 @@ pub enum VmWriteOp {
     Value = 0,
     /// Delete.
     Deletion = 1,
-}
-/// Compiler
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum VmLang {
-    /// .mvir files
-    MvIr = 0,
-    /// .move files
-    Move = 1,
 }
 #[doc = r" Generated client implementations."]
 pub mod vm_service_client {
@@ -307,8 +298,8 @@ pub mod vm_compiler_client {
         }
         pub async fn compile(
             &mut self,
-            request: impl tonic::IntoRequest<super::SourceFile>,
-        ) -> Result<tonic::Response<super::CompiledFile>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::MvIrSourceFile>,
+        ) -> Result<tonic::Response<super::CompilationResult>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
                     tonic::Code::Unknown,
@@ -438,8 +429,8 @@ pub mod vm_compiler_server {
     pub trait VmCompiler: Send + Sync + 'static {
         async fn compile(
             &self,
-            request: tonic::Request<super::SourceFile>,
-        ) -> Result<tonic::Response<super::CompiledFile>, tonic::Status>;
+            request: tonic::Request<super::MvIrSourceFile>,
+        ) -> Result<tonic::Response<super::CompilationResult>, tonic::Status>;
     }
     #[derive(Debug)]
     #[doc(hidden)]
@@ -471,12 +462,12 @@ pub mod vm_compiler_server {
             match req.uri().path() {
                 "/vm_grpc.VMCompiler/Compile" => {
                     struct CompileSvc<T: VmCompiler>(pub Arc<T>);
-                    impl<T: VmCompiler> tonic::server::UnaryService<super::SourceFile> for CompileSvc<T> {
-                        type Response = super::CompiledFile;
+                    impl<T: VmCompiler> tonic::server::UnaryService<super::MvIrSourceFile> for CompileSvc<T> {
+                        type Response = super::CompilationResult;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::SourceFile>,
+                            request: tonic::Request<super::MvIrSourceFile>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { inner.compile(request).await };

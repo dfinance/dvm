@@ -1450,6 +1450,7 @@ dependencies = [
  "futures-core",
  "hex 0.4.0",
  "http",
+ "ir-to-bytecode",
  "language-e2e-tests",
  "lazy_static",
  "libra-canonical-serialization",

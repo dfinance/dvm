@@ -22,6 +22,7 @@ bytecode-verifier = { git = "https://github.com/WingsDao/libra.git", branch = "2
 lcs = { git = "https://github.com/WingsDao/libra.git", package = "libra-canonical-serialization", branch = "28.01.2020" }
 compiler = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
 libra-logger = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
+ir-to-bytecode = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
 anyhow = "=1.0.26"
 lazy_static = "=1.4.0"
 hex = "=0.4.0"

@@ -78,7 +78,7 @@ fn parse_module(
     Ok((def_opt, errors))
 }
 
-fn parse_program(source: &Code, deps: &[Code]) -> Result<Result<parser::ast::Program, Errors>> {
+pub fn parse_program(source: &Code, deps: &[Code]) -> Result<Result<parser::ast::Program, Errors>> {
     let mut source_definitions = Vec::new();
     let mut lib_definitions = Vec::new();
     let mut errors: Errors = Vec::new();
