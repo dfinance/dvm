@@ -11,7 +11,6 @@ use structopt::StructOpt;
 use tokio::runtime::Runtime;
 use tonic::transport::{Channel, Server};
 
-use move_vm_in_cosmos::ds::MockDataSource;
 use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::service::MoveVmService;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
@@ -37,16 +36,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut runtime = Runtime::new().unwrap();
 
     {
-        let ws = MockDataSource::default();
         let ds = rds::CachingDataSource::new(tx, rrx);
 
         // enable logging for libra MoveVM
         std::env::set_var("RUST_LOG", "warn");
         try_init_for_testing();
-        let service = MoveVmService::with_auto_commit(Box::new(ds), Box::new(ws));
 
         println!("VM server listening on {}", serv_addr);
         runtime.spawn(async move {
+            let service = MoveVmService::new(Box::new(ds)).unwrap();
             Server::builder()
                 .add_service(VmServiceServer::new(service))
                 .serve(serv_addr)

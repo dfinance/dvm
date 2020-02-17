@@ -4,9 +4,7 @@ use libra_types::account_address::AccountAddress;
 use maplit::hashmap;
 use structopt::StructOpt;
 
-use move_vm_in_cosmos::move_lang;
-use move_vm_in_cosmos::test_kit::Lang;
-use move_vm_in_cosmos::move_lang::{validate_bytecode_instructions, WhitelistVerifier};
+use move_vm_in_cosmos::vm::{self, validate_bytecode_instructions, WhitelistVerifier, Lang};
 
 #[derive(StructOpt)]
 struct Opts {
@@ -25,7 +23,7 @@ fn main() {
         AccountAddress::default() => vec!["LibraAccount".to_string()]
     };
 
-    let script = move_lang::compile_script(&source, Lang::MvIr, &address);
+    let script = vm::compile_script(&source, Lang::MvIr, &address);
     if let Err(err) = validate_bytecode_instructions(&script) {
         dbg!(err);
     }

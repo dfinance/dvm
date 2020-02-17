@@ -17,6 +17,8 @@ use move_vm_in_cosmos::compiled_protos::ds_grpc::{
 };
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
 
+use vm_runtime_types::values::Struct;
+
 #[derive(Debug, StructOpt)]
 struct Options {
     #[structopt(help = "Address in the form of HOST_ADDRESS:PORT")]
@@ -74,7 +76,12 @@ impl DsService for DataSourceService {
         if is_resource(&access_path) {
             println!("Access path {}", &access_path);
             return Ok(new_response(
-                &account_data.to_resource().simple_serialize().unwrap(),
+                &account_data
+                    .to_resource()
+                    .value_as::<Struct>()
+                    .unwrap()
+                    .simple_serialize(&AccountData::layout())
+                    .unwrap(),
             ));
         }
         println!("No data for request");

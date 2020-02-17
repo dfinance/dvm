@@ -7,10 +7,37 @@ use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use libra_types::write_set::{WriteSet, WriteOp};
 use crate::ds::MergeWriteSet;
+use vm_runtime::data_cache::RemoteCache;
+use vm::errors::VMResult;
+use crate::vm::stdlib::{Stdlib, build_std, move_std, mvir_std};
+use crate::vm::compiler::Lang;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct MockDataSource {
     data: Arc<Mutex<HashMap<AccessPath, Vec<u8>>>>,
+}
+
+impl MockDataSource {
+    pub fn new(lang: Lang) -> MockDataSource {
+        let ds = MockDataSource {
+            data: Arc::new(Mutex::new(Default::default())),
+        };
+
+        let std = match &lang {
+            Lang::Move => move_std(),
+            Lang::MvIr => mvir_std(),
+        };
+
+        let ws = build_std(Stdlib { modules: std, lang }).unwrap();
+        ds.merge_write_set(ws);
+        ds
+    }
+
+    pub fn without_std() -> MockDataSource {
+        MockDataSource {
+            data: Arc::new(Mutex::new(Default::default())),
+        }
+    }
 }
 
 impl StateView for MockDataSource {
@@ -47,7 +74,7 @@ impl MockDataSource {
 }
 
 impl MergeWriteSet for MockDataSource {
-    fn merge_write_set(&self, write_set: WriteSet) -> Result<(), Error> {
+    fn merge_write_set(&self, write_set: WriteSet) {
         let data = &mut self.data.lock().unwrap();
         for (access_path, write_op) in write_set {
             match write_op {
@@ -59,6 +86,11 @@ impl MergeWriteSet for MockDataSource {
                 }
             }
         }
-        Ok(())
+    }
+}
+
+impl RemoteCache for MockDataSource {
+    fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
+        Ok(StateView::get(self, access_path).unwrap())
     }
 }
