@@ -157,8 +157,8 @@ pub struct MvIrSourceFile {
 pub struct CompilationResult {
     #[prost(bytes, tag = "1")]
     pub bytecode: std::vec::Vec<u8>,
-    #[prost(bytes, tag = "2")]
-    pub error_message: std::vec::Vec<u8>,
+    #[prost(bytes, repeated, tag = "2")]
+    pub errors: ::std::vec::Vec<std::vec::Vec<u8>>,
 }
 /// Type of contract (module or script).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]

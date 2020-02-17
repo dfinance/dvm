@@ -58,14 +58,14 @@ impl DsClient for DsServiceClient<Channel> {
 pub fn new_compilation_result(bytecode: Vec<u8>) -> CompilationResult {
     CompilationResult {
         bytecode,
-        error_message: "".to_string().into_bytes(),
+        errors: vec![],
     }
 }
 
 pub fn new_error_compilation_result(error_message: &str) -> CompilationResult {
     CompilationResult {
         bytecode: vec![],
-        error_message: error_message.to_string().into_bytes(),
+        errors: vec![error_message.to_string().into_bytes()],
     }
 }
 
@@ -217,6 +217,8 @@ mod tests {
             .await
             .unwrap()
             .into_inner();
-        dbg!(String::from_utf8(response.error_message).unwrap());
+        for error in response.errors {
+            dbg!(String::from_utf8(error).unwrap());
+        }
     }
 }

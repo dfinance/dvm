@@ -32,12 +32,15 @@ async fn main() -> Result<()> {
     let address = Options::from_args().address;
     let ds_address = Options::from_args().ds;
 
+    println!("Connecting to ds server...");
     let ds_client = loop {
         match DsServiceClient::connect(ds_address.clone()).await {
             Ok(client) => break client,
             Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
         }
     };
+    println!("Connected to ds server");
+
     let compiler_service = CompilerService::new(Box::new(ds_client));
 
     Server::builder()
