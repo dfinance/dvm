@@ -1,19 +1,17 @@
 use anyhow::Result;
 use bytecode_verifier::VerifiedModule;
-
 use futures::lock::Mutex;
-
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
+use move_ir_types::ast::ModuleIdent;
 use tonic::{Request, Response, Status};
 use tonic::transport::Channel;
 use vm::CompiledModule;
 
-use crate::compiled_protos::ds_grpc::{DsRawResponse, DsAccessPath};
+use crate::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, MvIrSourceFile};
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
-use move_ir_types::ast::ModuleIdent;
 
 pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessPath>> {
     let imports = if is_module {
@@ -60,10 +58,10 @@ pub fn new_compilation_result(bytecode: Vec<u8>) -> CompilationResult {
     }
 }
 
-pub fn new_error_compilation_result(error_message: &str) -> CompilationResult {
+pub fn new_error_compilation_result(errors: Vec<String>) -> CompilationResult {
     CompilationResult {
         bytecode: vec![],
-        errors: vec![error_message.to_string().into_bytes()],
+        errors: errors.iter().map(|e| e.clone().into_bytes()).collect(),
     }
 }
 
@@ -83,7 +81,7 @@ impl CompilerService {
     async fn inner_compile(
         &self,
         request: Request<MvIrSourceFile>,
-    ) -> Result<Result<Vec<u8>>, Status> {
+    ) -> Result<Result<Vec<u8>, Vec<String>>, Status> {
         let source_file_data = request.into_inner();
 
         let source_text = match String::from_utf8(source_file_data.text) {
@@ -99,10 +97,13 @@ impl CompilerService {
         let imports = match extract_imports(&source_text, is_module) {
             Ok(imports) => imports,
             Err(err) => {
-                return Ok(Err(err));
+                let errors = vec![err.to_string()];
+                return Ok(Err(errors));
             }
         };
+
         let mut deps: Vec<VerifiedModule> = vec![];
+        let mut dependency_errors: Vec<String> = vec![];
         for import_access_path in imports {
             let mut client = self.ds_client.lock().await;
             let response = client
@@ -121,12 +122,17 @@ impl CompilerService {
                         .expect("Module deserialization failed");
                     deps.push(VerifiedModule::new(resolved_dep_module).unwrap());
                 }
-                // NoData, compiler error: cannot resolve a dependency
-                1 => {}
                 // BadRequest, should not happen
-                2 => panic!("DS returned BAD_REQUEST"),
+                1 => panic!("DS returned BAD_REQUEST"),
+                // NoData, compiler error: cannot resolve a dependency
+                2 => {
+                    dependency_errors.push(String::from_utf8(ds_response.error_message).unwrap());
+                }
                 _ => panic!("DS returned invalid ErrorCode"),
             };
+        }
+        if dependency_errors.len() > 0 {
+            return Ok(Err(dependency_errors));
         }
 
         let address_lit = match String::from_utf8(source_file_data.address.to_vec()) {
@@ -168,9 +174,7 @@ impl VmCompiler for CompilerService {
         let res = self.inner_compile(request).await?;
         match res {
             Ok(bytecode) => Ok(Response::new(new_compilation_result(bytecode))),
-            Err(err) => Ok(Response::new(new_error_compilation_result(
-                &err.root_cause().to_string(),
-            ))),
+            Err(errors) => Ok(Response::new(new_error_compilation_result(errors))),
         }
     }
 }
@@ -179,14 +183,18 @@ impl VmCompiler for CompilerService {
 mod tests {
     use std::collections::HashMap;
 
-    use libra_types::access_path::{AccessPath};
+    use libra_types::access_path::AccessPath;
+    use maplit::hashmap;
+    use vm::access::{ModuleAccess, ScriptAccess};
+    use vm::file_format::Bytecode;
+    use vm::file_format::CompiledScript;
 
-    use crate::compiled_protos::ds_grpc::DsRawResponse;
     use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
+    use crate::compiled_protos::ds_grpc::DsRawResponse;
+    use crate::compiled_protos::vm_grpc::ContractType;
     use crate::compiler::test_utils::{new_error_response, new_response};
 
     use super::*;
-    use crate::compiled_protos::vm_grpc::ContractType;
 
     fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
         MvIrSourceFile {
@@ -226,6 +234,23 @@ mod tests {
         }
     }
 
+    fn new_source_file_request(source_text: &str, r#type: ContractType) -> Request<MvIrSourceFile> {
+        let address = format!("0x{}", AccountAddress::random().to_string());
+        let source_file = new_source_file(source_text, r#type, &address);
+        Request::new(source_file)
+    }
+
+    async fn compile_source_file(
+        source_text: &str,
+        r#type: ContractType,
+    ) -> Result<Response<CompilationResult>, Status> {
+        let source_file_request = new_source_file_request(source_text, r#type);
+        let mocked_ds_client = DsServiceMock::default();
+
+        let compiler_service = CompilerService::new(Box::new(mocked_ds_client));
+        compiler_service.compile(source_file_request).await
+    }
+
     #[tokio::test]
     async fn test_compile_mvir_script() {
         let source_text = r"
@@ -233,20 +258,78 @@ mod tests {
                 return;
             }
         ";
-        let address = format!("0x{}", AccountAddress::random().to_string());
-        let source_file = new_source_file(source_text, ContractType::Script, &address);
-        let request = Request::new(source_file);
-
-        let mocked_ds_client = DsServiceMock::default();
-
-        let compiler_service = CompilerService::new(Box::new(mocked_ds_client));
-        let response = compiler_service
-            .compile(request)
+        let compilation_result = compile_source_file(source_text, ContractType::Script)
             .await
             .unwrap()
             .into_inner();
-        for error in response.errors {
-            dbg!(String::from_utf8(error).unwrap());
-        }
+        assert_eq!(compilation_result.errors.len(), 0);
+
+        let compiled_script =
+            CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
+        assert_eq!(compiled_script.main().code.code, vec![Bytecode::Ret]);
+    }
+
+    #[tokio::test]
+    async fn test_compile_mvir_module() {
+        let source_text = r"
+            module M {
+                public method() {
+                   return;
+                }
+            }
+        ";
+        let compilation_result = compile_source_file(source_text, ContractType::Module)
+            .await
+            .unwrap()
+            .into_inner();
+        assert_eq!(compilation_result.errors.len(), 0);
+
+        let compiled_module =
+            CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
+        dbg!(compiled_module);
+    }
+
+    #[tokio::test]
+    async fn test_compile_mvir_module_with_dependencies() {
+        let source_text = r"
+            module M {
+                import 0x0.LibraCoin;
+                public method() {
+                   return;
+                }
+            }
+        ";
+
+        let libracoin_access_path = AccessPath::new(
+            AccountAddress::default(),
+            "LibraCoin".to_string().into_bytes(),
+        );
+        let coin_module = stdlib::stdlib_modules()
+            .iter()
+            .find(|module| module.as_inner().name().as_str() == "LibraCoin")
+            .unwrap()
+            .clone();
+        let ds_client = DsServiceMock::with_deps(hashmap! {
+            libracoin_access_path => coin_module
+        });
+
+        let source_file_request = new_source_file_request(source_text, ContractType::Module);
+
+        let compiler_service = CompilerService::new(Box::new(ds_client));
+        let compilation_result = compiler_service
+            .compile(source_file_request)
+            .await
+            .unwrap()
+            .into_inner();
+        assert_eq!(
+            compilation_result.errors.len(),
+            0,
+            "{:?}",
+            compilation_result.errors
+        );
+
+        let compiled_module =
+            CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
+        dbg!(compiled_module);
     }
 }
