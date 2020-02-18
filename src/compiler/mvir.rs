@@ -85,11 +85,7 @@ impl CompilerService {
         let source_file_data = request.into_inner();
 
         let source_text = source_file_data.text;
-        let is_module = match source_file_data.r#type {
-            0 /*Module*/ => true,
-            1 /*Script*/ => false,
-            _ => return Err(Status::invalid_argument("Invalid contract type."))
-        };
+        let is_module = source_file_data.is_module;
 
         let imports = match extract_imports(&source_text, is_module) {
             Ok(imports) => imports,
@@ -144,19 +140,19 @@ impl CompilerService {
         compiler.address = account_address;
 
         let mut compiled_bytecode = vec![];
-        match source_file_data.r#type {
-            0 => compiler
+        if is_module {
+            compiler
                 .into_compiled_module(&source_text)
                 .unwrap()
                 .serialize(&mut compiled_bytecode)
-                .unwrap(),
-            1 => compiler
+                .unwrap()
+        } else {
+            compiler
                 .into_compiled_program(&source_text)
                 .unwrap()
                 .script
                 .serialize(&mut compiled_bytecode)
-                .unwrap(),
-            _ => panic!("Invalid ContractType"),
+                .unwrap()
         };
         Ok(Ok(compiled_bytecode))
     }

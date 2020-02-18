@@ -150,8 +150,8 @@ pub struct MvIrSourceFile {
     pub text: std::string::String,
     #[prost(bytes, tag = "2")]
     pub address: std::vec::Vec<u8>,
-    #[prost(enumeration = "ContractType", tag = "3")]
-    pub r#type: i32,
+    #[prost(bool, tag = "3")]
+    pub is_module: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CompilationResult {

@@ -12,15 +12,15 @@ use vm::file_format::CompiledScript;
 
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
+use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, MvIrSourceFile};
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient};
 use move_vm_in_cosmos::compiler::test_utils::{new_error_response, new_response};
 
-fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
+fn new_source_file(source: &str, is_module: bool, address: &str) -> MvIrSourceFile {
     MvIrSourceFile {
         text: source.to_string(),
-        r#type: r#type as i32,
+        is_module,
         address: address.to_string().into_bytes(),
     }
 }
@@ -62,17 +62,17 @@ impl DsClient for DsServiceMock {
     }
 }
 
-fn new_source_file_request(source_text: &str, r#type: ContractType) -> Request<MvIrSourceFile> {
+fn new_source_file_request(source_text: &str, is_module: bool) -> Request<MvIrSourceFile> {
     let address = format!("0x{}", AccountAddress::random().to_string());
-    let source_file = new_source_file(source_text, r#type, &address);
+    let source_file = new_source_file(source_text, is_module, &address);
     Request::new(source_file)
 }
 
 async fn compile_source_file(
     source_text: &str,
-    r#type: ContractType,
+    is_module: bool,
 ) -> Result<Response<CompilationResult>, Status> {
-    let source_file_request = new_source_file_request(source_text, r#type);
+    let source_file_request = new_source_file_request(source_text, is_module);
     let mocked_ds_client = DsServiceMock::default();
 
     let compiler_service = CompilerService::new(Box::new(mocked_ds_client));
@@ -88,7 +88,7 @@ async fn test_compile_mvir_module() {
                 }
             }
         ";
-    let compilation_result = compile_source_file(source_text, ContractType::Module)
+    let compilation_result = compile_source_file(source_text, true)
         .await
         .unwrap()
         .into_inner();
@@ -109,7 +109,7 @@ async fn test_compile_mvir_script() {
                 return;
             }
         ";
-    let compilation_result = compile_source_file(source_text, ContractType::Script)
+    let compilation_result = compile_source_file(source_text, false)
         .await
         .unwrap()
         .into_inner();
@@ -144,7 +144,7 @@ async fn test_compile_mvir_script_with_dependencies() {
         libracoin_access_path => coin_module
     });
 
-    let source_file_request = new_source_file_request(source_text, ContractType::Script);
+    let source_file_request = new_source_file_request(source_text, false);
 
     let compiler_service = CompilerService::new(Box::new(ds_client));
     let compilation_result = compiler_service
@@ -179,7 +179,7 @@ async fn test_required_libracoin_dependency_is_not_available() {
             }
         ";
 
-    let source_file_request = new_source_file_request(source_text, ContractType::Script);
+    let source_file_request = new_source_file_request(source_text, false);
 
     let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
     let compilation_result = compiler_service
