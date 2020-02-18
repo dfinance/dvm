@@ -146,8 +146,8 @@ pub struct VmExecuteRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MvIrSourceFile {
-    #[prost(bytes, tag = "1")]
-    pub text: std::vec::Vec<u8>,
+    #[prost(string, tag = "1")]
+    pub text: std::string::String,
     #[prost(bytes, tag = "2")]
     pub address: std::vec::Vec<u8>,
     #[prost(enumeration = "ContractType", tag = "3")]
@@ -157,8 +157,8 @@ pub struct MvIrSourceFile {
 pub struct CompilationResult {
     #[prost(bytes, tag = "1")]
     pub bytecode: std::vec::Vec<u8>,
-    #[prost(bytes, repeated, tag = "2")]
-    pub errors: ::std::vec::Vec<std::vec::Vec<u8>>,
+    #[prost(string, repeated, tag = "2")]
+    pub errors: ::std::vec::Vec<std::string::String>,
 }
 /// Type of contract (module or script).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]

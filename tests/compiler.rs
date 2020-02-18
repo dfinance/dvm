@@ -1,25 +1,25 @@
 use std::collections::HashMap;
 
+use bytecode_verifier::VerifiedModule;
 use libra_types::access_path::AccessPath;
+use libra_types::account_address::AccountAddress;
 use maplit::hashmap;
+use tonic::{Request, Response, Status};
 use vm::access::{ModuleAccess, ScriptAccess};
-use vm::file_format::Bytecode;
+use vm::CompiledModule;
+use vm::file_format::{Bytecode, ModuleHandleIndex};
 use vm::file_format::CompiledScript;
 
-use vm::CompiledModule;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{ContractType, MvIrSourceFile, CompilationResult};
-use bytecode_verifier::VerifiedModule;
-use move_vm_in_cosmos::compiler::mvir::{DsClient, CompilerService};
-use tonic::{Request, Response, Status};
-use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
-use move_vm_in_cosmos::compiler::test_utils::{new_response, new_error_response};
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
-use libra_types::account_address::AccountAddress;
+use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
+use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
+use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient};
+use move_vm_in_cosmos::compiler::test_utils::{new_error_response, new_response};
 
 fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
     MvIrSourceFile {
-        text: source.to_string().into_bytes(),
+        text: source.to_string(),
         r#type: r#type as i32,
         address: address.to_string().into_bytes(),
     }
@@ -43,13 +43,20 @@ impl DsClient for DsServiceMock {
         &mut self,
         request: Request<AccessPath>,
     ) -> Result<Response<DsRawResponse>, Status> {
-        let response = match self.deps.get(&request.into_inner()) {
+        let access_path = request.into_inner();
+        let response = match self.deps.get(&access_path) {
             Some(module) => {
                 let mut buffer = vec![];
                 module.serialize(&mut buffer).unwrap();
                 new_response(&buffer[..])
             }
-            None => new_error_response(ErrorCode::NoData, "No module found".to_string()),
+            None => new_error_response(
+                ErrorCode::NoData,
+                format!(
+                    "No module '{}' found",
+                    String::from_utf8(access_path.path).unwrap()
+                ),
+            ),
         };
         Ok(response)
     }
@@ -73,23 +80,6 @@ async fn compile_source_file(
 }
 
 #[tokio::test]
-async fn test_compile_mvir_script() {
-    let source_text = r"
-            main() {
-                return;
-            }
-        ";
-    let compilation_result = compile_source_file(source_text, ContractType::Script)
-        .await
-        .unwrap()
-        .into_inner();
-    assert_eq!(compilation_result.errors.len(), 0);
-
-    let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
-    assert_eq!(compiled_script.main().code.code, vec![Bytecode::Ret]);
-}
-
-#[tokio::test]
 async fn test_compile_mvir_module() {
     let source_text = r"
             module M {
@@ -102,21 +92,42 @@ async fn test_compile_mvir_module() {
         .await
         .unwrap()
         .into_inner();
-    assert_eq!(compilation_result.errors.len(), 0);
+    assert!(
+        compilation_result.errors.is_empty(),
+        "{:?}",
+        compilation_result.errors
+    );
 
     let compiled_module = CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
     dbg!(compiled_module);
 }
 
 #[tokio::test]
-async fn test_compile_mvir_module_with_dependencies() {
+async fn test_compile_mvir_script() {
     let source_text = r"
-            module M {
-                import 0x0.LibraCoin;
+            main() {
+                return;
+            }
+        ";
+    let compilation_result = compile_source_file(source_text, ContractType::Script)
+        .await
+        .unwrap()
+        .into_inner();
+    assert!(
+        compilation_result.errors.is_empty(),
+        "{:?}",
+        compilation_result.errors
+    );
+    let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
+    assert_eq!(compiled_script.main().code.code, vec![Bytecode::Ret]);
+}
 
-                public method() {
-                   return;
-                }
+#[tokio::test]
+async fn test_compile_mvir_script_with_dependencies() {
+    let source_text = r"
+            import 0x0.LibraCoin;
+            main() {
+               return;
             }
         ";
 
@@ -133,7 +144,7 @@ async fn test_compile_mvir_module_with_dependencies() {
         libracoin_access_path => coin_module
     });
 
-    let source_file_request = new_source_file_request(source_text, ContractType::Module);
+    let source_file_request = new_source_file_request(source_text, ContractType::Script);
 
     let compiler_service = CompilerService::new(Box::new(ds_client));
     let compilation_result = compiler_service
@@ -141,13 +152,44 @@ async fn test_compile_mvir_module_with_dependencies() {
         .await
         .unwrap()
         .into_inner();
-    assert_eq!(
-        compilation_result.errors.len(),
-        0,
+    assert!(
+        compilation_result.errors.is_empty(),
         "{:?}",
         compilation_result.errors
     );
 
-    let compiled_module = CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
-    dbg!(compiled_module);
+    let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
+    assert_eq!(compiled_script.main().code.code, vec![Bytecode::Ret]);
+
+    let imported_module_handle = compiled_script.module_handle_at(ModuleHandleIndex::new(1u16));
+    assert_eq!(
+        compiled_script
+            .identifier_at(imported_module_handle.name)
+            .to_string(),
+        "LibraCoin"
+    );
+}
+
+#[tokio::test]
+async fn test_required_libracoin_dependency_is_not_available() {
+    let source_text = r"
+            import 0x0.LibraCoin;
+            main() {
+               return;
+            }
+        ";
+
+    let source_file_request = new_source_file_request(source_text, ContractType::Script);
+
+    let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
+    let compilation_result = compiler_service
+        .compile(source_file_request)
+        .await
+        .unwrap()
+        .into_inner();
+    assert!(compilation_result.bytecode.is_empty());
+    assert_eq!(compilation_result.errors.len(), 1);
+
+    let error = compilation_result.errors.get(0).unwrap();
+    assert_eq!(error, "No module 'LibraCoin' found")
 }

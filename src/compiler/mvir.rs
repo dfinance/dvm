@@ -61,7 +61,7 @@ pub fn new_compilation_result(bytecode: Vec<u8>) -> CompilationResult {
 pub fn new_error_compilation_result(errors: Vec<String>) -> CompilationResult {
     CompilationResult {
         bytecode: vec![],
-        errors: errors.iter().map(|e| e.clone().into_bytes()).collect(),
+        errors,
     }
 }
 
@@ -84,10 +84,7 @@ impl CompilerService {
     ) -> Result<Result<Vec<u8>, Vec<String>>, Status> {
         let source_file_data = request.into_inner();
 
-        let source_text = match String::from_utf8(source_file_data.text) {
-            Ok(s) => s,
-            Err(_) => return Err(Status::invalid_argument("Source is not a valid utf8")),
-        };
+        let source_text = source_file_data.text;
         let is_module = match source_file_data.r#type {
             0 /*Module*/ => true,
             1 /*Script*/ => false,
