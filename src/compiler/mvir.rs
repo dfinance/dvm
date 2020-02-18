@@ -2,7 +2,6 @@ use anyhow::Result;
 use bytecode_verifier::VerifiedModule;
 
 use futures::lock::Mutex;
-use ir_to_bytecode::parser::ast::{ModuleIdent};
 
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
@@ -14,6 +13,7 @@ use crate::compiled_protos::ds_grpc::{DsRawResponse, DsAccessPath};
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, MvIrSourceFile};
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
+use move_ir_types::ast::ModuleIdent;
 
 pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessPath>> {
     let imports = if is_module {
@@ -188,11 +188,7 @@ mod tests {
     use super::*;
     use crate::compiled_protos::vm_grpc::ContractType;
 
-    fn new_source_file(
-        source: &str,
-        r#type: ContractType,
-        address: AccountAddress,
-    ) -> MvIrSourceFile {
+    fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
         MvIrSourceFile {
             text: source.to_string().into_bytes(),
             r#type: r#type as i32,
@@ -237,8 +233,8 @@ mod tests {
                 return;
             }
         ";
-        let address = AccountAddress::random();
-        let source_file = new_source_file(source_text, ContractType::Script, address);
+        let address = format!("0x{}", AccountAddress::random().to_string());
+        let source_file = new_source_file(source_text, ContractType::Script, &address);
         let request = Request::new(source_file);
 
         let mocked_ds_client = DsServiceMock::default();
