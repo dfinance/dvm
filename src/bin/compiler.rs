@@ -11,13 +11,13 @@ use tonic::{Request, Response, Status};
 use tonic::transport::{Channel, Server, Uri};
 use vm::CompiledModule;
 
+use move_vm_in_cosmos::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::{ContractType, MvIrSourceFile};
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::{VmCompiler, VmCompilerServer};
 use move_vm_in_cosmos::compiler;
-use move_vm_in_cosmos::compiler::mvir::{CompilerService, extract_imports, DsClient};
+use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient, extract_imports};
 use move_vm_in_cosmos::test_kit::Lang;
-use move_vm_in_cosmos::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -59,25 +59,12 @@ mod tests {
     use vm::printers::TableAccess;
 
     use move_vm_in_cosmos::compiled_protos::ds_grpc::DsAccessPath;
-    use move_vm_in_cosmos::compiled_protos::vm_grpc::{ContractType};
+    use move_vm_in_cosmos::compiled_protos::vm_grpc::ContractType;
     use move_vm_in_cosmos::compiler::mvir::extract_imports;
     use move_vm_in_cosmos::move_lang::{Code, parse_program};
 
     use super::*;
 
-    //    fn new_source_file(
-    //        source: &str,
-    //        r#type: ContractType,
-    //        lang: VmLang,
-    //        address: AccountAddress,
-    //    ) -> MvSourceFile {
-    //        SourceFile {
-    //            source: source.to_string().into_bytes(),
-    //            r#type: r#type as i32,
-    //            lang: lang as i32,
-    //            address: address.to_string().into_bytes(),
-    //        }
-    //    }
     //
     //    #[tokio::test]
     //    async fn test_compile_mvir_module() {

@@ -12,7 +12,7 @@ use tonic::{Request, Response, Status};
 use tonic::transport::Channel;
 use vm::CompiledModule;
 
-use crate::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
+use crate::compiled_protos::ds_grpc::{DsAccessPaths, DsRawResponse, DsAccessPath};
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::ds_grpc::ds_service_server::DsService;
 use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
@@ -41,7 +41,7 @@ pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessP
 pub trait DsClient {
     async fn resolve_ds_path(
         &mut self,
-        request: tonic::Request<DsAccessPath>,
+        request: tonic::Request<AccessPath>,
     ) -> Result<tonic::Response<DsRawResponse>, tonic::Status>;
 }
 
@@ -49,8 +49,10 @@ pub trait DsClient {
 impl DsClient for DsServiceClient<Channel> {
     async fn resolve_ds_path(
         &mut self,
-        request: Request<DsAccessPath>,
+        request: Request<AccessPath>,
     ) -> Result<Response<DsRawResponse>, Status> {
+        let ds_access_path: DsAccessPath = request.into_inner().into();
+        let request = Request::new(ds_access_path);
         self.get_raw(request).await
     }
 }
@@ -106,9 +108,10 @@ impl CompilerService {
         };
         let mut deps: Vec<VerifiedModule> = vec![];
         for import_access_path in imports {
-            let ds_access_path: DsAccessPath = import_access_path.into();
             let mut client = self.ds_client.lock().await;
-            let response = client.resolve_ds_path(Request::new(ds_access_path)).await;
+            let response = client
+                .resolve_ds_path(Request::new(import_access_path))
+                .await;
             if let Err(status) = response {
                 return Err(Status::unavailable(format!(
                     "DS server request failed with {}",
@@ -142,11 +145,20 @@ impl CompilerService {
         compiler.address = account_address;
 
         let mut compiled_bytecode = vec![];
-        compiler
-            .into_compiled_module(&source_text)
-            .unwrap()
-            .serialize(&mut compiled_bytecode);
-
+        match source_file_data.r#type {
+            0 => compiler
+                .into_compiled_module(&source_text)
+                .unwrap()
+                .serialize(&mut compiled_bytecode)
+                .unwrap(),
+            1 => compiler
+                .into_compiled_program(&source_text)
+                .unwrap()
+                .script
+                .serialize(&mut compiled_bytecode)
+                .unwrap(),
+            _ => panic!("Invalid ContractType"),
+        };
         Ok(Ok(compiled_bytecode))
     }
 }
@@ -169,8 +181,13 @@ impl VmCompiler for CompilerService {
 
 #[cfg(test)]
 mod tests {
-    use crate::compiled_protos::ds_grpc::{DsAccessPath, DsAccessPaths, DsRawResponse, DsRawResponses};
-    use crate::compiler::test_utils::new_response;
+    use std::collections::HashMap;
+
+    use libra_types::access_path::{Access, AccessPath};
+
+    use crate::compiled_protos::ds_grpc::{DsAccessPaths, DsRawResponse, DsRawResponses};
+    use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
+    use crate::compiler::test_utils::{new_error_response, new_response};
 
     use super::*;
 
@@ -186,6 +203,35 @@ mod tests {
         }
     }
 
+    #[derive(Default)]
+    struct DsServiceMock {
+        deps: HashMap<AccessPath, VerifiedModule>,
+    }
+
+    impl DsServiceMock {
+        pub fn with_deps(deps: HashMap<AccessPath, VerifiedModule>) -> Self {
+            DsServiceMock { deps }
+        }
+    }
+
+    #[tonic::async_trait]
+    impl DsClient for DsServiceMock {
+        async fn resolve_ds_path(
+            &mut self,
+            request: Request<AccessPath>,
+        ) -> Result<Response<DsRawResponse>, Status> {
+            let response = match self.deps.get(&request.into_inner()) {
+                Some(module) => {
+                    let mut buffer = vec![];
+                    module.serialize(&mut buffer).unwrap();
+                    new_response(&buffer[..])
+                }
+                None => new_error_response(ErrorCode::NoData, "No module found".to_string()),
+            };
+            Ok(response)
+        }
+    }
+
     #[tokio::test]
     async fn test_compile_mvir_script() {
         let source_text = r"
@@ -194,22 +240,10 @@ mod tests {
             }
         ";
         let address = AccountAddress::random();
-        let source_file = new_source_file(source_text, ContractType::Module, address);
+        let source_file = new_source_file(source_text, ContractType::Script, address);
         let request = Request::new(source_file);
 
-        #[derive(Default)]
-        struct DsServiceMock {}
-
-        #[tonic::async_trait]
-        impl DsClient for DsServiceMock {
-            async fn resolve_ds_path(
-                &mut self,
-                request: Request<DsAccessPath>,
-            ) -> Result<Response<DsRawResponse>, Status> {
-                dbg!(request.into_inner());
-                Ok(new_response(&[]))
-            }
-        }
+        let mocked_ds_client = DsServiceMock::default();
 
         let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
         let response = compiler_service
