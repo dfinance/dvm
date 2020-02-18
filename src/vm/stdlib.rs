@@ -32,9 +32,7 @@ enum Module<'a> {
     Binary((ModuleId, Vec<u8>)),
 }
 
-pub fn build_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
-    let compiler = stdlib.lang.compiler();
-
+pub fn build_std_with_compiler(stdlib: Stdlib, compiler: &dyn Compiler) -> Result<WriteSet, Error> {
     let mut std_with_meta: HashMap<String, Module> = stdlib
         .modules
         .into_iter()
@@ -51,7 +49,7 @@ pub fn build_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
             &module,
             &mut std_with_meta,
             &AccountAddress::default(),
-            compiler.as_ref(),
+            compiler,
         )?;
     }
 
@@ -75,6 +73,11 @@ pub fn build_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
     data_view.publish_module(std_meta_id, meta)?;
 
     Ok(data_view.make_write_set()?)
+}
+
+pub fn build_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
+    let compiler = stdlib.lang.compiler();
+    build_std_with_compiler(stdlib, compiler.as_ref())
 }
 
 fn build_module_with_dep(
@@ -226,5 +229,6 @@ pub fn mvir_std() -> Vec<&'static str> {
         include_str!("../../stdlib/mvir/libra_time.mvir"),
         include_str!("../../stdlib/mvir/libra_transaction_timeout.mvir"),
         include_str!("../../stdlib/mvir/offer.mvir"),
+        include_str!("../../stdlib/mvir/dbg.mvir"),
     ]
 }

@@ -5,6 +5,7 @@ extern crate anyhow;
 pub mod compiled_protos;
 pub mod ds;
 pub mod service;
+#[macro_use]
 pub mod vm;
 
 pub mod test_kit;
