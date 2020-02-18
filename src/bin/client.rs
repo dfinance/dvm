@@ -42,17 +42,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 mod mocks {
     use super::*;
-    use move_vm_in_cosmos::test_kit::*;
-    // use move_vm_in_cosmos::move_lang::*;
-    // use move_vm_in_cosmos::libra_types::*;
     use move_vm_in_cosmos::libra_types::account_address::AccountAddress;
+    use move_vm_in_cosmos::vm::Lang;
     use move_vm_in_cosmos::compiled_protos::vm_grpc::VmContract;
 
     pub fn req_publish_mod() -> Result<VmExecuteRequest, Box<dyn std::error::Error>> {
-        let compiler = compiler::Lang::MvIr.compiler();
+        let compiler = Lang::MvIr.compiler();
         let sender = AccountAddress::random();
         let source = include_str!("../../tests/resources/module_coin.mvir");
-        let module = compiler.build_module(source, &sender);
+        let module = compiler.build_module(source, &sender, false).unwrap();
         Ok(VmExecuteRequest {
             contracts: vec![VmContract {
                 address: sender.to_vec(),

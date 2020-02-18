@@ -5,8 +5,8 @@ extern crate anyhow;
 pub mod compiled_protos;
 pub mod compiler;
 pub mod ds;
-pub mod move_lang;
 pub mod service;
+pub mod vm;
 
 pub mod test_kit;
 

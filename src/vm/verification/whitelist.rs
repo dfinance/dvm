@@ -74,10 +74,10 @@ impl WhitelistVerifier {
 
 #[cfg(test)]
 mod tests {
-    use crate::move_lang::verification::bytecode::compile_script;
-    use crate::test_kit::Lang;
+    use crate::vm::verification::bytecode::compile_script;
 
     use super::*;
+    use crate::vm::Lang;
 
     fn get_sender_address(address: &str) -> Result<AccountAddress> {
         ensure!(

@@ -7,25 +7,25 @@ edition = "2018"
 build = "src/build.rs"
 
 [dependencies]
-move-lang = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-libra-crypto = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-vm-runtime-types = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-language-e2e-tests = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-vm = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-vm-cache-map = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-vm-runtime = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-libra-state-view = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-libra-config = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-libra-types = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-stdlib = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-bytecode-verifier = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-lcs = { git = "https://github.com/WingsDao/libra.git", package = "libra-canonical-serialization", branch = "28.01.2020" }
-compiler = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-libra-logger = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
-ir-to-bytecode = { git = "https://github.com/WingsDao/libra.git", branch = "28.01.2020" }
+move-lang = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+libra-crypto = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+vm-runtime-types = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+language-e2e-tests = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+vm = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+vm-cache-map = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+vm-runtime = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+libra-state-view = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+libra-config = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+libra-types = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+stdlib = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+bytecode-verifier = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+lcs = { git = "https://github.com/WingsDao/libra.git", package = "libra-canonical-serialization", branch = "14.02.2020" }
+compiler = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+libra-logger = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+ir-to-bytecode = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
 anyhow = "=1.0.26"
 lazy_static = "=1.4.0"
-hex = "=0.4.0"
+hex = "0.4.1"
 slog = "2.5.2"
 
 tonic = "=0.1.1"
@@ -34,6 +34,8 @@ prost-types = "=0.6"
 tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
 futures = { version = "=0.3.4", features = ["async-await"] }
 futures-core = "=0.3.4"
+serde = "1.0.104"
+serde_json = "1.0.47"
 
 structopt = "=0.3.9"
 http = "=0.2.0"

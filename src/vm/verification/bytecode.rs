@@ -2,11 +2,16 @@ use anyhow::Result;
 use libra_types::account_address::AccountAddress;
 use vm::access::ScriptAccess;
 use vm::file_format::{Bytecode, CompiledScript};
-
-use crate::test_kit::Lang;
+use crate::vm::compiler::Lang;
 
 pub fn compile_script(source: &str, lang: Lang, sender_address: &AccountAddress) -> CompiledScript {
-    CompiledScript::deserialize(&lang.compiler().build_script(source, sender_address)).unwrap()
+    CompiledScript::deserialize(
+        &lang
+            .compiler()
+            .build_script(source, sender_address, false)
+            .unwrap(),
+    )
+    .unwrap()
 }
 
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
