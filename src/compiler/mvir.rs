@@ -1,23 +1,19 @@
-use std::cell::RefCell;
-
 use anyhow::Result;
 use bytecode_verifier::VerifiedModule;
-use compiler::Compiler;
+
 use futures::lock::Mutex;
-use ir_to_bytecode::parser::ast::{ImportDefinition, ModuleIdent};
-use language_e2e_tests::compile::compile_script;
+use ir_to_bytecode::parser::ast::{ModuleIdent};
+
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use tonic::{Request, Response, Status};
 use tonic::transport::Channel;
 use vm::CompiledModule;
 
-use crate::compiled_protos::ds_grpc::{DsAccessPaths, DsRawResponse, DsAccessPath};
+use crate::compiled_protos::ds_grpc::{DsRawResponse, DsAccessPath};
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
-use crate::compiled_protos::ds_grpc::ds_service_server::DsService;
-use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
+use crate::compiled_protos::vm_grpc::{CompilationResult, MvIrSourceFile};
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
-use crate::move_lang::build_with_deps;
 
 pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessPath>> {
     let imports = if is_module {
@@ -183,13 +179,14 @@ impl VmCompiler for CompilerService {
 mod tests {
     use std::collections::HashMap;
 
-    use libra_types::access_path::{Access, AccessPath};
+    use libra_types::access_path::{AccessPath};
 
-    use crate::compiled_protos::ds_grpc::{DsAccessPaths, DsRawResponse, DsRawResponses};
+    use crate::compiled_protos::ds_grpc::DsRawResponse;
     use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
     use crate::compiler::test_utils::{new_error_response, new_response};
 
     use super::*;
+    use crate::compiled_protos::vm_grpc::ContractType;
 
     fn new_source_file(
         source: &str,
@@ -209,6 +206,7 @@ mod tests {
     }
 
     impl DsServiceMock {
+        #[allow(dead_code)]
         pub fn with_deps(deps: HashMap<AccessPath, VerifiedModule>) -> Self {
             DsServiceMock { deps }
         }
@@ -245,7 +243,7 @@ mod tests {
 
         let mocked_ds_client = DsServiceMock::default();
 
-        let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
+        let compiler_service = CompilerService::new(Box::new(mocked_ds_client));
         let response = compiler_service
             .compile(request)
             .await

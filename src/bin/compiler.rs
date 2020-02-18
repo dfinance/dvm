@@ -1,23 +1,13 @@
-use std::cell::RefCell;
 use std::net::SocketAddr;
-use std::ops::DerefMut;
 
 use anyhow::Result;
-use bytecode_verifier::VerifiedModule;
-use libra_types::account_address::AccountAddress;
 use structopt::StructOpt;
 use tokio::time::Duration;
-use tonic::{Request, Response, Status};
-use tonic::transport::{Channel, Server, Uri};
-use vm::CompiledModule;
+use tonic::transport::{Server, Uri};
 
-use move_vm_in_cosmos::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{ContractType, MvIrSourceFile};
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::{VmCompiler, VmCompilerServer};
-use move_vm_in_cosmos::compiler;
-use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient, extract_imports};
-use move_vm_in_cosmos::test_kit::Lang;
+use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
+use move_vm_in_cosmos::compiler::mvir::CompilerService;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -48,94 +38,4 @@ async fn main() -> Result<()> {
         .serve(address)
         .await?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use ir_to_bytecode::parser::ast::ModuleIdent;
-    use libra_types::access_path::AccessPath;
-    use vm::CompiledModule;
-    use vm::file_format::{CompiledScript, ModuleHandleIndex};
-    use vm::printers::TableAccess;
-
-    use move_vm_in_cosmos::compiled_protos::ds_grpc::DsAccessPath;
-    use move_vm_in_cosmos::compiled_protos::vm_grpc::ContractType;
-    use move_vm_in_cosmos::compiler::mvir::extract_imports;
-    use move_vm_in_cosmos::move_lang::{Code, parse_program};
-
-    use super::*;
-
-    //
-    //    #[tokio::test]
-    //    async fn test_compile_mvir_module() {
-    //        let source_text = r"
-    //            module M {}
-    //        ";
-    //        let address = AccountAddress::random();
-    //        let source_file = new_source_file(source_text, ContractType::Module, VmLang::MvIr, address);
-    //        let request = Request::new(source_file);
-    //
-    //        let compiled_module_code = GrpcCompilerService::default()
-    //            .compile(request)
-    //            .await
-    //            .unwrap()
-    //            .into_inner()
-    //            .bytecode;
-    //
-    //        let deserialized = CompiledModule::deserialize(&compiled_module_code[..])
-    //            .unwrap()
-    //            .into_inner();
-    //        let module_name = deserialized
-    //            .get_identifier_at(
-    //                deserialized
-    //                    .get_module_at(ModuleHandleIndex::new(0))
-    //                    .unwrap()
-    //                    .name,
-    //            )
-    //            .unwrap()
-    //            .as_str();
-    //        assert_eq!(module_name, "M")
-    //    }
-    //
-    //    #[tokio::test]
-    //    async fn test_compile_mvir_script() {
-    //        let source_text = r"
-    //            main() {return;}
-    //        ";
-    //        let address = AccountAddress::random();
-    //        let source_file = new_source_file(source_text, ContractType::Script, VmLang::MvIr, address);
-    //        let request = Request::new(source_file);
-    //
-    //        let compiled_module_code = GrpcCompilerService::default()
-    //            .compile(request)
-    //            .await
-    //            .unwrap()
-    //            .into_inner()
-    //            .bytecode;
-    //
-    //        let deserialized = CompiledScript::deserialize(&compiled_module_code[..])
-    //            .unwrap()
-    //            .into_inner();
-    //        assert_eq!(
-    //            deserialized
-    //                .get_identifier_at(deserialized.function_handles[0].name)
-    //                .unwrap()
-    //                .to_string(),
-    //            "main"
-    //        );
-    //    }
-    //
-    //    #[tokio::test]
-    //    async fn test_compiler_errors() {
-    //        let source_text = r"
-    //            import 0x0.LibraAccount;
-    //            import 0x1.LibraCore;
-    //            main() {return;}
-    //        ";
-    //        let address = AccountAddress::random();
-    //        let source_file = new_source_file(source_text, ContractType::Script, VmLang::MvIr, address);
-    //        let request = Request::new(source_file);
-    //
-    //        let imports = extract_imports(source_text, ContractType::Script);
-    //    }
 }
