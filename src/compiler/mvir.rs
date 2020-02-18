@@ -51,17 +51,19 @@ impl DsClient for DsServiceClient<Channel> {
     }
 }
 
-pub fn new_compilation_result(bytecode: Vec<u8>) -> CompilationResult {
-    CompilationResult {
-        bytecode,
-        errors: vec![],
+impl CompilationResult {
+    pub fn with_bytecode(bytecode: Vec<u8>) -> Self {
+        CompilationResult {
+            bytecode,
+            errors: vec![],
+        }
     }
-}
 
-pub fn new_error_compilation_result(errors: Vec<String>) -> CompilationResult {
-    CompilationResult {
-        bytecode: vec![],
-        errors,
+    pub fn with_errors(errors: Vec<String>) -> Self {
+        CompilationResult {
+            bytecode: vec![],
+            errors,
+        }
     }
 }
 
@@ -166,8 +168,8 @@ impl VmCompiler for CompilerService {
     ) -> Result<Response<CompilationResult>, Status> {
         let res = self.inner_compile(request).await?;
         match res {
-            Ok(bytecode) => Ok(Response::new(new_compilation_result(bytecode))),
-            Err(errors) => Ok(Response::new(new_error_compilation_result(errors))),
+            Ok(bytecode) => Ok(Response::new(CompilationResult::with_bytecode(bytecode))),
+            Err(errors) => Ok(Response::new(CompilationResult::with_errors(errors))),
         }
     }
 }
