@@ -109,7 +109,7 @@ impl TryFrom<VmContract> for Contract {
         let meta = ExecutionMeta::new(
             contract.max_gas_amount,
             contract.gas_unit_price,
-            AccountAddress::try_from(format!("0x{}", address)).map_err(|err| {
+            AccountAddress::try_from(address).map_err(|err| {
                 VMStatus::new(StatusCode::INVALID_DATA)
                     .with_message(format!("Invalid AccountAddress: {:?}", err))
             })?,
