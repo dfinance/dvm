@@ -32,7 +32,7 @@ fn test_native_func() {
           return;
         }
     ";
-    let res = test_kit.execute_script(script, meta(&acc_1), &["b\"aa\""]);
+    let res = test_kit.execute_script(script, meta(&acc_1), &["b\"C001C00D\""]);
     test_kit.assert_success(&res);
 }
 

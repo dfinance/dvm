@@ -17,6 +17,7 @@ vm-runtime = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.20
 libra-state-view = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
 libra-config = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
 libra-types = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
+move-ir-types = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
 stdlib = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
 bytecode-verifier = { git = "https://github.com/WingsDao/libra.git", branch = "14.02.2020" }
 lcs = { git = "https://github.com/WingsDao/libra.git", package = "libra-canonical-serialization", branch = "14.02.2020" }

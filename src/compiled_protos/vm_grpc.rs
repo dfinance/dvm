@@ -144,6 +144,26 @@ pub struct VmExecuteRequest {
     #[prost(uint64, tag = "4")]
     pub options: u64,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MvIrSourceFile {
+    /// utf8 encoded source code with bech32 addresses possible
+    #[prost(string, tag = "1")]
+    pub text: std::string::String,
+    /// address of the sender
+    #[prost(bytes, tag = "2")]
+    pub address: std::vec::Vec<u8>,
+    #[prost(enumeration = "ContractType", tag = "3")]
+    pub r#type: i32,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CompilationResult {
+    /// bytecode of the compiled module/script
+    #[prost(bytes, tag = "1")]
+    pub bytecode: std::vec::Vec<u8>,
+    /// list of error messages, empty if successful
+    #[prost(string, repeated, tag = "2")]
+    pub errors: ::std::vec::Vec<std::string::String>,
+}
 /// Type of contract (module or script).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -240,6 +260,62 @@ pub mod vm_service_client {
         }
     }
     impl<T: Clone> Clone for VmServiceClient<T> {
+        fn clone(&self) -> Self {
+            Self {
+                inner: self.inner.clone(),
+            }
+        }
+    }
+}
+#[doc = r" Generated client implementations."]
+pub mod vm_compiler_client {
+    #![allow(unused_variables, dead_code, missing_docs)]
+    use tonic::codegen::*;
+    pub struct VmCompilerClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl VmCompilerClient<tonic::transport::Channel> {
+        #[doc = r" Attempt to create a new client by connecting to a given endpoint."]
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: std::convert::TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> VmCompilerClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T::ResponseBody: Body + HttpBody + Send + 'static,
+        T::Error: Into<StdError>,
+        <T::ResponseBody as HttpBody>::Error: Into<StdError> + Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_interceptor(inner: T, interceptor: impl Into<tonic::Interceptor>) -> Self {
+            let inner = tonic::client::Grpc::with_interceptor(inner, interceptor);
+            Self { inner }
+        }
+        pub async fn compile(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MvIrSourceFile>,
+        ) -> Result<tonic::Response<super::CompilationResult>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/vm_grpc.VMCompiler/Compile");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+    }
+    impl<T: Clone> Clone for VmCompilerClient<T> {
         fn clone(&self) -> Self {
             Self {
                 inner: self.inner.clone(),
@@ -346,5 +422,105 @@ pub mod vm_service_server {
     }
     impl<T: VmService> tonic::transport::NamedService for VmServiceServer<T> {
         const NAME: &'static str = "vm_grpc.VMService";
+    }
+}
+#[doc = r" Generated server implementations."]
+pub mod vm_compiler_server {
+    #![allow(unused_variables, dead_code, missing_docs)]
+    use tonic::codegen::*;
+    #[doc = "Generated trait containing gRPC methods that should be implemented for use with VmCompilerServer."]
+    #[async_trait]
+    pub trait VmCompiler: Send + Sync + 'static {
+        async fn compile(
+            &self,
+            request: tonic::Request<super::MvIrSourceFile>,
+        ) -> Result<tonic::Response<super::CompilationResult>, tonic::Status>;
+    }
+    #[derive(Debug)]
+    #[doc(hidden)]
+    pub struct VmCompilerServer<T: VmCompiler> {
+        inner: _Inner<T>,
+    }
+    struct _Inner<T>(Arc<T>, Option<tonic::Interceptor>);
+    impl<T: VmCompiler> VmCompilerServer<T> {
+        pub fn new(inner: T) -> Self {
+            let inner = Arc::new(inner);
+            let inner = _Inner(inner, None);
+            Self { inner }
+        }
+        pub fn with_interceptor(inner: T, interceptor: impl Into<tonic::Interceptor>) -> Self {
+            let inner = Arc::new(inner);
+            let inner = _Inner(inner, Some(interceptor.into()));
+            Self { inner }
+        }
+    }
+    impl<T: VmCompiler> Service<http::Request<HyperBody>> for VmCompilerServer<T> {
+        type Response = http::Response<tonic::body::BoxBody>;
+        type Error = Never;
+        type Future = BoxFuture<Self::Response, Self::Error>;
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, req: http::Request<HyperBody>) -> Self::Future {
+            let inner = self.inner.clone();
+            match req.uri().path() {
+                "/vm_grpc.VMCompiler/Compile" => {
+                    struct CompileSvc<T: VmCompiler>(pub Arc<T>);
+                    impl<T: VmCompiler> tonic::server::UnaryService<super::MvIrSourceFile> for CompileSvc<T> {
+                        type Response = super::CompilationResult;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::MvIrSourceFile>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { inner.compile(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = CompileSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                _ => Box::pin(async move {
+                    Ok(http::Response::builder()
+                        .status(200)
+                        .header("grpc-status", "12")
+                        .body(tonic::body::BoxBody::empty())
+                        .unwrap())
+                }),
+            }
+        }
+    }
+    impl<T: VmCompiler> Clone for VmCompilerServer<T> {
+        fn clone(&self) -> Self {
+            let inner = self.inner.clone();
+            Self { inner }
+        }
+    }
+    impl<T: VmCompiler> Clone for _Inner<T> {
+        fn clone(&self) -> Self {
+            Self(self.0.clone(), self.1.clone())
+        }
+    }
+    impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?}", self.0)
+        }
+    }
+    impl<T: VmCompiler> tonic::transport::NamedService for VmCompilerServer<T> {
+        const NAME: &'static str = "vm_grpc.VMCompiler";
     }
 }

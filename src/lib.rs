@@ -3,6 +3,7 @@ extern crate vm_runtime;
 #[macro_use]
 extern crate anyhow;
 pub mod compiled_protos;
+pub mod compiler;
 pub mod ds;
 pub mod service;
 #[macro_use]

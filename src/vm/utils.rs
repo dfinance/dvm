@@ -59,7 +59,7 @@ pub fn libra_address_string_into_bech32(libra_address: &str) -> Result<String> {
         .collect::<Vec<&[u8]>>();
     ensure!(parts.len() == 2, "Malformed bech32");
 
-    let hrp = String::from_utf8((&parts[0]).to_vec())?;
+    let hrp = std::str::from_utf8(&parts[0])?;
     let data = parts[1];
     ensure!(data.len() == 20, "Invalid data part length: {}", data.len());
 
@@ -67,7 +67,7 @@ pub fn libra_address_string_into_bech32(libra_address: &str) -> Result<String> {
         .iter()
         .map(|bit| u5::try_from_u8(bit.to_owned()).unwrap())
         .collect::<Vec<u5>>();
-    let encoded = bech32::encode(&hrp, data_u5)?;
+    let encoded = bech32::encode(hrp, data_u5)?;
     Ok(encoded)
 }
 
