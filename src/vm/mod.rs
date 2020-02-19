@@ -4,6 +4,8 @@ mod move_vm;
 pub mod stdlib;
 mod utils;
 mod verification;
+#[macro_use]
+pub mod native;
 
 pub use self::move_vm::{MoveVm, VM, VmResult, ExecutionMeta, ExecutionResult};
 pub use self::compiler::*;
