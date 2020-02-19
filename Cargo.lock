@@ -1451,6 +1451,7 @@ dependencies = [
  "libra-state-view",
  "libra-types",
  "maplit",
+ "move-ir-types",
  "move-lang",
  "once_cell",
  "prost",

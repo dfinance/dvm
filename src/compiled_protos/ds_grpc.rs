@@ -12,15 +12,19 @@ pub struct DsRawResponse {
     pub blob: std::vec::Vec<u8>,
     #[prost(enumeration = "ds_raw_response::ErrorCode", tag = "2")]
     pub error_code: i32,
-    #[prost(bytes, tag = "3")]
-    pub error_message: std::vec::Vec<u8>,
+    /// error message from libra, empty if ErrorCode::None
+    #[prost(string, tag = "3")]
+    pub error_message: std::string::String,
 }
 pub mod ds_raw_response {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum ErrorCode {
+        /// no error
         None = 0,
+        /// crash of compilation, logs will show stacktrace
         BadRequest = 1,
+        /// no such module
         NoData = 2,
     }
 }

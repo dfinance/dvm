@@ -25,16 +25,16 @@ pub struct PriceOracle {
 
 impl PriceOracle {
     pub fn new(view: Box<View>) -> PriceOracle {
-        PriceOracle {
-            view
-        }
+        PriceOracle { view }
     }
 
     pub fn make_path(ticker_pair: ByteArray) -> Result<AccessPath, VMStatus> {
         let ticker_pair = String::from_utf8(ticker_pair.into_inner())
-            .map_err(|err| VMStatus::new(StatusCode::TYPE_MISMATCH)
-                .with_sub_status(1)
-                .with_message(format!("Invalid ticker pair:[{:?}]", err)))?
+            .map_err(|err| {
+                VMStatus::new(StatusCode::TYPE_MISMATCH)
+                    .with_sub_status(1)
+                    .with_message(format!("Invalid ticker pair:[{:?}]", err))
+            })?
             .to_ascii_lowercase();
 
         let mut hasher = DefaultHasher::default();
@@ -53,37 +53,39 @@ impl fmt::Debug for PriceOracle {
 }
 
 impl Function for PriceOracle {
-    fn call(&self, _ty_args: Vec<TypeTag>, mut arguments: VecDeque<Value>, _cost_table: &CostTable) -> Result<NativeResult, VMStatus> {
+    fn call(
+        &self,
+        _ty_args: Vec<TypeTag>,
+        mut arguments: VecDeque<Value>,
+        _cost_table: &CostTable,
+    ) -> Result<NativeResult, VMStatus> {
         let result = Self::make_path(pop_arg!(arguments, ByteArray))
-            .and_then(|path| self.view.get(&path)
-                .map_err(|err| {
+            .and_then(|path| {
+                self.view.get(&path).map_err(|err| {
                     VMStatus::new(StatusCode::STORAGE_ERROR)
                         .with_sub_status(1)
                         .with_message(err.to_string())
-                }))
-            .and_then(|price| {
-                match price {
-                    Some(price) => {
-                        if price.len() != 8 {
-                            Err(VMStatus::new(StatusCode::TYPE_MISMATCH)
-                                .with_sub_status(2)
-                                .with_message("Invalid prise size".to_owned()))
-                        } else {
-                            Ok(LittleEndian::read_u64(&price))
-                        }
-                    }
-                    None => {
-                        Err(VMStatus::new(StatusCode::STORAGE_ERROR)
+                })
+            })
+            .and_then(|price| match price {
+                Some(price) => {
+                    if price.len() != 8 {
+                        Err(VMStatus::new(StatusCode::TYPE_MISMATCH)
                             .with_sub_status(2)
-                            .with_message("Price not found".to_owned()))
+                            .with_message("Invalid prise size".to_owned()))
+                    } else {
+                        Ok(LittleEndian::read_u64(&price))
                     }
                 }
+                None => Err(VMStatus::new(StatusCode::STORAGE_ERROR)
+                    .with_sub_status(2)
+                    .with_message("Price not found".to_owned())),
             });
 
         let cost = GasCost::new(COST, 1);
         match result {
             Ok(price) => Ok(NativeResult::ok(cost.total(), vec![Value::u64(price)])),
-            Err(status) => Ok(NativeResult::err(cost.total(), status))
+            Err(status) => Ok(NativeResult::err(cost.total(), status)),
         }
     }
 }

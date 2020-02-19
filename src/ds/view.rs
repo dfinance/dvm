@@ -3,6 +3,7 @@ use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use anyhow::Error;
 use crate::compiled_protos::ds_grpc::DsRawResponse;
+use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 
 pub type Request = AccessPath;
 pub type Response = DsRawResponse;
@@ -49,14 +50,15 @@ impl CachingDataSource<Request, Response> {
 impl StateView for CachingDataSource<Request, Response> {
     fn get(&self, access_path: &Request) -> Result<Option<Vec<u8>>, Error> {
         let response = self.remote.lock().unwrap().get_blocking(access_path)?;
-        match response.error_code {
+        let error_code =
+            ErrorCode::from_i32(response.error_code).expect("Invalid ErrorCode enum value");
+        match error_code {
             // if no error code, return blob
-            0 => Ok(Some(response.blob)),
+            ErrorCode::None => Ok(Some(response.blob)),
             // if BadRequest, return Err()
-            1 => Err(anyhow!(String::from_utf8(response.error_message).unwrap())),
+            ErrorCode::BadRequest => Err(anyhow!(response.error_message)),
             // if NoData, return None
-            2 => Ok(None),
-            _ => panic!("No such value for ErrorCode enum"),
+            ErrorCode::NoData => Ok(None),
         }
     }
 

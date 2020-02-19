@@ -15,9 +15,7 @@ use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::service::MoveVmService;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
-use move_vm_in_cosmos::vm::native::{
-    oracle::PriceOracle, Reg
-};
+use move_vm_in_cosmos::vm::native::{oracle::PriceOracle, Reg};
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {

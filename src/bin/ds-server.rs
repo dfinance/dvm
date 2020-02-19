@@ -13,9 +13,10 @@ use structopt::StructOpt;
 use tonic::{Request, Response, Status};
 use tonic::transport::Server;
 use move_vm_in_cosmos::compiled_protos::ds_grpc::{
-    DsRawResponse, ds_raw_response, DsAccessPath, DsAccessPaths, DsRawResponses,
+    DsRawResponse, DsAccessPath, DsAccessPaths, DsRawResponses,
 };
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
+use move_vm_in_cosmos::compiler::test_utils::new_response;
 
 use vm_runtime_types::values::Struct;
 
@@ -27,26 +28,6 @@ struct Options {
 
 pub struct DataSourceService {
     // TODO: add mock data
-}
-
-fn new_response(blob: &[u8]) -> Response<DsRawResponse> {
-    Response::new(DsRawResponse {
-        blob: blob.to_vec(),
-        error_code: ds_raw_response::ErrorCode::None as i32,
-        error_message: vec![],
-    })
-}
-
-#[allow(dead_code)]
-fn new_error_response(
-    error_code: ds_raw_response::ErrorCode,
-    error_message: String,
-) -> Response<DsRawResponse> {
-    Response::new(DsRawResponse {
-        blob: vec![],
-        error_code: error_code as i32,
-        error_message: error_message.into_bytes(),
-    })
 }
 
 fn is_resource(access_path: &AccessPath) -> bool {

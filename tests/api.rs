@@ -29,7 +29,10 @@ fn test_native_func() {
 
     let test_kit = TestKit::new(Lang::MvIr);
 
-    let res = test_kit.publish_module(include_str!("./resources/dbg.mvir"), meta(&AccountAddress::default()));
+    let res = test_kit.publish_module(
+        include_str!("./resources/dbg.mvir"),
+        meta(&AccountAddress::default()),
+    );
     test_kit.assert_success(&res);
     test_kit.merge_result(&res);
 
@@ -41,7 +44,7 @@ fn test_native_func() {
           return;
         }
     ";
-    let res = test_kit.execute_script(script, meta(&acc_1), &["b\"aa\""]);
+    let res = test_kit.execute_script(script, meta(&acc_1), &["b\"C001C00D\""]);
     test_kit.assert_success(&res);
 }
 
@@ -53,14 +56,20 @@ fn test_oracle() {
     let mut price = vec![0; 8];
     LittleEndian::write_u64(&mut price, 13);
 
-    ds.insert(PriceOracle::make_path(ByteArray::new(ticker)).unwrap(), price);
-    PriceOracle::new(Box::new(ds.clone())).reg_function();
+    ds.insert(
+        PriceOracle::make_path(ByteArray::new(ticker)).unwrap(),
+        price,
+    );
+    PriceOracle::new(Box::new(ds)).reg_function();
     let dump = dbg::DumpU64::new();
     dump.clone().reg_function();
 
     let test_kit = TestKit::new(Lang::MvIr);
 
-    let res = test_kit.publish_module(include_str!("./resources/dbg.mvir"), meta(&AccountAddress::default()));
+    let res = test_kit.publish_module(
+        include_str!("./resources/dbg.mvir"),
+        meta(&AccountAddress::default()),
+    );
     test_kit.assert_success(&res);
     test_kit.merge_result(&res);
 

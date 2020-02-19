@@ -30,3 +30,8 @@ ln -s `git rev-parse --show-toplevel`/check_project.sh `git rev-parse --absolute
 Example.
 `cargo run --bin stdlib-builder stdlib/mvir mvir`
 
+# Start compiler
+
+`cargo run --bin compiler "<which host:port to use>" <ds-server uri>"`
+
+Example: `cargo run --bin compiler "[::1]:50052" "http://[::1]:50051"`
