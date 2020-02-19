@@ -127,7 +127,7 @@ impl CompilerService {
                 ErrorCode::BadRequest => panic!("DS returned BAD_REQUEST"),
                 // NoData, compiler error: cannot resolve a dependency
                 ErrorCode::NoData => {
-                    dependency_errors.push(String::from_utf8(ds_response.error_message).unwrap());
+                    dependency_errors.push(ds_response.error_message);
                 }
             };
         }
