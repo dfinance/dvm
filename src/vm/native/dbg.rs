@@ -21,7 +21,7 @@ impl Function for PrintByteArray {
     ) -> Result<NativeResult, VMStatus> {
         let cost = native_gas(cost_table, NativeCostIndex::LENGTH, 1);
         let print_arg: ByteArray = pop_arg!(arguments, ByteArray);
-        println!("{}", hex::encode(print_arg.as_bytes()));
+        println!("native fn PrintByteArray called with: {}", hex::encode(print_arg.as_bytes()));
         Ok(NativeResult::ok(cost, vec![]))
     }
 }
