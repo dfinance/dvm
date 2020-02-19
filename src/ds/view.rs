@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::sync::{mpsc, Arc, Mutex};
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use anyhow::Error;
@@ -29,8 +29,9 @@ impl<K: 'static + Send + Sync + Clone, V: Send> ChannelDataSource<K, V> {
     }
 }
 
+#[derive(Clone)]
 pub struct CachingDataSource<K: Send, V: Send> {
-    remote: ChannelDataSource<K, V>,
+    remote: Arc<Mutex<ChannelDataSource<K, V>>>,
     /* // TODO: inpl caching
     /// inner storage used for as temporary values
     storage: HashMap<AccessPath, Vec<u8>>, */
@@ -39,7 +40,7 @@ pub struct CachingDataSource<K: Send, V: Send> {
 impl CachingDataSource<Request, Response> {
     pub fn new(tx: mpsc::Sender<Request>, rx: mpsc::Receiver<Response>) -> Self {
         Self {
-            remote: ChannelDataSource::new(tx, rx),
+            remote: Arc::new(Mutex::new(ChannelDataSource::new(tx, rx))),
             // storage: Default::default(),
         }
     }
@@ -47,7 +48,7 @@ impl CachingDataSource<Request, Response> {
 
 impl StateView for CachingDataSource<Request, Response> {
     fn get(&self, access_path: &Request) -> Result<Option<Vec<u8>>, Error> {
-        let response = self.remote.get_blocking(access_path)?;
+        let response = self.remote.lock().unwrap().get_blocking(access_path)?;
         match response.error_code {
             // if no error code, return blob
             0 => Ok(Some(response.blob)),

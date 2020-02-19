@@ -1,7 +1,11 @@
 use move_vm_in_cosmos::test_kit::*;
 use libra_types::account_address::AccountAddress;
 use move_vm_in_cosmos::vm::Lang;
-use move_vm_in_cosmos::vm::native::init_native;
+use move_vm_in_cosmos::vm::native::{dbg, Reg};
+use move_vm_in_cosmos::ds::MockDataSource;
+use move_vm_in_cosmos::vm::native::oracle::PriceOracle;
+use byteorder::{LittleEndian, ByteOrder};
+use libra_types::byte_array::ByteArray;
 
 #[test]
 fn test_create_account() {
@@ -21,9 +25,14 @@ fn test_create_account() {
 
 #[test]
 fn test_native_func() {
-    init_native().unwrap();
+    dbg::PrintByteArray {}.reg_function();
 
     let test_kit = TestKit::new(Lang::MvIr);
+
+    let res = test_kit.publish_module(include_str!("./resources/dbg.mvir"), meta(&AccountAddress::default()));
+    test_kit.assert_success(&res);
+    test_kit.merge_result(&res);
+
     let acc_1 = AccountAddress::random();
     let script = "\
         import 0x0.Dbg;
@@ -34,6 +43,40 @@ fn test_native_func() {
     ";
     let res = test_kit.execute_script(script, meta(&acc_1), &["b\"aa\""]);
     test_kit.assert_success(&res);
+}
+
+#[test]
+fn test_oracle() {
+    let ds = MockDataSource::without_std();
+    let ticker = hex::decode("425443555344").unwrap();
+
+    let mut price = vec![0; 8];
+    LittleEndian::write_u64(&mut price, 13);
+
+    ds.insert(PriceOracle::make_path(ByteArray::new(ticker)).unwrap(), price);
+    PriceOracle::new(Box::new(ds.clone())).reg_function();
+    let dump = dbg::DumpU64::new();
+    dump.clone().reg_function();
+
+    let test_kit = TestKit::new(Lang::MvIr);
+
+    let res = test_kit.publish_module(include_str!("./resources/dbg.mvir"), meta(&AccountAddress::default()));
+    test_kit.assert_success(&res);
+    test_kit.merge_result(&res);
+
+    let acc_1 = AccountAddress::random();
+    let script = "\
+        import 0x0.Dbg;
+        import 0x0.Oracle;
+
+        main() {
+          Dbg.dump_u64(Oracle.get_price(h\"425443555344\"));
+          return;
+        }
+    ";
+    let res = test_kit.execute_script(script, meta(&acc_1), &[]);
+    test_kit.assert_success(&res);
+    assert_eq!(dump.get(), Some(13));
 }
 
 #[test]

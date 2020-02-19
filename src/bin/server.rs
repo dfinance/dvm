@@ -15,6 +15,9 @@ use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::service::MoveVmService;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
+use move_vm_in_cosmos::vm::native::{
+    oracle::PriceOracle, Reg
+};
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -37,6 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     {
         let ds = rds::CachingDataSource::new(tx, rrx);
+        PriceOracle::new(Box::new(ds.clone())).reg_function();
 
         // enable logging for libra MoveVM
         std::env::set_var("RUST_LOG", "warn");
