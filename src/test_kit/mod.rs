@@ -16,6 +16,7 @@ use crate::compiled_protos::vm_grpc::{
 };
 use crate::vm::compiler::{Compiler, Lang};
 use crate::test_kit::grpc_client::Client;
+use crate::vm::stdlib::{move_std, build_std_with_compiler, mvir_std, Stdlib};
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 
@@ -38,10 +39,20 @@ impl TestKit {
                 server.port()
             )
         });
+
+        let compiler = lang.compiler();
+        let std = match &lang {
+            Lang::Move => move_std(),
+            Lang::MvIr => mvir_std(),
+        };
+
+        // TODO remove it when the compiler can take modules from ds.
+        build_std_with_compiler(Stdlib { modules: std, lang }, compiler.as_ref()).unwrap();
+
         TestKit {
             data_source,
             _server: server,
-            compiler: lang.compiler(),
+            compiler,
             client,
         }
     }
@@ -49,7 +60,7 @@ impl TestKit {
     pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponses {
         let module = self
             .compiler
-            .build_module(code, &meta.sender, false)
+            .build_module(code, &meta.sender, true)
             .unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
@@ -73,7 +84,7 @@ impl TestKit {
     ) -> VmExecuteResponses {
         let code = self
             .compiler
-            .build_script(code, &meta.sender, false)
+            .build_script(code, &meta.sender, true)
             .unwrap();
 
         let args = parse_args(args)
@@ -131,14 +142,14 @@ impl TestKit {
                 path.path.clone(),
             );
             match value.r#type {
-                    0 /*Value*/ => {
-                        self.data_source.insert(path, value.value.clone())
-                    }
-                    1 /*Deletion*/ => {
-                        self.data_source.delete(path);
-                    }
-                    _ => unreachable!(),
+                0 /*Value*/ => {
+                    self.data_source.insert(path, value.value.clone())
                 }
+                1 /*Deletion*/ => {
+                    self.data_source.delete(path);
+                }
+                _ => unreachable!(),
+            }
         });
     }
 }
