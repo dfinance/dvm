@@ -1,0 +1,3 @@
+module Dbg {
+    native public print_byte_array(data: bytearray);
+}

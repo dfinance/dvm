@@ -221,7 +221,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "mirai-annotations",
 ]
@@ -241,7 +241,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "codespan 0.2.1",
@@ -256,7 +256,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "libra-types",
@@ -404,7 +404,7 @@ dependencies = [
 [[package]]
 name = "compiler"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -548,7 +548,7 @@ checksum = "f4f47ca1860a761136924ddd2422ba77b2ea54fe8cc75b9040804a0d9d32ad97"
 [[package]]
 name = "datatest-stable"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "regex",
  "structopt",
@@ -881,18 +881,18 @@ dependencies = [
 
 [[package]]
 name = "hermit-abi"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eff2656d88f158ce120947499e971d743c05dbcbed62e5bd2f38f1698bbc3772"
+checksum = "e2c55f143919fbc0bc77e427fe2d74cf23786d7c1875666f2fde3ac3c659bb67"
 dependencies = [
  "libc",
 ]
 
 [[package]]
 name = "hex"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76cdda6bf525062a0c9e8f14ee2b37935c86b8efb6c8b69b3c83dfb518a914af"
+checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
 
 [[package]]
 name = "hex_fmt"
@@ -993,7 +993,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1010,7 +1010,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "codespan 0.2.1",
@@ -1054,7 +1054,7 @@ dependencies = [
 [[package]]
 name = "language-e2e-tests"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
@@ -1096,7 +1096,7 @@ checksum = "d515b1f41455adea1313a4a2ac8a8a477634fbae63cc6100e3aebb207ce61558"
 [[package]]
 name = "libra-canonical-serialization"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "serde",
  "thiserror",
@@ -1105,7 +1105,7 @@ dependencies = [
 [[package]]
 name = "libra-config"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "get_if_addrs",
@@ -1127,7 +1127,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -1157,7 +1157,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto-derive"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "proc-macro2 1.0.8",
  "quote 1.0.2",
@@ -1167,7 +1167,7 @@ dependencies = [
 [[package]]
 name = "libra-logger"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "backtrace",
  "chrono",
@@ -1187,7 +1187,7 @@ dependencies = [
 [[package]]
 name = "libra-metrics"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "futures",
@@ -1202,7 +1202,7 @@ dependencies = [
 [[package]]
 name = "libra-nibble"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "serde",
 ]
@@ -1210,7 +1210,7 @@ dependencies = [
 [[package]]
 name = "libra-proptest-helpers"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "crossbeam",
  "proptest",
@@ -1220,7 +1220,7 @@ dependencies = [
 [[package]]
 name = "libra-state-view"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "libra-types",
@@ -1229,7 +1229,7 @@ dependencies = [
 [[package]]
 name = "libra-temppath"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "hex",
  "rand 0.6.5",
@@ -1238,7 +1238,7 @@ dependencies = [
 [[package]]
 name = "libra-types"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "bech32 0.6.0",
@@ -1302,9 +1302,9 @@ checksum = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
 
 [[package]]
 name = "memchr"
-version = "2.3.0"
+version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3197e20c7edb283f87c071ddfc7a2cca8f8e0b888c242959846a6fce03c72223"
+checksum = "53445de381a1f436797497c61d851644d0e8e88e6140f22872ad33a704933978"
 
 [[package]]
 name = "memoffset"
@@ -1400,7 +1400,7 @@ checksum = "f12a5b7d83c8fbf058cf1b33d26373763b2d6a0632b6bfecd4b4fa6a0507fea5"
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "codespan 0.2.1",
@@ -1412,7 +1412,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "borrow-graph",
  "bytecode-verifier",
@@ -1452,6 +1452,7 @@ dependencies = [
  "maplit",
  "move-ir-types",
  "move-lang",
+ "once_cell",
  "prost",
  "prost-types",
  "regex",
@@ -1515,7 +1516,7 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "proc-macro2 1.0.8",
  "quote 1.0.2",
@@ -1587,9 +1588,9 @@ dependencies = [
 
 [[package]]
 name = "parity-multiaddr"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80878c27f90dd162d3143333d672e80b194d6b080f05c83440e3dfda42e409f2"
+checksum = "26df883298bc3f4e92528b4c5cc9f806b791955b136da3e5e939ed9de0fd958b"
 dependencies = [
  "arrayref",
  "bs58",
@@ -1605,9 +1606,9 @@ dependencies = [
 
 [[package]]
 name = "parity-multihash"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b11f42bbd3a021c5061b77154bd3334d5a57e1a03eb162de0b962681cc25800d"
+checksum = "7a1cd2ba02391b81367bec529fb209019d718684fdc8ad6a712c2b536e46f775"
 dependencies = [
  "blake2",
  "bytes",
@@ -1711,9 +1712,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-error"
-version = "0.4.8"
+version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "875077759af22fa20b610ad4471d8155b321c89c3f2785526c9839b099be4e0a"
+checksum = "052b3c9af39c7e5e94245f820530487d19eb285faedcb40e0c3275132293f242"
 dependencies = [
  "proc-macro-error-attr",
  "proc-macro2 1.0.8",
@@ -1724,9 +1725,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-error-attr"
-version = "0.4.8"
+version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5717d9fa2664351a01ed73ba5ef6df09c01a521cb42cb65a061432a826f3c7a"
+checksum = "d175bef481c7902e63e3165627123fff3502f06ac043d3ef42d08c1246da9253"
 dependencies = [
  "proc-macro2 1.0.8",
  "quote 1.0.2",
@@ -2273,9 +2274,9 @@ dependencies = [
 
 [[package]]
 name = "scopeguard"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b42e15e59b18a828bbf5c58ea01debb36b9b096346de35d941dcb89009f24a0d"
+checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "semver"
@@ -2314,9 +2315,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.47"
+version = "1.0.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15913895b61e0be854afd32fd4163fcd2a3df34142cf2cb961b310ce694cbf90"
+checksum = "9371ade75d4c2d6cb154141b9752cf3781ec9c05e0e5cf35060e1e70ee7b9c25"
 dependencies = [
  "itoa",
  "ryu",
@@ -2499,7 +2500,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "stdlib"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "bytecode-source-map",
  "bytecode-verifier",
@@ -2646,18 +2647,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.10"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "205684fd018ca14432b12cce6ea3d46763311a571c3d294e71ba3f01adcf1aad"
+checksum = "ee14bf8e6767ab4c687c9e8bc003879e042a96fd67a3ba5934eadb6536bef4db"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.10"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57e4d2e50ca050ed44fb58309bdce3efa79948f84f9993ad1978de5eebdce5a7"
+checksum = "a7b51e1fbc44b5a0840be594fbc0f960be09050f2617e61e6aa43bef97cd3ef4"
 dependencies = [
  "proc-macro2 1.0.8",
  "quote 1.0.2",
@@ -3043,9 +3044,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-futures"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33848db47a7c848ab48b66aab3293cb9c61ea879a3586ecfcd17302fcea0baf1"
+checksum = "58b6233e421bf43203d36a8cd430acd24a75bed39832b0e07bec24541f9759e9"
 dependencies = [
  "pin-project",
  "tracing",
@@ -3054,7 +3055,7 @@ dependencies = [
 [[package]]
 name = "transaction-builder"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "ir-to-bytecode",
  "libra-config",
@@ -3128,9 +3129,9 @@ checksum = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
 
 [[package]]
 name = "unsigned-varint"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c689459fbaeb50e56c6749275f084decfd02194ac5852e6617d95d0d3cf02eaf"
+checksum = "3b7ffb36714206d2f5f05d61a2bc350415c642f2c54433f0ebf829afbe41d570"
 
 [[package]]
 name = "url"
@@ -3152,7 +3153,7 @@ checksum = "05c78687fb1a80548ae3250346c3db86a80a7cdd77bda190189f2d0a0987c81a"
 [[package]]
 name = "vm"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -3170,7 +3171,7 @@ dependencies = [
 [[package]]
 name = "vm-cache-map"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "chashmap",
  "typed-arena",
@@ -3179,7 +3180,7 @@ dependencies = [
 [[package]]
 name = "vm-genesis"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
@@ -3202,7 +3203,7 @@ dependencies = [
 [[package]]
 name = "vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "bytecode-verifier",
  "hex",
@@ -3226,7 +3227,7 @@ dependencies = [
 [[package]]
 name = "vm-runtime-types"
 version = "0.1.0"
-source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#527d09c947980089633e439b46771a800b7a2d83"
+source = "git+https://github.com/WingsDao/libra.git?branch=14.02.2020#62917a03922319b6f403cdf740be32b6364db0ed"
 dependencies = [
  "bit-vec 0.6.1",
  "libra-canonical-serialization",
