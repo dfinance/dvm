@@ -14,7 +14,7 @@ use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
-use crate::vm::find_and_replace_bech32_addresses;
+use crate::vm::{bech32_into_libra_address, find_and_replace_bech32_addresses};
 
 pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessPath>> {
     let imports = if is_module {
@@ -135,11 +135,17 @@ impl CompilerService {
             return Ok(Err(dependency_errors));
         }
 
-        let address_lit = match std::str::from_utf8(&source_file_data.address) {
+        let bech32_address_lit = match std::str::from_utf8(&source_file_data.address) {
             Ok(address) => address,
             Err(_) => return Err(Status::invalid_argument("Address is not a valid utf8")),
         };
-        let account_address = AccountAddress::from_hex_literal(address_lit).unwrap();
+        let address_lit = match bech32_into_libra_address(bech32_address_lit) {
+            Ok(address) => format!("0x{}", address),
+            Err(_) => {
+                return Err(Status::invalid_argument("Address is not a valid bech32"));
+            }
+        };
+        let account_address = AccountAddress::from_hex_literal(&address_lit).unwrap();
 
         let mut compiler = compiler::Compiler::default();
         compiler.skip_stdlib_deps = true;

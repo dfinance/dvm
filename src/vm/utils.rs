@@ -6,6 +6,7 @@ use lazy_static::lazy_static;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use regex::Regex;
+
 use crate::compiled_protos::ds_grpc::DsAccessPath;
 
 lazy_static! {
@@ -23,9 +24,8 @@ fn vec_u8_into_hex_string(bytes: &[u8]) -> String {
         .join("")
 }
 
-pub fn bech32_into_libra_address(address: &str) -> String {
-    let (hrp, data_bytes) =
-        bech32::decode(address).unwrap_or_else(|_| panic!("Invalid bech32 address {}", address));
+pub fn bech32_into_libra_address(address: &str) -> Result<String> {
+    let (hrp, data_bytes) = bech32::decode(address)?;
 
     let hrp_bytes = hrp.chars().map(|chr| chr as u8).collect::<Vec<u8>>();
     let hrp = vec_u8_into_hex_string(&hrp_bytes);
@@ -33,7 +33,7 @@ pub fn bech32_into_libra_address(address: &str) -> String {
     let data_bytes = bech32::convert_bits(&data_bytes, 5, 8, true).unwrap();
     let data = vec_u8_into_hex_string(&data_bytes);
 
-    format!("{:0<24}{}", hrp, data)
+    Ok(format!("{:0<24}{}", hrp, data))
 }
 
 pub fn libra_access_path_into_ds_access_path(access_path: &AccessPath) -> Result<DsAccessPath> {
@@ -79,7 +79,7 @@ pub fn find_and_replace_bech32_addresses(source: &str) -> String {
             // libra match, don't replace
             continue;
         }
-        let libra_address = bech32_into_libra_address(address);
+        let libra_address = bech32_into_libra_address(address).unwrap();
         transformed_source = transformed_source.replace(address, &format!("0x{}", libra_address));
     }
     transformed_source
