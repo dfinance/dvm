@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use bytecode_verifier::VerifiedModule;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
+use libra_types::identifier::Identifier;
+use libra_types::language_storage::ModuleId;
 use maplit::hashmap;
 use tonic::{Request, Response, Status};
 use vm::access::{ModuleAccess, ScriptAccess};
@@ -32,8 +34,17 @@ struct DsServiceMock {
 
 impl DsServiceMock {
     #[allow(dead_code)]
-    pub fn with_deps(deps: HashMap<AccessPath, VerifiedModule>) -> Self {
-        DsServiceMock { deps }
+    pub fn with_deps(deps: HashMap<(AccountAddress, String), VerifiedModule>) -> Self {
+        let deps: HashMap<AccessPath, VerifiedModule> = deps
+            .iter()
+            .map(|(key, val)| {
+                let (address, path) = key;
+                let module_ident = Identifier::new(path.clone()).unwrap();
+                let module_id = ModuleId::new(*address, module_ident);
+                (AccessPath::code_access_path(&module_id), val.clone())
+            })
+            .collect();
+        Self { deps }
     }
 }
 
@@ -44,19 +55,19 @@ impl DsClient for DsServiceMock {
         request: Request<AccessPath>,
     ) -> Result<Response<DsRawResponse>, Status> {
         let access_path = request.into_inner();
+        let path = &access_path.path;
+        assert_eq!(
+            path[0], 0,
+            "First byte should be 0 as in AccessPath::CODE_TAG"
+        );
+
         let response = match self.deps.get(&access_path) {
             Some(module) => {
                 let mut buffer = vec![];
                 module.serialize(&mut buffer).unwrap();
                 new_response(&buffer[..])
             }
-            None => new_error_response(
-                ErrorCode::NoData,
-                format!(
-                    "No module '{}' found",
-                    String::from_utf8(access_path.path).unwrap()
-                ),
-            ),
+            None => new_error_response(ErrorCode::NoData, format!("'{}' not found", access_path)),
         };
         Ok(response)
     }
@@ -131,17 +142,13 @@ async fn test_compile_mvir_script_with_dependencies() {
             }
         ";
 
-    let libracoin_access_path = AccessPath::new(
-        AccountAddress::default(),
-        "LibraCoin".to_string().into_bytes(),
-    );
     let coin_module = stdlib::stdlib_modules()
         .iter()
         .find(|module| module.as_inner().name().as_str() == "LibraCoin")
         .unwrap()
         .clone();
     let ds_client = DsServiceMock::with_deps(hashmap! {
-        libracoin_access_path => coin_module
+        (AccountAddress::default(), "LibraCoin".to_string()) => coin_module
     });
 
     let source_file_request = new_source_file_request(source_text, ContractType::Script);
@@ -191,7 +198,10 @@ async fn test_required_libracoin_dependency_is_not_available() {
     assert_eq!(compilation_result.errors.len(), 1);
 
     let error = compilation_result.errors.get(0).unwrap();
-    assert_eq!(error, "No module 'LibraCoin' found")
+    assert_eq!(
+        error,
+        r#"'AccessPath { address: 0000000000000000000000000000000000000000000000000000000000000000, type: Module, hash: "1ff6fadddda5de4c8c9bc95c5b204a999070f1c90c97b8017d4beb7a55d5fb30", suffix: "" } ' not found"#
+    )
 }
 
 #[tokio::test]
@@ -209,14 +219,13 @@ async fn test_allows_for_bech32_addresses() {
         "0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb",
     )
     .unwrap();
-    let access_path = AccessPath::new(libra_address, "LibraCoin".to_string().into_bytes());
     let coin_module = stdlib::stdlib_modules()
         .iter()
         .find(|module| module.as_inner().name().as_str() == "LibraCoin")
         .unwrap()
         .clone();
     let ds_client = DsServiceMock::with_deps(hashmap! {
-        access_path => coin_module
+        (libra_address, "LibraCoin".to_string()) => coin_module
     });
 
     let compiler_service = CompilerService::new(Box::new(ds_client));

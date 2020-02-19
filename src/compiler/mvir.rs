@@ -3,6 +3,7 @@ use bytecode_verifier::VerifiedModule;
 use futures::lock::Mutex;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
+use libra_types::language_storage::ModuleId;
 use move_ir_types::ast::ModuleIdent;
 use tonic::{Request, Response, Status};
 use tonic::transport::Channel;
@@ -24,10 +25,9 @@ pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessP
     let mut imported_modules = vec![];
     for import in imports {
         if let ModuleIdent::Qualified(module_ident) = import.ident {
-            imported_modules.push(AccessPath::new(
-                module_ident.address,
-                module_ident.name.to_string().into_bytes(),
-            ));
+            let module_id = ModuleId::new(module_ident.address, module_ident.name.into_inner());
+            let access_path = AccessPath::code_access_path(&module_id);
+            imported_modules.push(access_path);
         }
     }
     Ok(imported_modules)
