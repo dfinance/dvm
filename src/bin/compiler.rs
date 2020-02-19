@@ -1,3 +1,7 @@
+//! Compilation server implementation on tonic & tokio.
+//! Currently supports Mvir only.
+//! Run with `cargo run --bin compiler "[::1]:50054" "http://[::1]:50052"`
+
 use std::net::SocketAddr;
 
 use anyhow::Result;
