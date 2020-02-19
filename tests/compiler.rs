@@ -12,7 +12,7 @@ use vm::file_format::CompiledScript;
 
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, MvIrSourceFile, ContractType};
+use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient};
 use move_vm_in_cosmos::compiler::test_utils::{new_error_response, new_response};
@@ -192,4 +192,43 @@ async fn test_required_libracoin_dependency_is_not_available() {
 
     let error = compilation_result.errors.get(0).unwrap();
     assert_eq!(error, "No module 'LibraCoin' found")
+}
+
+#[tokio::test]
+async fn test_allows_for_bech32_addresses() {
+    let source_text = r"
+            import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.LibraCoin;
+            main() {
+               return;
+            }
+        ";
+
+    let source_file_request = new_source_file_request(source_text, ContractType::Script);
+
+    let libra_address = AccountAddress::from_hex_literal(
+        "0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb",
+    )
+    .unwrap();
+    let access_path = AccessPath::new(libra_address, "LibraCoin".to_string().into_bytes());
+    let coin_module = stdlib::stdlib_modules()
+        .iter()
+        .find(|module| module.as_inner().name().as_str() == "LibraCoin")
+        .unwrap()
+        .clone();
+    let ds_client = DsServiceMock::with_deps(hashmap! {
+        access_path => coin_module
+    });
+
+    let compiler_service = CompilerService::new(Box::new(ds_client));
+    let compilation_result = compiler_service
+        .compile(source_file_request)
+        .await
+        .unwrap()
+        .into_inner();
+    assert_eq!(
+        compilation_result.errors.len(),
+        0,
+        "{:?}",
+        compilation_result.errors
+    );
 }

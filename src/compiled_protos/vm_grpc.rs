@@ -146,8 +146,10 @@ pub struct VmExecuteRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MvIrSourceFile {
+    /// utf8 encoded source code with bech32 addresses possible
     #[prost(string, tag = "1")]
     pub text: std::string::String,
+    /// address of the sender
     #[prost(bytes, tag = "2")]
     pub address: std::vec::Vec<u8>,
     #[prost(enumeration = "ContractType", tag = "3")]
@@ -155,8 +157,10 @@ pub struct MvIrSourceFile {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CompilationResult {
+    /// bytecode of the compiled module/script
     #[prost(bytes, tag = "1")]
     pub bytecode: std::vec::Vec<u8>,
+    /// list of error messages, empty if successful
     #[prost(string, repeated, tag = "2")]
     pub errors: ::std::vec::Vec<std::string::String>,
 }
