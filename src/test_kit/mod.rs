@@ -64,7 +64,7 @@ impl TestKit {
             .unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: meta.sender.to_vec(),
+                address: meta.sender.to_string(),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code: module,
@@ -103,7 +103,7 @@ impl TestKit {
 
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: meta.sender.to_vec(),
+                address: meta.sender.to_string(),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code,

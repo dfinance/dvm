@@ -53,7 +53,7 @@ mod mocks {
         let module = compiler.build_module(source, &sender, false).unwrap();
         Ok(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: sender.to_vec(),
+                address: sender.to_string(),
                 max_gas_amount: 0,
                 gas_unit_price: 0,
                 code: module,

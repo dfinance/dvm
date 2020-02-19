@@ -1,6 +1,6 @@
 use move_vm_in_cosmos::test_kit::*;
 use libra_types::account_address::AccountAddress;
-use move_vm_in_cosmos::vm::Lang;
+use move_vm_in_cosmos::vm::{Lang, libra_address_string_into_bech32};
 use move_vm_in_cosmos::vm::native::init_native;
 
 #[test]
@@ -14,7 +14,12 @@ fn test_create_account() {
           return;
         }
     ";
-    let res = test_kit.execute_script(create_account, meta(&acc_1), &[&addr(&acc_1), "1000"]);
+    let bech32_sender_address = libra_address_string_into_bech32(&addr(&acc_1)).unwrap();
+    let res = test_kit.execute_script(
+        create_account,
+        meta(&acc_1),
+        &[&bech32_sender_address, "1000"],
+    );
     test_kit.assert_success(&res);
     test_kit.merge_result(&res);
 }
