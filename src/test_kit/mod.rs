@@ -5,7 +5,7 @@ pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
 use crate::ds::MockDataSource;
-use crate::vm::{ExecutionMeta, libra_address_string_into_bech32};
+use crate::vm::{ExecutionMeta, bech32_utils};
 use tonic::Request;
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
 use libra_types::access_path::AccessPath;
@@ -64,10 +64,11 @@ impl TestKit {
             .unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: libra_address_string_into_bech32(&addr(&meta.sender)).unwrap(),
+                address: bech32_utils::libra_into_bech32(&addr(&meta.sender)).unwrap(),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code: module,
+
                 contract_type: ContractType::Module as i32,
                 args: vec![],
             }],
@@ -87,9 +88,13 @@ impl TestKit {
             .build_script(code, &meta.sender, true)
             .unwrap();
 
+        let libra_address = addr(&meta.sender);
+        let bech32_sender_address = bech32_utils::libra_into_bech32(&libra_address)
+            .expect("Cannot convert to bech32 address");
+
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: libra_address_string_into_bech32(&addr(&meta.sender)).unwrap(),
+                address: bech32_sender_address,
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code,

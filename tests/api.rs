@@ -2,7 +2,7 @@ use libra_types::account_address::AccountAddress;
 
 use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
 use move_vm_in_cosmos::test_kit::*;
-use move_vm_in_cosmos::vm::{bech32_into_libra_address, Lang};
+use move_vm_in_cosmos::vm::{bech32_into_libra, Lang};
 use move_vm_in_cosmos::vm::native::init_native;
 
 #[test]
@@ -15,12 +15,12 @@ fn test_create_account() {
           return;
         }
     ";
-    let bech32_sender_address = "cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e";
+    let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
-        bech32_into_libra_address(bech32_sender_address).unwrap()
+        bech32_into_libra(bech32_sender_address).expect("Invalid bech32 address")
     ))
-    .unwrap();
+    .expect("Cannot make AccountAddress");
     let args = vec![
         VmArgs {
             r#type: VmTypeTag::Address as i32,
@@ -51,7 +51,7 @@ fn test_native_func() {
     let bech32_sender_address = "cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
-        bech32_into_libra_address(bech32_sender_address).unwrap()
+        bech32_into_libra(bech32_sender_address).unwrap()
     ))
     .unwrap();
     let args = vec![VmArgs {
@@ -68,7 +68,7 @@ fn test_publish_module() {
     let bech32_sender_address = "cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
-        bech32_into_libra_address(bech32_sender_address).unwrap()
+        bech32_into_libra(bech32_sender_address).unwrap()
     ))
     .unwrap();
     let res = test_kit.publish_module(
