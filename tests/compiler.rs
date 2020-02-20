@@ -9,7 +9,7 @@ use maplit::hashmap;
 use tonic::{Request, Response, Status};
 use vm::access::{ModuleAccess, ScriptAccess};
 use vm::CompiledModule;
-use vm::file_format::{Bytecode, ModuleHandleIndex};
+use vm::file_format::{ByteArrayPoolIndex, Bytecode, ModuleHandleIndex};
 use vm::file_format::CompiledScript;
 
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
@@ -255,4 +255,35 @@ async fn test_pass_empty_string_as_address() {
     let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
     let error_status = compiler_service.compile(request).await.unwrap_err();
     assert_eq!(error_status.message(), "Address is not a valid bech32");
+}
+
+#[tokio::test]
+async fn test_s_prefixed_strings_should_be_replaced_with_hex_equivalent() {
+    let source_text = r#"
+            main() {
+                let pair: bytearray;
+                pair = s"BTCUSD";
+            }
+        "#;
+    let compiled = compile_source_file(source_text, ContractType::Script)
+        .await
+        .unwrap()
+        .into_inner();
+    assert!(compiled.errors.is_empty());
+    let compiled_script = CompiledScript::deserialize(&compiled.bytecode).unwrap();
+
+    let byte_array_idx = ByteArrayPoolIndex::new(0);
+    let byte_array = compiled_script.byte_array_pool()[byte_array_idx.0 as usize].clone();
+
+    assert_eq!(
+        byte_array.into_inner(),
+        hex::decode("425443555344").unwrap()
+    );
+    assert_eq!(
+        compiled_script.main().code.code,
+        vec![
+            Bytecode::LdByteArray(byte_array_idx),
+            Bytecode::StLoc(byte_array_idx.0 as u8)
+        ]
+    )
 }

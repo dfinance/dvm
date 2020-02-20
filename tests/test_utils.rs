@@ -4,6 +4,7 @@ use libra_types::identifier::Identifier;
 use libra_types::language_storage::ModuleId;
 
 use move_vm_in_cosmos::compiled_protos::ds_grpc::DsAccessPath;
+use move_vm_in_cosmos::compiler::mvir;
 use move_vm_in_cosmos::vm::{
     bech32_into_libra, find_and_replace_bech32_addresses, libra_access_path_into_ds_access_path,
     libra_into_bech32,
@@ -180,4 +181,16 @@ fn test_roundtrip_conversion() {
     }
     roundtrip("cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e");
     roundtrip("wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6");
+}
+
+#[test]
+fn test_replace_s_prefixed_string() {
+    assert_eq!(
+        mvir::find_and_replace_s_prefixed_strings(r#"a = s"BTCUSD";"#),
+        r#"a = h"425443555344";"#
+    );
+    assert_eq!(
+        mvir::find_and_replace_s_prefixed_strings(r#"a = s"";"#),
+        r#"a = h"";"#
+    );
 }
