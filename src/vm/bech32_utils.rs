@@ -30,10 +30,8 @@ fn vec_u8_into_hex_string(bytes: &[u8]) -> String {
 pub fn bech32_into_libra(address: &str) -> Result<String> {
     let (hrp, data_bytes) = bech32::decode(address)?;
 
-    // let hrp_bytes = hrp.chars().map(|chr| chr as u8).collect::<Vec<u8>>();
     let hrp_bytes = hrp.as_bytes().to_vec();
     let hrp = hex::encode(hrp_bytes);
-    // let hrp = vec_u8_into_hex_string(&hrp_bytes);
 
     let data_bytes = bech32::convert_bits(&data_bytes, 5, 8, true).unwrap();
     let data = vec_u8_into_hex_string(&data_bytes);
@@ -96,8 +94,10 @@ pub fn find_and_replace_bech32_addresses(source: &str) -> String {
             // libra match, don't replace
             continue;
         }
-        let libra_address = bech32_into_libra(address).unwrap();
-        transformed_source = transformed_source.replace(address, &format!("0x{}", libra_address));
+        if let Ok(libra_address) = bech32_into_libra(address) {
+            transformed_source =
+                transformed_source.replace(address, &format!("0x{}", libra_address));
+        }
     }
     transformed_source
 }

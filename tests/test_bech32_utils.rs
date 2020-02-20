@@ -58,6 +58,20 @@ fn test_valid_bech32_libra_address_not_replaced() {
 }
 
 #[test]
+fn test_do_not_replace_invalid_bech32_addresses() {
+    let source = r"
+        import 0x0.Dbg;
+        main(l: u256) {
+            let r: u256;
+            r = 1233124232344232214519u245;
+            Dbg.dump_u256(l + r);
+            return;
+        };
+    ";
+    assert_eq!(find_and_replace_bech32_addresses(source), source);
+}
+
+#[test]
 fn test_match_valid_import_bech32_lines_move() {
     let line = "use cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e::WingsAccount; use wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6::WingsAccount;";
     let replaced_line = find_and_replace_bech32_addresses(line);
