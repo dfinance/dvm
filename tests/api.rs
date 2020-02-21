@@ -1,9 +1,12 @@
+use byteorder::{LittleEndian, ByteOrder};
 use move_vm_in_cosmos::test_kit::*;
 use libra_types::account_address::AccountAddress;
 use move_vm_in_cosmos::vm::{Lang, bech32_utils};
-use move_vm_in_cosmos::vm::native::{init_native, dbg};
+use move_vm_in_cosmos::vm::native::dbg;
 use move_vm_in_cosmos::vm::native::oracle::PriceOracle;
 use move_vm_in_cosmos::ds::MockDataSource;
+use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmTypeTag, VmArgs};
+use libra_types::byte_array::ByteArray;
 
 #[test]
 fn test_create_account() {

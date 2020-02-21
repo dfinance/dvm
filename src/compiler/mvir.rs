@@ -13,8 +13,6 @@ use crate::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
 use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
-use crate::vm::find_and_replace_bech32_addresses;
-use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use crate::vm::bech32_utils;
 
@@ -90,7 +88,7 @@ impl CompilerService {
     ) -> Result<Result<Vec<u8>, Vec<String>>, Status> {
         let source_file_data = request.into_inner();
 
-        let source_text = find_and_replace_bech32_addresses(&source_file_data.text);
+        let source_text = bech32_utils::find_and_replace_bech32_addresses(&source_file_data.text);
         let is_module = ContractType::from_i32(source_file_data.r#type)
             .expect("Invalid ContractType")
             == ContractType::Module;
