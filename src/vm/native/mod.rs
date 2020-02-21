@@ -1,4 +1,5 @@
 pub mod dbg;
+pub mod oracle;
 
 use std::collections::VecDeque;
 use vm_runtime_types::native_functions::dispatch::NativeResult;
@@ -6,13 +7,6 @@ use libra_types::language_storage::TypeTag;
 use vm::gas_schedule::CostTable;
 use vm::errors::VMResult;
 use vm_runtime_types::values::Value;
-use anyhow::Error;
-
-pub fn init_native() -> Result<(), Error> {
-    dbg::PrintByteArray {}.reg_function();
-
-    Ok(())
-}
 
 pub trait Function {
     fn call(
@@ -37,7 +31,7 @@ pub trait Reg {
 
 #[macro_export]
 macro_rules! module {
-    ($module: ident; [$($function_type:ident::<$($kinds:ident),*>$name:ident fn ($($args:expr),*) -> ($($ret:expr),*)),*]) => {
+    ($module: ident; [$($function_type:ident::<$($kinds:ident),*>$name:ident fn ($($args:expr),*) -> ($($ret:expr),*));*]) => {
         #[allow(non_snake_case)]
         pub mod $module {
             $(
@@ -95,7 +89,7 @@ macro_rules! module {
                         }
                     }
                 }
-            ),*
+            )*
         }
     }
 }

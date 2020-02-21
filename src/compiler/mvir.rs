@@ -13,8 +13,8 @@ use crate::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
 use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
-use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use crate::vm::find_and_replace_bech32_addresses;
+use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 
 pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessPath>> {
     let imports = if is_module {

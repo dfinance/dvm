@@ -1,3 +1,4 @@
 module Dbg {
     native public print_byte_array(data: bytearray);
+    native public dump_u64(val: u64);
 }
