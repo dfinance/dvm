@@ -13,6 +13,8 @@ use crate::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
 use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
+use crate::vm::find_and_replace_bech32_addresses;
+use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use crate::vm::bech32_utils;
 
@@ -88,7 +90,7 @@ impl CompilerService {
     ) -> Result<Result<Vec<u8>, Vec<String>>, Status> {
         let source_file_data = request.into_inner();
 
-        let source_text = bech32_utils::find_and_replace_bech32_addresses(&source_file_data.text);
+        let source_text = find_and_replace_bech32_addresses(&source_file_data.text);
         let is_module = ContractType::from_i32(source_file_data.r#type)
             .expect("Invalid ContractType")
             == ContractType::Module;
@@ -135,17 +137,11 @@ impl CompilerService {
             return Ok(Err(dependency_errors));
         }
 
-        let bech32_address_lit = match std::str::from_utf8(&source_file_data.address) {
+        let address_lit = match std::str::from_utf8(&source_file_data.address) {
             Ok(address) => address,
             Err(_) => return Err(Status::invalid_argument("Address is not a valid utf8")),
         };
-        let address_lit = match bech32_utils::bech32_into_libra(bech32_address_lit) {
-            Ok(address) => format!("0x{}", address),
-            Err(_) => {
-                return Err(Status::invalid_argument("Address is not a valid bech32"));
-            }
-        };
-        let account_address = AccountAddress::from_hex_literal(&address_lit).unwrap();
+        let account_address = AccountAddress::from_hex_literal(address_lit).unwrap();
 
         let mut compiler = compiler::Compiler::default();
         compiler.skip_stdlib_deps = true;

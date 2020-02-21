@@ -1,13 +1,9 @@
 use move_vm_in_cosmos::test_kit::*;
 use libra_types::account_address::AccountAddress;
-
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
-use move_vm_in_cosmos::vm::native::{dbg, Reg};
-use move_vm_in_cosmos::ds::MockDataSource;
-use move_vm_in_cosmos::vm::native::oracle::PriceOracle;
-use byteorder::{LittleEndian, ByteOrder};
-use libra_types::byte_array::ByteArray;
 use move_vm_in_cosmos::vm::{Lang, bech32_utils};
+use move_vm_in_cosmos::vm::native::{init_native, dbg};
+use move_vm_in_cosmos::vm::native::oracle::PriceOracle;
+use move_vm_in_cosmos::ds::MockDataSource;
 
 #[test]
 fn test_create_account() {
@@ -46,6 +42,13 @@ fn test_native_func() {
     dbg::PrintByteArray {}.reg_function();
 
     let test_kit = TestKit::new(Lang::MvIr);
+
+    let res = test_kit.publish_module(
+        include_str!("./resources/dbg.mvir"),
+        meta(&AccountAddress::default()),
+    );
+    test_kit.assert_success(&res);
+    test_kit.merge_result(&res);
 
     let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
     let account_address = AccountAddress::from_hex_literal(&format!(
