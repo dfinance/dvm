@@ -62,9 +62,10 @@ impl TestKit {
             .compiler
             .build_module(code, &meta.sender, true)
             .unwrap();
+        let sender_as_bech32 = bech32_utils::libra_into_bech32(&addr(&meta.sender)).unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: bech32_utils::libra_into_bech32(&addr(&meta.sender)).unwrap(),
+                address: sender_as_bech32,
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code: module,

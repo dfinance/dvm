@@ -229,6 +229,6 @@ pub fn mvir_std() -> Vec<&'static str> {
         include_str!("../../stdlib/mvir/libra_time.mvir"),
         include_str!("../../stdlib/mvir/libra_transaction_timeout.mvir"),
         include_str!("../../stdlib/mvir/offer.mvir"),
-        include_str!("../../stdlib/mvir/dbg.mvir"),
+        include_str!("../../stdlib/mvir/oracle.mvir"),
     ]
 }

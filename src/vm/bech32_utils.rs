@@ -85,7 +85,7 @@ pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
         })
         .collect::<Vec<u5>>();
 
-    bech32::encode(&hrp, data_u5).map_err(|_| anyhow!("Malformed bech32"))
+    bech32::encode(&hrp, data_u5).map_err(|err| anyhow!("Malformed bech32: {}", err))
 }
 
 pub fn find_and_replace_bech32_addresses(source: &str) -> String {

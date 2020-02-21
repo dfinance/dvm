@@ -4,9 +4,9 @@ use libra_types::identifier::Identifier;
 use libra_types::language_storage::ModuleId;
 
 use move_vm_in_cosmos::compiled_protos::ds_grpc::DsAccessPath;
-use move_vm_in_cosmos::vm::{
-    bech32_into_libra, find_and_replace_bech32_addresses, libra_access_path_into_ds_access_path,
-    libra_into_bech32,
+use move_vm_in_cosmos::vm::bech32_utils::{
+    find_and_replace_bech32_addresses, libra_into_bech32, libra_access_path_into_ds_access_path,
+    bech32_into_libra,
 };
 
 #[test]

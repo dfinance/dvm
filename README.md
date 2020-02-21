@@ -28,7 +28,7 @@ ln -s `git rev-parse --show-toplevel`/check_project.sh `git rev-parse --absolute
 `cargo run --bin stdlib-builder <path to stdlib directory> <compiler type [move, mvir]>`
 
 Example.
-`cargo run --bin stdlib-builder stdlib/move move`
+`cargo run --bin stdlib-builder stdlib/mvir mvir`
 
 # Start compiler
 
