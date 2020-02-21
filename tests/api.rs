@@ -46,13 +46,6 @@ fn test_native_func() {
 
     let test_kit = TestKit::new(Lang::MvIr);
 
-    let res = test_kit.publish_module(
-        include_str!("./resources/dbg.mvir"),
-        meta(&AccountAddress::default()),
-    );
-    test_kit.assert_success(&res);
-    test_kit.merge_result(&res);
-
     let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
