@@ -17,6 +17,7 @@ use crate::compiled_protos::vm_grpc::{
 use crate::vm::compiler::{Compiler, Lang};
 use crate::test_kit::grpc_client::Client;
 use crate::vm::stdlib::{move_std, build_std_with_compiler, mvir_std, Stdlib};
+use vm::CompiledModule;
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 
@@ -76,6 +77,16 @@ impl TestKit {
             options: 0,
         });
         self.client.perform_request(request)
+    }
+
+    pub fn add_std_module(&self, code: &str) {
+        let module = self
+            .compiler
+            .build_module(code, &AccountAddress::default(), true)
+            .unwrap();
+
+        let id = CompiledModule::deserialize(&module).unwrap().self_id();
+        self.data_source.insert((&id).into(), module);
     }
 
     pub fn execute_script(

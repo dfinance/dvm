@@ -46,18 +46,10 @@ fn test_native_func() {
 
     let test_kit = TestKit::new(Lang::MvIr);
 
-    let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
-    let account_address = AccountAddress::from_hex_literal(&format!(
-        "0x{}",
-        bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
-    ))
-    .unwrap();
-    let res = test_kit.publish_module(include_str!("./resources/dbg.mvir"), meta(&account_address));
-    test_kit.assert_success(&res);
-    test_kit.merge_result(&res);
+    test_kit.add_std_module(include_str!("./resources/dbg.mvir"));
 
     let script = "\
-        import wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6.Dbg;
+        import 0x0.Dbg;
         main(data: bytearray) {
           Dbg.print_byte_array(move(data));
           return;
@@ -67,6 +59,13 @@ fn test_native_func() {
         r#type: VmTypeTag::ByteArray as i32,
         value: "b\"C001C00D\"".to_string(),
     }];
+
+    let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
+    let account_address = AccountAddress::from_hex_literal(&format!(
+        "0x{}",
+        bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
+    ))
+        .unwrap();
     let res = test_kit.execute_script(script, meta(&account_address), args);
     test_kit.assert_success(&res);
 }
@@ -88,27 +87,24 @@ fn test_oracle() {
     dump.clone().reg_function();
 
     let test_kit = TestKit::new(Lang::MvIr);
-
-    let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
-    let account_address = AccountAddress::from_hex_literal(&format!(
-        "0x{}",
-        bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
-    ))
-    .unwrap();
-
-    let res = test_kit.publish_module(include_str!("./resources/dbg.mvir"), meta(&account_address));
-    test_kit.assert_success(&res);
-    test_kit.merge_result(&res);
+    test_kit.add_std_module(include_str!("./resources/dbg.mvir"));
 
     let script = "\
-        import wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6.Dbg;
-        import wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6.Oracle;
+        import 0x0.Dbg;
+        import 0x0.Oracle;
 
         main() {
           Dbg.dump_u64(Oracle.get_price(h\"425443555344\"));
           return;
         }
     ";
+
+    let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
+    let account_address = AccountAddress::from_hex_literal(&format!(
+        "0x{}",
+        bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
+    ))
+        .unwrap();
     let res = test_kit.execute_script(script, meta(&account_address), vec![]);
     test_kit.assert_success(&res);
     assert_eq!(dump.get(), Some(13));
