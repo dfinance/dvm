@@ -1,27 +1,26 @@
-use std::convert::TryFrom;
+use tonic::{Request, Response, Status};
 
-use anyhow::Error;
+use crate::vm::MoveVm;
 use libra_state_view::StateView;
+use crate::vm::{ExecutionMeta, VM, VmResult};
+use crate::vm::ExecutionResult;
 use libra_types::account_address::AccountAddress;
-use libra_types::contract_event::ContractEvent;
-use libra_types::language_storage::TypeTag;
+use std::convert::TryFrom;
+use anyhow::Error;
 use libra_types::transaction::{
-    Module, parse_as_address, parse_as_bool, parse_as_byte_array, parse_as_u64, Script,
+    Module, Script, parse_as_bool, parse_as_u64, parse_as_byte_array, parse_as_address,
     TransactionStatus,
 };
 use libra_types::vm_error::{StatusCode, VMStatus};
-use libra_types::write_set::{WriteOp, WriteSet};
-use tonic::{Request, Response, Status};
-
+use libra_types::write_set::{WriteSet, WriteOp};
+use libra_types::contract_event::ContractEvent;
+use libra_types::language_storage::TypeTag;
+use crate::ds::MergeWriteSet;
 use crate::compiled_protos::vm_grpc::{
-    ContractType, VmAccessPath, VmContract, VmErrorStatus, VmEvent, VmExecuteRequest,
-    VmExecuteResponse, VmExecuteResponses, VmStructTag, VmType, VmTypeTag, VmValue,
+    VmContract, VmExecuteResponse, VmExecuteRequest, VmExecuteResponses, VmErrorStatus, VmEvent,
+    VmType, VmStructTag, VmValue, VmAccessPath,
 };
 use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
-use crate::ds::MergeWriteSet;
-use crate::vm::{ExecutionMeta, VM, VmResult, bech32_utils};
-use crate::vm::ExecutionResult;
-use crate::vm::MoveVm;
 
 pub struct MoveVmService {
     vm: MoveVm,
@@ -100,50 +99,35 @@ impl TryFrom<VmContract> for Contract {
     type Error = VMStatus;
 
     fn try_from(contract: VmContract) -> Result<Self, Self::Error> {
-        let address = bech32_utils::bech32_into_libra(&contract.address).map_err(|_| {
-            VMStatus::new(StatusCode::INVALID_DATA).with_message(format!(
-                "Invalid AccountAddress: invalid bech32 address {}",
-                &contract.address
-            ))
-        })?;
         let meta = ExecutionMeta::new(
             contract.max_gas_amount,
             contract.gas_unit_price,
-            AccountAddress::try_from(address).map_err(|err| {
+            AccountAddress::try_from(contract.address).map_err(|err| {
                 VMStatus::new(StatusCode::INVALID_DATA)
                     .with_message(format!("Invalid AccountAddress: {:?}", err))
             })?,
         );
 
-        let code = match ContractType::from_i32(contract.contract_type) {
-            Some(ContractType::Module) => Ok(Code::Module(Module::new(contract.code))),
-            Some(ContractType::Script) => {
-                let args = contract
-                    .args
-                    .into_iter()
-                    .map(|arg| {
-                        match VmTypeTag::from_i32(arg.r#type) {
-                            Some(VmTypeTag::Bool) => parse_as_bool(&arg.value),
-                            Some(VmTypeTag::U64) => parse_as_u64(&arg.value),
-                            Some(VmTypeTag::ByteArray) => parse_as_byte_array(&arg.value),
-                            Some(VmTypeTag::Address) => {
-                                match bech32_utils::bech32_into_libra(&arg.value) {
-                                    Ok(address) => parse_as_address(&format!("0x{}", address)),
-                                    Err(_) => Err(Error::msg("Invalid args type.")),
-                                }
-                            }
+        let code = match contract.contract_type {
+            0 /*Module*/ => {
+                Ok(Code::Module(Module::new(contract.code)))
+            }
+            1 /*Script*/ => {
+                let args = contract.args.into_iter()
+                    .map(|arg|
+                        match arg.r#type {
+                            0 /*Bool*/ => parse_as_bool(&arg.value),
+                            1 /*U64*/ => parse_as_u64(&arg.value),
+                            2 /*ByteArray*/ => parse_as_byte_array(&arg.value),
+                            3 /*Address*/ => parse_as_address(&arg.value),
                             _ => Err(Error::msg("Invalid args type.")),
-                        }
-                        .map_err(|err| {
-                            VMStatus::new(StatusCode::INVALID_DATA)
-                                .with_message(format!("Invalid contract args [{:?}].", err))
-                        })
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
+                        }.map_err(|err| VMStatus::new(StatusCode::INVALID_DATA)
+                            .with_message(format!("Invalid contract args [{:?}].", err)))
+                    ).collect::<Result<Vec<_>, _>>()?;
 
                 Ok(Code::Script(Script::new(contract.code, args)))
             }
-            None => Err(VMStatus::new(StatusCode::INVALID_DATA)
+            _ => Err(VMStatus::new(StatusCode::INVALID_DATA)
                 .with_message("Invalid contract type.".to_string())),
         }?;
 

@@ -89,9 +89,9 @@ pub struct VmArgs {
 /// VM contract object to process.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct VmContract {
-    /// owner of contract (module) or script executor, bech32 form.
-    #[prost(string, tag = "1")]
-    pub address: std::string::String,
+    /// owner of contract (module) or script executor.
+    #[prost(bytes, tag = "1")]
+    pub address: std::vec::Vec<u8>,
     /// maximal total gas specified by wallet to spend for this transaction.
     #[prost(uint64, tag = "2")]
     pub max_gas_amount: u64,
@@ -146,10 +146,10 @@ pub struct VmExecuteRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MvIrSourceFile {
-    /// utf8 encoded source code with libra/bech32 addresses
+    /// utf8 encoded source code with bech32 addresses possible
     #[prost(string, tag = "1")]
     pub text: std::string::String,
-    /// address of the sender, in bech32 form
+    /// address of the sender
     #[prost(bytes, tag = "2")]
     pub address: std::vec::Vec<u8>,
     #[prost(enumeration = "ContractType", tag = "3")]
@@ -192,7 +192,7 @@ pub enum VmTypeTag {
     U64 = 1,
     /// Bytes
     ByteArray = 2,
-    /// Address, in bech32 form
+    /// Address
     Address = 3,
     /// Structure (could be several arguments for event call).
     Struct = 4,

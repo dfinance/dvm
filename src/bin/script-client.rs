@@ -30,7 +30,7 @@ fn get_execute_script_request() -> Result<VmExecuteRequest, Box<dyn std::error::
         value: format!("0x{}", sender.to_string()),
     };
     let vm_contract = VmContract {
-        address: sender.to_string(),
+        address: sender.to_vec(),
         max_gas_amount: 100_000,
         gas_unit_price: 1,
         code: binary_script,

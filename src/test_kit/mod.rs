@@ -5,14 +5,14 @@ pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
 use crate::ds::MockDataSource;
-use crate::vm::{ExecutionMeta, bech32_utils};
+use crate::vm::ExecutionMeta;
 use tonic::Request;
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
 use crate::compiled_protos::vm_grpc::{
-    VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue, ContractType,
+    VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue,
 };
 use crate::vm::compiler::{Compiler, Lang};
 use crate::test_kit::grpc_client::Client;
@@ -62,15 +62,13 @@ impl TestKit {
             .compiler
             .build_module(code, &meta.sender, true)
             .unwrap();
-        let sender_as_bech32 = bech32_utils::libra_into_bech32(&addr(&meta.sender)).unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: sender_as_bech32,
+                address: meta.sender.to_vec(),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code: module,
-
-                contract_type: ContractType::Module as i32,
+                contract_type: 0, //Module
                 args: vec![],
             }],
             options: 0,
@@ -82,24 +80,34 @@ impl TestKit {
         &self,
         code: &str,
         meta: ExecutionMeta,
-        args: Vec<VmArgs>,
+        args: &[&str],
     ) -> VmExecuteResponses {
         let code = self
             .compiler
             .build_script(code, &meta.sender, true)
             .unwrap();
 
-        let libra_address = addr(&meta.sender);
-        let bech32_sender_address = bech32_utils::libra_into_bech32(&libra_address)
-            .expect("Cannot convert to bech32 address");
+        let args = parse_args(args)
+            .into_iter()
+            .map(|arg| match arg {
+                TransactionArgument::Bool(val) => (0, val.to_string()),
+                TransactionArgument::U64(val) => (1, val.to_string()),
+                TransactionArgument::ByteArray(val) => (2, val.to_string()),
+                TransactionArgument::Address(val) => (3, addr(&val)),
+            })
+            .map(|(value_type, value)| VmArgs {
+                r#type: value_type,
+                value,
+            })
+            .collect();
 
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: bech32_sender_address,
+                address: meta.sender.to_vec(),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code,
-                contract_type: ContractType::Script as i32,
+                contract_type: 1, //Script
                 args,
             }],
             options: 0,

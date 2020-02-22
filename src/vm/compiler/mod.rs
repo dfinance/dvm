@@ -10,7 +10,7 @@ use std::str::FromStr;
 use ir_to_bytecode::parser::parse_program;
 use move_lang::parser::ast::{FileDefinition, ModuleOrAddress};
 use crate::vm::compiler::mv::{build_with_deps, Code, parse_module};
-use crate::vm::bech32_utils;
+use crate::vm::find_and_replace_bech32_addresses;
 
 pub enum Lang {
     Move,
@@ -152,7 +152,7 @@ impl Compiler for MvIr {
         address: &AccountAddress,
         disabled_std: bool,
     ) -> Result<Vec<u8>, Error> {
-        let code = bech32_utils::find_and_replace_bech32_addresses(code);
+        let code = find_and_replace_bech32_addresses(code);
 
         let mut cache = self.cache.lock().unwrap();
         let mut compiler = MvIrCompiler::default();
@@ -173,7 +173,7 @@ impl Compiler for MvIr {
         address: &AccountAddress,
         disabled_std: bool,
     ) -> Result<Vec<u8>, Error> {
-        let code = bech32_utils::find_and_replace_bech32_addresses(code);
+        let code = find_and_replace_bech32_addresses(code);
 
         let cache = self.cache.lock().unwrap();
         let mut compiler = MvIrCompiler::default();
