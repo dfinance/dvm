@@ -5,18 +5,19 @@ pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
 use crate::ds::MockDataSource;
-use crate::vm::ExecutionMeta;
+use crate::vm::{ExecutionMeta, bech32_utils};
 use tonic::Request;
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
 use crate::compiled_protos::vm_grpc::{
-    VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue,
+    VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue, ContractType,
 };
 use crate::vm::compiler::{Compiler, Lang};
 use crate::test_kit::grpc_client::Client;
 use crate::vm::stdlib::{move_std, build_std_with_compiler, mvir_std, Stdlib};
+use vm::CompiledModule;
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 
@@ -62,13 +63,15 @@ impl TestKit {
             .compiler
             .build_module(code, &meta.sender, true)
             .unwrap();
+        let sender_as_bech32 = bech32_utils::libra_into_bech32(&addr(&meta.sender)).unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: meta.sender.to_vec(),
+                address: sender_as_bech32,
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code: module,
-                contract_type: 0, //Module
+
+                contract_type: ContractType::Module as i32,
                 args: vec![],
             }],
             options: 0,
@@ -76,38 +79,38 @@ impl TestKit {
         self.client.perform_request(request)
     }
 
+    pub fn add_std_module(&self, code: &str) {
+        let module = self
+            .compiler
+            .build_module(code, &AccountAddress::default(), true)
+            .unwrap();
+
+        let id = CompiledModule::deserialize(&module).unwrap().self_id();
+        self.data_source.insert((&id).into(), module);
+    }
+
     pub fn execute_script(
         &self,
         code: &str,
         meta: ExecutionMeta,
-        args: &[&str],
+        args: Vec<VmArgs>,
     ) -> VmExecuteResponses {
         let code = self
             .compiler
             .build_script(code, &meta.sender, true)
             .unwrap();
 
-        let args = parse_args(args)
-            .into_iter()
-            .map(|arg| match arg {
-                TransactionArgument::Bool(val) => (0, val.to_string()),
-                TransactionArgument::U64(val) => (1, val.to_string()),
-                TransactionArgument::ByteArray(val) => (2, val.to_string()),
-                TransactionArgument::Address(val) => (3, addr(&val)),
-            })
-            .map(|(value_type, value)| VmArgs {
-                r#type: value_type,
-                value,
-            })
-            .collect();
+        let libra_address = addr(&meta.sender);
+        let bech32_sender_address = bech32_utils::libra_into_bech32(&libra_address)
+            .expect("Cannot convert to bech32 address");
 
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: meta.sender.to_vec(),
+                address: bech32_sender_address,
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code,
-                contract_type: 1, //Script
+                contract_type: ContractType::Script as i32,
                 args,
             }],
             options: 0,

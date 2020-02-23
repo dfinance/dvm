@@ -74,7 +74,7 @@ impl DsClient for DsServiceMock {
 }
 
 fn new_source_file_request(source_text: &str, r#type: ContractType) -> Request<MvIrSourceFile> {
-    let address = format!("0x{}", AccountAddress::random().to_string());
+    let address = "cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e";
     let source_file = new_source_file(source_text, r#type, &address);
     Request::new(source_file)
 }
@@ -240,4 +240,19 @@ async fn test_allows_for_bech32_addresses() {
         "{:?}",
         compilation_result.errors
     );
+}
+
+#[tokio::test]
+async fn test_pass_empty_string_as_address() {
+    let source_text = r"
+            main() {
+                return;
+            }
+        ";
+    let source_file = new_source_file(source_text, ContractType::Script, "");
+    let request = Request::new(source_file);
+
+    let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
+    let error_status = compiler_service.compile(request).await.unwrap_err();
+    assert_eq!(error_status.message(), "Address is not a valid bech32");
 }
