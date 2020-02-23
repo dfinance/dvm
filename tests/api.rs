@@ -53,15 +53,15 @@ fn test_oracle() {
     let ds = MockDataSource::without_std();
     let ticker = hex::decode("425443555344").unwrap();
 
-    let mut price = vec![0; 8];
-    LittleEndian::write_u64(&mut price, 13);
+    let mut price = vec![0; 16];
+    LittleEndian::write_u128(&mut price, 13);
 
     ds.insert(
         PriceOracle::make_path(ByteArray::new(ticker)).unwrap(),
         price,
     );
     PriceOracle::new(Box::new(ds)).reg_function();
-    let dump = dbg::DumpU64::new();
+    let dump = dbg::DumpU128::new();
     dump.clone().reg_function();
 
     let test_kit = TestKit::new(Lang::MvIr);
@@ -79,7 +79,7 @@ fn test_oracle() {
         import 0x0.Oracle;
 
         main() {
-          Dbg.dump_u64(Oracle.get_price(h\"425443555344\"));
+          Dbg.dump_u128(Oracle.get_price(h\"425443555344\"));
           return;
         }
     ";

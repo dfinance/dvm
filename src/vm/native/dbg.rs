@@ -64,10 +64,45 @@ impl Function for DumpU64 {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct DumpU128 {
+    value: Arc<Mutex<Option<u128>>>,
+}
+
+impl DumpU128 {
+    pub fn new() -> DumpU128 {
+        DumpU128 {
+            value: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    pub fn get(&self) -> Option<u128> {
+        *self.value.lock().unwrap()
+    }
+
+    pub fn store(&self, val: Option<u128>) {
+        *self.value.lock().unwrap() = val;
+    }
+}
+
+impl Function for DumpU128 {
+    fn call(
+        &self,
+        _ty_args: Vec<TypeTag>,
+        mut arguments: VecDeque<Value>,
+        cost_table: &CostTable,
+    ) -> Result<NativeResult, VMStatus> {
+        let cost = native_gas(cost_table, NativeCostIndex::LENGTH, 1);
+        self.store(Some(pop_arg!(arguments, u128)));
+        Ok(NativeResult::ok(cost, vec![]))
+    }
+}
+
 module! {
     Dbg;
     [
         PrintByteArray::<All>print_byte_array fn (ByteArray)->();
-        DumpU64::<All>dump_u64 fn (U64)->()
+        DumpU64::<All>dump_u64 fn (U64)->();
+        DumpU128::<All>dump_u128 fn (U128)->()
     ]
 }

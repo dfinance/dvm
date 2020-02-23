@@ -69,12 +69,12 @@ impl Function for PriceOracle {
             })
             .and_then(|price| match price {
                 Some(price) => {
-                    if price.len() != 8 {
+                    if price.len() != 16 {
                         Err(VMStatus::new(StatusCode::TYPE_MISMATCH)
                             .with_sub_status(2)
-                            .with_message("Invalid prise size".to_owned()))
+                            .with_message("Invalid price size".to_owned()))
                     } else {
-                        Ok(LittleEndian::read_u64(&price))
+                        Ok(LittleEndian::read_u128(&price))
                     }
                 }
                 None => Err(VMStatus::new(StatusCode::STORAGE_ERROR)
@@ -84,7 +84,7 @@ impl Function for PriceOracle {
 
         let cost = GasCost::new(COST, 1);
         match result {
-            Ok(price) => Ok(NativeResult::ok(cost.total(), vec![Value::u64(price)])),
+            Ok(price) => Ok(NativeResult::ok(cost.total(), vec![Value::u128(price)])),
             Err(status) => Ok(NativeResult::err(cost.total(), status)),
         }
     }
@@ -92,5 +92,5 @@ impl Function for PriceOracle {
 
 module! {
     Oracle;
-    [PriceOracle::<All>get_price fn (ByteArray)->(U64)]
+    [PriceOracle::<All>get_price fn (ByteArray)->(U128)]
 }
