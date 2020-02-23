@@ -143,7 +143,7 @@ fn test_invalid_libra_missing_hrp_part() {
         libra_into_bech32(invalid_libra_address)
             .unwrap_err()
             .to_string(),
-        "Malformed bech32",
+        "Malformed bech32: invalid length",
     );
 }
 

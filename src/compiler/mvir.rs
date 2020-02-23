@@ -135,11 +135,17 @@ impl CompilerService {
             return Ok(Err(dependency_errors));
         }
 
-        let address_lit = match std::str::from_utf8(&source_file_data.address) {
+        let bech32_address_lit = match std::str::from_utf8(&source_file_data.address) {
             Ok(address) => address,
             Err(_) => return Err(Status::invalid_argument("Address is not a valid utf8")),
         };
-        let account_address = AccountAddress::from_hex_literal(address_lit).unwrap();
+        let address_lit = match bech32_utils::bech32_into_libra(bech32_address_lit) {
+            Ok(address) => format!("0x{}", address),
+            Err(_) => {
+                return Err(Status::invalid_argument("Address is not a valid bech32"));
+            }
+        };
+        let account_address = AccountAddress::from_hex_literal(&address_lit).unwrap();
 
         let mut compiler = compiler::Compiler::default();
         compiler.skip_stdlib_deps = true;

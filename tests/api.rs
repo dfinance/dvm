@@ -65,7 +65,7 @@ fn test_native_func() {
         "0x{}",
         bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
     ))
-        .unwrap();
+    .unwrap();
     let res = test_kit.execute_script(script, meta(&account_address), args);
     test_kit.assert_success(&res);
 }
@@ -104,7 +104,7 @@ fn test_oracle() {
         "0x{}",
         bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
     ))
-        .unwrap();
+    .unwrap();
     let res = test_kit.execute_script(script, meta(&account_address), vec![]);
     test_kit.assert_success(&res);
     assert_eq!(dump.get(), Some(13));
