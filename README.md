@@ -25,10 +25,11 @@ ln -s `git rev-parse --show-toplevel`/check_project.sh `git rev-parse --absolute
 ```
 
 # Build std.
-`cargo run --bin stdlib-builder <path to stdlib directory> <compiler type [move, mvir]>`
+`cargo run --bin stdlib-builder <path to stdlib directory> <compiler type [move, mvir]> [-o output file] [-verbose]`
 
-Example.
-`cargo run --bin stdlib-builder stdlib/mvir mvir`
+Example:
+- `cargo run --bin stdlib-builder stdlib/mvir mvir -p`
+- `cargo run --bin stdlib-builder stdlib/mvir mvir -po ./std-out.json`
 
 # Start compiler
 
