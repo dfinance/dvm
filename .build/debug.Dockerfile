@@ -33,7 +33,5 @@
 FROM ubuntu:18.04
 WORKDIR /opt/app
 COPY \
-    ./target/debug/client \
-    ./target/debug/server \
-    ./target/debug/verify \
+    ./target/debug/* \
     /opt/app/
