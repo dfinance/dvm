@@ -1,0 +1,50 @@
+module WBAccount {
+    import 0x0.WBCoins;
+
+    resource T {
+        // store balances.
+        balances: WBCoins.T,
+    }
+
+    // withdraw funcs
+
+    // Withdraw `amount` LibraCoin.T from the transaction sender's account
+    public withdraw_from_sender(amount: u64, denom: bytearray): WBCoins.Coin acquires T {
+        let sender_account: &mut Self.T;
+
+        sender_account = borrow_global_mut<T>(get_txn_sender());
+        return Self.withdraw_from_account(move(sender_account), move(amount), move(denom));
+    }
+
+    // Helper to withdraw `amount` from the given `account` and return the resulting LibraCoin.T
+    withdraw_from_account(account: &mut Self.T, amount: u64, denom: bytearray): WBCoins.Coin {
+        let to_withdraw: WBCoins.Coin;
+
+        to_withdraw = WBCoins.withdraw(&mut move(account).balances, move(amount), move(denom));
+        return move(to_withdraw);
+    }
+
+    // Deposits the `to_deposit` coin into the `payee`'s account
+    public deposit(payee: address, to_deposit: WBCoins.Coin) acquires T {
+        Self.deposit_to_payee(move(payee), move(to_deposit));
+        return;
+    }
+
+    // Deposits the `to_deposit` coin into the `payee`'s account with the attached `metadata` and
+    // sender address
+    deposit_to_payee(
+        payee: address,
+        to_deposit: WBCoins.Coin,
+    ) acquires T {
+        let deposit_value: u64;
+        let payee_account_ref:  &mut Self.T;
+
+        // Load the payee's account
+        payee_account_ref = borrow_global_mut<T>(move(payee));
+
+        // Deposit the `to_deposit` coin
+        WBCoins.deposit(&mut copy(payee_account_ref).balances, move(to_deposit));
+
+        return;
+    }
+}
