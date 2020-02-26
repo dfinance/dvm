@@ -4,7 +4,7 @@ module WBCoins {
     // coin struct
     struct Coin {
         denom: bytearray,
-        value: u64,
+        value: u128,
     }
 
     resource T {
@@ -16,12 +16,12 @@ module WBCoins {
     // The original coin will have value = original value - `amount`
     // The new coin will have a value = `amount`
     // Fails if the coins value is less than `amount`
-    public withdraw(coins_ref: &mut Self.T, amount: u64, denom: bytearray): Self.Coin {
+    public withdraw(coins_ref: &mut Self.T, amount: u128, denom: bytearray): Self.Coin {
         let balances_ref: &mut Vector.T<Self.Coin>;
         let size: u64;
         let i: u64;
         let coin: &mut Self.Coin;
-        let value: u64;
+        let value: u128;
 
         balances_ref = &mut copy(coins_ref).balances;
         size = Vector.length<Self.Coin>(freeze(copy(balances_ref)));
@@ -40,7 +40,7 @@ module WBCoins {
         }
 
         assert(false, 10); // can't withdraw fake denom
-        return Coin{denom: move(denom), value: 0};
+        return Coin{denom: move(denom), value: 0u128};
     }
 
     // "Merges" the two coins
@@ -53,8 +53,8 @@ module WBCoins {
         let i: u64;
 
         let check_denom: bytearray;
-        let check_value: u64;
-        let value: u64;
+        let check_value: u128;
+        let value: u128;
 
         balances_ref = &mut copy(coins_ref).balances;
         size = Vector.length<Self.Coin>(freeze(copy(balances_ref)));
@@ -62,7 +62,7 @@ module WBCoins {
         i = 0;
         Coin { denom: check_denom, value: check_value } = move(check);
 
-        assert(copy(check_value) > 0, 11);
+        assert(copy(check_value) > 0u128, 11);
         // try to find balance and update
         while (copy(i) < copy(size)) {
             coin = Vector.borrow_mut<Self.Coin>(copy(balances_ref), copy(i));
