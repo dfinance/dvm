@@ -19,7 +19,7 @@ Executables included:
 
 One of following options:
 - __TODO: describe docker-install solution__
-- `cargo install --all-features --git https://github.com/WingsDao/move-vm-in-cosmos.git --bin server compiler verify`
+- `cargo install --all-features --git git@github.com:WingsDao/move-vm-in-cosmos.git --bin server compiler verify`
 
 
 
