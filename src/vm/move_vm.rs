@@ -3,10 +3,10 @@ extern crate lazy_static;
 use lazy_static::lazy_static;
 
 use libra_state_view::StateView;
-use libra_types::transaction::{TransactionArgument, TransactionStatus};
+use libra_types::transaction::TransactionStatus;
 use libra_types::{
     account_address::AccountAddress,
-    transaction::{Module, Script},
+    transaction::Module,
 };
 use vm::{
     gas_schedule::{CostTable, GasUnits, GasAlgebra, GasPrice},
@@ -121,7 +121,7 @@ pub trait VM {
         meta: ExecutionMeta,
         module_id: &ModuleId,
         function_name: &IdentStr,
-        args: Vec<TransactionArgument>,
+        args: Vec<Value>,
     ) -> VmResult;
 }
 
@@ -217,12 +217,7 @@ impl VM for MoveVm {
         let mut context = self.make_execution_context(&meta, &cache);
 
         let (script, args) = script.into_inner();
-
-        let res = convert_txn_args(args).and_then(|args| {
-            self.runtime
-                .execute_script(&mut context, &meta, &self.cost_table, script, args)
-        });
-
+        let res = self.runtime.execute_script(&mut context, &meta, &self.cost_table, script, args);
         ExecutionResult::new(context, meta, res)
     }
 
@@ -231,38 +226,56 @@ impl VM for MoveVm {
         meta: ExecutionMeta,
         module_id: &ModuleId,
         function_name: &IdentStr,
-        args: Vec<TransactionArgument>,
+        args: Vec<Value>,
     ) -> VmResult {
         let cache = self.make_data_cache();
         let meta = meta.into();
 
         let mut context = self.make_execution_context(&meta, &cache);
 
-        let res = convert_txn_args(args).and_then(|args| {
-            self.runtime.execute_function(
-                &mut context,
-                &meta,
-                &self.cost_table,
-                module_id,
-                &function_name,
-                args,
-            )
-        });
+        let res = self.runtime.execute_function(
+            &mut context,
+            &meta,
+            &self.cost_table,
+            module_id,
+            &function_name,
+            args,
+        );
 
         ExecutionResult::new(context, meta, res)
     }
 }
 
-/// Convert the transaction arguments into move values.
-fn convert_txn_args(args: Vec<TransactionArgument>) -> Result<Vec<Value>, VMStatus> {
-    args.into_iter()
-        .map(|arg| match arg {
-            TransactionArgument::U64(i) => Ok(Value::u64(i)),
-            TransactionArgument::Address(a) => Ok(Value::address(a)),
-            TransactionArgument::Bool(b) => Ok(Value::bool(b)),
-            TransactionArgument::ByteArray(b) => Ok(Value::byte_array(b)),
-        })
-        .collect()
+pub struct Script {
+    code: Vec<u8>,
+    args: Vec<Value>,
+}
+
+impl Script {
+    pub fn new(code: Vec<u8>, args: Vec<Value>) -> Self {
+        Script { code, args }
+    }
+
+    pub fn code(&self) -> &[u8] {
+        &self.code
+    }
+
+    pub fn args(&self) -> &[Value] {
+        &self.args
+    }
+
+    pub fn into_inner(self) -> (Vec<u8>, Vec<Value>) {
+        (self.code, self.args)
+    }
+}
+
+impl fmt::Debug for Script {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Script")
+            .field("code", &hex::encode(&self.code))
+            .field("args", &self.args)
+            .finish()
+    }
 }
 
 #[cfg(test)]
@@ -270,14 +283,15 @@ mod test {
     use crate::vm::{MoveVm, VM, Lang};
     use libra_types::account_address::AccountAddress;
     use crate::ds::{MockDataSource, MergeWriteSet, DataAccess};
-    use libra_types::transaction::{Module, Script, TransactionArgument};
+    use libra_types::transaction::Module;
     use vm::CompiledModule;
     use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use libra_types::identifier::Identifier;
     use libra_types::account_config::{core_code_address, association_address, transaction_fee_address};
-    use crate::vm::move_vm::ExecutionMeta;
+    use crate::vm::move_vm::{ExecutionMeta, Script};
     use libra_types::vm_error::StatusCode::DUPLICATE_MODULE_NAME;
     use crate::vm::compiler::mv::{build, Code};
+    use vm_runtime_types::values::Value;
 
     #[test]
     fn test_create_account() {
@@ -354,8 +368,8 @@ mod test {
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-            .unwrap()
-            .write_set,
+                .unwrap()
+                .write_set,
         );
 
         let account = AccountAddress::random();
@@ -368,8 +382,8 @@ mod test {
                 &ACCOUNT_MODULE,
                 &Identifier::new("mint_to_address").unwrap(),
                 vec![
-                    TransactionArgument::Address(account),
-                    TransactionArgument::U64(1000),
+                    Value::address(account),
+                    Value::u64(1000),
                 ],
             )
             .unwrap();
@@ -403,8 +417,8 @@ mod test {
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-            .unwrap()
-            .write_set,
+                .unwrap()
+                .write_set,
         );
 
         let account = AccountAddress::random();
@@ -420,8 +434,8 @@ mod test {
         let script = Script::new(
             unit.serialize(),
             vec![
-                TransactionArgument::Address(account),
-                TransactionArgument::U64(1000),
+                Value::address(account),
+                Value::u64(1000),
             ],
         );
         let output = vm
