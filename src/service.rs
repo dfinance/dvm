@@ -5,10 +5,7 @@ use libra_state_view::StateView;
 use libra_types::account_address::AccountAddress;
 use libra_types::contract_event::ContractEvent;
 use libra_types::language_storage::TypeTag;
-use libra_types::transaction::{
-    Module, parse_as_address, parse_as_bool, parse_as_byte_array, parse_as_u64, Script,
-    TransactionStatus,
-};
+use libra_types::transaction::{Module, TransactionStatus};
 use libra_types::vm_error::{StatusCode, VMStatus};
 use libra_types::write_set::{WriteOp, WriteSet};
 use tonic::{Request, Response, Status};
@@ -19,9 +16,11 @@ use crate::compiled_protos::vm_grpc::{
 };
 use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
 use crate::ds::MergeWriteSet;
-use crate::vm::{ExecutionMeta, VM, VmResult, bech32_utils};
+use crate::vm::{ExecutionMeta, VM, VmResult, bech32_utils, Script};
 use crate::vm::ExecutionResult;
 use crate::vm::MoveVm;
+use vm_runtime_types::values::Value;
+use libra_types::byte_array::ByteArray;
 
 pub struct MoveVmService {
     vm: MoveVm,
@@ -132,6 +131,7 @@ impl TryFrom<VmContract> for Contract {
                                     Err(_) => Err(Error::msg("Invalid args type.")),
                                 }
                             }
+                            Some(VmTypeTag::U128) => parse_as_u128(&arg.value),
                             _ => Err(Error::msg("Invalid args type.")),
                         }
                         .map_err(|err| {
@@ -149,6 +149,59 @@ impl TryFrom<VmContract> for Contract {
 
         Ok(Contract { meta, code })
     }
+}
+
+pub fn parse_as_address(s: &str) -> Result<Value, Error> {
+    let mut s = s.to_ascii_lowercase();
+    if !s.starts_with("0x") {
+        return Err(Error::msg("address must start with '0x'".to_string()));
+    }
+    if s.len() == 2 {
+        return Err(Error::msg("address cannot be empty".to_string()));
+    }
+    if s.len() % 2 != 0 {
+        s = format!("0x0{}", &s[2..]);
+    }
+    let mut addr = hex::decode(&s[2..])?;
+    if addr.len() > 32 {
+        return Err(Error::msg("address must be 32 bytes or less".to_string()));
+    }
+    if addr.len() < 32 {
+        addr = vec![0u8; 32 - addr.len()]
+            .into_iter()
+            .chain(addr.into_iter())
+            .collect();
+    }
+    Ok(Value::address(AccountAddress::try_from(addr)?))
+}
+
+pub fn parse_as_byte_array(s: &str) -> Result<Value, Error> {
+    if s.starts_with("b\"") && s.ends_with('"') && s.len() >= 3 {
+        let s = &s[2..s.len() - 1];
+        if s.is_empty() {
+            return Err(Error::msg("byte array cannot be empty".to_string()));
+        }
+        let s = if s.len() % 2 == 0 {
+            s.to_string()
+        } else {
+            format!("0{}", s)
+        };
+        Ok(Value::byte_array(ByteArray::new(hex::decode(&s)?)))
+    } else {
+        Err(Error::msg(format!("\"{}\" is not a byte array", s)))
+    }
+}
+
+pub fn parse_as_u64(s: &str) -> Result<Value, Error> {
+    Ok(Value::u64(s.parse::<u64>()?))
+}
+
+pub fn parse_as_u128(s: &str) -> Result<Value, Error> {
+    Ok(Value::u128(s.parse::<u128>()?))
+}
+
+pub fn parse_as_bool(s: &str) -> Result<Value, Error> {
+    Ok(Value::bool(s.parse::<bool>()?))
 }
 
 impl From<VmResult> for VmExecuteResponse {
