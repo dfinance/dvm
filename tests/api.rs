@@ -12,9 +12,9 @@ use libra_types::byte_array::ByteArray;
 fn test_create_account() {
     let test_kit = TestKit::new(Lang::MvIr);
     let create_account = "\
-        import 0x0.LibraAccount;
-        main(fresh_address: address, initial_amount: u64) {
-          LibraAccount.create_new_account(move(fresh_address), move(initial_amount));
+        import 0x0.WBAccount;
+        main(fresh_address: address) {
+          WBAccount.create_account(move(fresh_address));
           return;
         }
     ";
@@ -25,18 +25,13 @@ fn test_create_account() {
     ))
     .expect("Cannot make AccountAddress");
 
-    let args = vec![
-        VmArgs {
-            r#type: VmTypeTag::Address as i32,
-            value: bech32_sender_address.to_string(),
-        },
-        VmArgs {
-            r#type: VmTypeTag::U64 as i32,
-            value: "1000".to_string(),
-        },
-    ];
+    let args = vec![VmArgs {
+        r#type: VmTypeTag::Address as i32,
+        value: bech32_sender_address.to_string(),
+    }];
     let res = test_kit.execute_script(create_account, meta(&account_address), args);
     test_kit.assert_success(&res);
+    assert!(!res.executions[0].write_set.is_empty());
     test_kit.merge_result(&res);
 }
 

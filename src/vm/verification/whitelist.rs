@@ -74,10 +74,8 @@ impl WhitelistVerifier {
 
 #[cfg(test)]
 mod tests {
-    use crate::vm::verification::bytecode::compile_script;
-
     use super::*;
-    use crate::vm::Lang;
+    use crate::vm::{Lang, compile_script};
 
     fn get_sender_address(address: &str) -> Result<AccountAddress> {
         ensure!(
@@ -104,15 +102,15 @@ mod tests {
         )
         .unwrap();
         let source = r"
-            import 0x0.LibraCoin;
-            import 0x0.LibraAccount;
+            import 0x0.WBCoins;
+            import 0x0.WBAccount;
 
             main() {
                 return;
             }
         ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["LibraAccount".to_string(), "LibraCoin".to_string()]
+            AccountAddress::default() => vec!["WBAccount".to_string(), "WBCoins".to_string()]
         };
         let verifier = WhitelistVerifier::new(sender_address, vec![], whitelist);
 
@@ -172,22 +170,22 @@ mod tests {
         )
         .unwrap();
         let source = r"
-                import 0x0.LibraCoin;
-                import 0x0.LibraAccount;
+                import 0x0.WBCoins;
+                import 0x0.WBAccount;
 
                 main() {
                     return;
                 }
             ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["LibraCoin".to_string()]
+            AccountAddress::default() => vec!["WBCoins".to_string()]
         };
         let verifier =
             WhitelistVerifier::new(sender_address, vec!["WingsAccount".to_string()], whitelist);
         let verified_err = verify_source_code(source, verifier, sender_address).unwrap_err();
         assert_eq!(
             verified_err.to_string(),
-            "Module 0000000000000000000000000000000000000000000000000000000000000000.LibraAccount is not whitelisted"
+            "Module 0000000000000000000000000000000000000000000000000000000000000000.WBAccount is not whitelisted"
         );
     }
 }

@@ -16,6 +16,16 @@ module WBAccount {
         return Self.withdraw_from_account(move(sender_account), move(amount), move(denom));
     }
 
+    // Creates a new account at `fresh_address` with an initial balance of zero
+    // Creating account on 0x0 will cause runtime failure as it is a reserved address for MoveVM.
+    public create_account(fresh_address: address) {
+       Self.save_account(copy(fresh_address), T {balances: WBCoins.zero_balances()});
+       return;
+    }
+
+     // Save an account to a given address if the address does not have an account resource yet
+     native save_account(addr: address, account: Self.T);
+
     // Helper to withdraw `amount` from the given `account` and return the resulting LibraCoin.T
     withdraw_from_account(account: &mut Self.T, amount: u128, denom: bytearray): WBCoins.Coin {
         let to_withdraw: WBCoins.Coin;
@@ -26,6 +36,10 @@ module WBAccount {
 
     // Deposits the `to_deposit` coin into the `payee`'s account
     public deposit(payee: address, to_deposit: WBCoins.Coin) acquires T {
+        if (!exists<T>(copy(payee))) {
+            Self.create_account(copy(payee));
+        }
+
         Self.deposit_to_payee(move(payee), move(to_deposit));
         return;
     }

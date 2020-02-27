@@ -287,7 +287,7 @@ mod test {
     use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use libra_types::identifier::Identifier;
     use libra_types::account_config::{core_code_address, association_address, transaction_fee_address};
-    use crate::vm::move_vm::{ExecutionMeta, Script};
+    use crate::vm::move_vm::ExecutionMeta;
     use libra_types::vm_error::StatusCode::DUPLICATE_MODULE_NAME;
     use crate::vm::compiler::mv::{build, Code};
     use vm_runtime_types::values::Value;
@@ -299,8 +299,8 @@ mod test {
         let account = AccountAddress::random();
         assert!(ds.get_account(&account).unwrap().is_none());
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
+        assert!(!output.write_set.is_empty());
         ds.merge_write_set(output.write_set);
-        assert_eq!(ds.get_account(&account).unwrap().unwrap().balance(), 0);
     }
 
     #[test]
@@ -384,61 +384,5 @@ mod test {
             )
             .unwrap();
         ds.merge_write_set(output.write_set);
-    }
-
-    #[test]
-    fn test_execute_script() {
-        let ds = MockDataSource::new(Lang::MvIr);
-        let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
-        ds.merge_write_set(
-            vm.create_account(ExecutionMeta::test(), association_address())
-                .unwrap()
-                .write_set,
-        );
-        ds.merge_write_set(
-            vm.create_account(ExecutionMeta::test(), transaction_fee_address())
-                .unwrap()
-                .write_set,
-        );
-        ds.merge_write_set(
-            vm.create_account(ExecutionMeta::test(), core_code_address())
-                .unwrap()
-                .write_set,
-        );
-
-        ds.merge_write_set(
-            vm.execute_function(
-                ExecutionMeta::new(100_000, 1, association_address()),
-                &COIN_MODULE,
-                &Identifier::new("initialize").unwrap(),
-                vec![],
-            )
-            .unwrap()
-            .write_set,
-        );
-
-        let account = AccountAddress::random();
-        let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
-        ds.merge_write_set(output.write_set);
-
-        let program = "
-        fun main(payee: address, amount: u64) {
-            0x0::LibraAccount::mint_to_address(payee, amount)
-        }
-        ";
-        let unit = build(Code::script(program), &account, false).unwrap();
-        let script = Script::new(
-            unit.serialize(),
-            vec![Value::address(account), Value::u64(1000)],
-        );
-        let output = vm
-            .execute_script(
-                ExecutionMeta::new(100_000, 1, association_address()),
-                script,
-            )
-            .unwrap();
-        ds.merge_write_set(output.write_set);
-        assert!(output.gas_used > 0);
-        assert_eq!(ds.get_account(&account).unwrap().unwrap().balance(), 1000);
     }
 }

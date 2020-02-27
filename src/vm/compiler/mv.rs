@@ -127,12 +127,32 @@ mod test {
     use libra_types::account_address::AccountAddress;
     use vm::access::{ModuleAccess, ScriptAccess};
     use vm::CompiledModule;
-    use vm::file_format::CompiledScript;
+
+    pub fn compile_module(
+        source: &str,
+        lang: Lang,
+        sender_address: &AccountAddress,
+    ) -> CompiledModule {
+        let compiler = lang.compiler();
+        build_std_with_compiler(
+            Stdlib {
+                modules: mvir_std(),
+                lang,
+            },
+            compiler.as_ref(),
+        )
+        .unwrap();
+
+        CompiledModule::deserialize(&compiler.build_module(source, sender_address, true).unwrap())
+            .unwrap()
+    }
 
     use crate::vm::compiler::{
         mv::{build_with_deps, Code, build},
         Lang,
     };
+    use crate::vm::stdlib::{build_std_with_compiler, Stdlib, mvir_std};
+    use crate::vm::compile_script;
 
     #[test]
     pub fn test_build_module_success() {
@@ -192,11 +212,7 @@ mod test {
             }
         ";
 
-        let binary = Lang::MvIr
-            .compiler()
-            .build_script(program, &AccountAddress::default(), false)
-            .unwrap();
-        let script = CompiledScript::deserialize(&binary).unwrap();
+        let script = compile_script(program, Lang::MvIr, &AccountAddress::default());
 
         let module = script
             .module_handles()
@@ -217,11 +233,8 @@ mod test {
                 import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount;
             }
         ";
-        let binary = Lang::MvIr
-            .compiler()
-            .build_module(program, &AccountAddress::default(), false)
-            .unwrap();
-        let main_module = CompiledModule::deserialize(&binary).unwrap();
+
+        let main_module = compile_module(program, Lang::MvIr, &AccountAddress::default());
 
         let module = main_module
             .module_handles()

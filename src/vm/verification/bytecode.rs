@@ -3,15 +3,22 @@ use libra_types::account_address::AccountAddress;
 use vm::access::ScriptAccess;
 use vm::file_format::{Bytecode, CompiledScript};
 use crate::vm::compiler::Lang;
+use crate::vm::stdlib::{build_std_with_compiler, Stdlib, mvir_std};
 
+//TODO Test only
 pub fn compile_script(source: &str, lang: Lang, sender_address: &AccountAddress) -> CompiledScript {
-    CompiledScript::deserialize(
-        &lang
-            .compiler()
-            .build_script(source, sender_address, false)
-            .unwrap(),
+    let compiler = lang.compiler();
+    build_std_with_compiler(
+        Stdlib {
+            modules: mvir_std(),
+            lang,
+        },
+        compiler.as_ref(),
     )
-    .unwrap()
+    .unwrap();
+
+    CompiledScript::deserialize(&compiler.build_script(source, sender_address, true).unwrap())
+        .unwrap()
 }
 
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
@@ -69,11 +76,11 @@ mod tests {
     #[test]
     fn test_call_module_is_accepted() {
         let source = r"
-            import 0x0.LibraAccount;
+            import 0x0.WBAccount;
 
             main() {
-                let account: LibraAccount.T;
-                account = LibraAccount.create_new_account(0x0, 10);
+                let account: WBAccount.T;
+                account = WBAccount.create_account(0x0);
                 return;
             }
         ";
