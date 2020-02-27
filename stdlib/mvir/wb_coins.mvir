@@ -12,6 +12,21 @@ module WBCoins {
         balances: Vector.T<Self.Coin>,
     }
 
+    // get zero coin.
+    public zero_coin(): Self.Coin {
+        return Coin { denom: h"", value: 0u128 };
+    }
+
+    // get coin value.
+    public coin_value(coin_ref: &Self.Coin): u128 {
+        return *&move(coin_ref).value;
+    }
+
+    // get coin denom.
+    public coin_denom(coin_ref: &Self.Coin): bytearray {
+        return *&move(coin_ref).denom;
+    }
+
     // "Divides" the given coin into two, where original coin is modified in place
     // The original coin will have value = original value - `amount`
     // The new coin will have a value = `amount`
