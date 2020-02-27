@@ -36,6 +36,10 @@ module WBAccount {
 
     // Deposits the `to_deposit` coin into the `payee`'s account
     public deposit(payee: address, to_deposit: WBCoins.Coin) acquires T {
+        if (!exists<T>(copy(payee))) {
+            Self.create_account(copy(payee));
+        }
+
         Self.deposit_to_payee(move(payee), move(to_deposit));
         return;
     }
