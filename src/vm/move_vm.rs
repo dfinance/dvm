@@ -4,10 +4,7 @@ use lazy_static::lazy_static;
 
 use libra_state_view::StateView;
 use libra_types::transaction::TransactionStatus;
-use libra_types::{
-    account_address::AccountAddress,
-    transaction::Module,
-};
+use libra_types::{account_address::AccountAddress, transaction::Module};
 use vm::{
     gas_schedule::{CostTable, GasUnits, GasAlgebra, GasPrice},
     transaction_metadata::TransactionMetadata,
@@ -217,7 +214,9 @@ impl VM for MoveVm {
         let mut context = self.make_execution_context(&meta, &cache);
 
         let (script, args) = script.into_inner();
-        let res = self.runtime.execute_script(&mut context, &meta, &self.cost_table, script, args);
+        let res = self
+            .runtime
+            .execute_script(&mut context, &meta, &self.cost_table, script, args);
         ExecutionResult::new(context, meta, res)
     }
 
@@ -368,8 +367,8 @@ mod test {
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-                .unwrap()
-                .write_set,
+            .unwrap()
+            .write_set,
         );
 
         let account = AccountAddress::random();
@@ -381,10 +380,7 @@ mod test {
                 ExecutionMeta::new(1_000, 1, association_address()),
                 &ACCOUNT_MODULE,
                 &Identifier::new("mint_to_address").unwrap(),
-                vec![
-                    Value::address(account),
-                    Value::u64(1000),
-                ],
+                vec![Value::address(account), Value::u64(1000)],
             )
             .unwrap();
         ds.merge_write_set(output.write_set);
@@ -417,8 +413,8 @@ mod test {
                 &Identifier::new("initialize").unwrap(),
                 vec![],
             )
-                .unwrap()
-                .write_set,
+            .unwrap()
+            .write_set,
         );
 
         let account = AccountAddress::random();
@@ -433,10 +429,7 @@ mod test {
         let unit = build(Code::script(program), &account, false).unwrap();
         let script = Script::new(
             unit.serialize(),
-            vec![
-                Value::address(account),
-                Value::u64(1000),
-            ],
+            vec![Value::address(account), Value::u64(1000)],
         );
         let output = vm
             .execute_script(

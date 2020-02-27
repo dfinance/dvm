@@ -134,10 +134,10 @@ impl TryFrom<VmContract> for Contract {
                             Some(VmTypeTag::U128) => parse_as_u128(&arg.value),
                             _ => Err(Error::msg("Invalid args type.")),
                         }
-                            .map_err(|err| {
-                                VMStatus::new(StatusCode::INVALID_DATA)
-                                    .with_message(format!("Invalid contract args [{:?}].", err))
-                            })
+                        .map_err(|err| {
+                            VMStatus::new(StatusCode::INVALID_DATA)
+                                .with_message(format!("Invalid contract args [{:?}].", err))
+                        })
                     })
                     .collect::<Result<Vec<_>, _>>()?;
 
@@ -154,17 +154,17 @@ impl TryFrom<VmContract> for Contract {
 pub fn parse_as_address(s: &str) -> Result<Value, Error> {
     let mut s = s.to_ascii_lowercase();
     if !s.starts_with("0x") {
-        return Err(Error::msg("address must start with '0x'".to_string()).into());
+        return Err(Error::msg("address must start with '0x'".to_string()));
     }
     if s.len() == 2 {
-        return Err(Error::msg("address cannot be empty".to_string()).into());
+        return Err(Error::msg("address cannot be empty".to_string()));
     }
     if s.len() % 2 != 0 {
         s = format!("0x0{}", &s[2..]);
     }
     let mut addr = hex::decode(&s[2..])?;
     if addr.len() > 32 {
-        return Err(Error::msg("address must be 32 bytes or less".to_string()).into());
+        return Err(Error::msg("address must be 32 bytes or less".to_string()));
     }
     if addr.len() < 32 {
         addr = vec![0u8; 32 - addr.len()]
@@ -179,7 +179,7 @@ pub fn parse_as_byte_array(s: &str) -> Result<Value, Error> {
     if s.starts_with("b\"") && s.ends_with('"') && s.len() >= 3 {
         let s = &s[2..s.len() - 1];
         if s.is_empty() {
-            return Err(Error::msg("byte array cannot be empty".to_string()).into());
+            return Err(Error::msg("byte array cannot be empty".to_string()));
         }
         let s = if s.len() % 2 == 0 {
             s.to_string()
@@ -188,7 +188,7 @@ pub fn parse_as_byte_array(s: &str) -> Result<Value, Error> {
         };
         Ok(Value::byte_array(ByteArray::new(hex::decode(&s)?)))
     } else {
-        Err(Error::msg(format!("\"{}\" is not a byte array", s)).into())
+        Err(Error::msg(format!("\"{}\" is not a byte array", s)))
     }
 }
 
@@ -203,7 +203,6 @@ pub fn parse_as_u128(s: &str) -> Result<Value, Error> {
 pub fn parse_as_bool(s: &str) -> Result<Value, Error> {
     Ok(Value::bool(s.parse::<bool>()?))
 }
-
 
 impl From<VmResult> for VmExecuteResponse {
     fn from(res: Result<ExecutionResult, VMStatus>) -> Self {
