@@ -156,9 +156,11 @@ impl Compiler for MvIr {
 
         let mut cache = self.cache.lock().unwrap();
         let mut compiler = MvIrCompiler::default();
+
         compiler.skip_stdlib_deps = disabled_std;
         compiler.extra_deps = cache.clone();
         compiler.address = *address;
+
         let module = compiler.into_compiled_module(&code)?;
         let mut buff = Vec::new();
         module.serialize(&mut buff).unwrap();

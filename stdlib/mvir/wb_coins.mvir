@@ -12,6 +12,11 @@ module WBCoins {
         balances: Vector.T<Self.Coin>,
     }
 
+    // Create a new LibraCoin.T with a value of 0
+    public zero_balances(): Self.T {
+        return T { balances: Vector.empty<Self.Coin>()};
+    }
+
     // get zero coin.
     public zero_coin(): Self.Coin {
         return Coin { denom: h"", value: 0u128 };
