@@ -68,6 +68,8 @@ pub fn build_std_with_compiler(stdlib: Stdlib, compiler: &dyn Compiler) -> Resul
         }
     }
 
+    ids.sort_unstable();
+
     let meta = lcs::to_bytes(&StdMeta { modules: ids })?;
     let std_meta_id = meta_module_id()?;
     data_view.publish_module(std_meta_id, meta)?;
