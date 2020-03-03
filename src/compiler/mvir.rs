@@ -81,6 +81,35 @@ impl CompilerService {
     }
 }
 
+pub fn compile_mvir(
+    source_text: &str,
+    sender_address: AccountAddress,
+    is_module: bool,
+    deps: Vec<VerifiedModule>,
+) -> Result<Vec<u8>, Vec<String>> {
+    let mut compiler = compiler::Compiler::default();
+    compiler.skip_stdlib_deps = true;
+    compiler.extra_deps = deps;
+    compiler.address = sender_address;
+
+    let mut compiled_bytecode = vec![];
+    if is_module {
+        compiler
+            .into_compiled_module(source_text)
+            .unwrap()
+            .serialize(&mut compiled_bytecode)
+            .unwrap()
+    } else {
+        compiler
+            .into_compiled_program(source_text)
+            .unwrap()
+            .script
+            .serialize(&mut compiled_bytecode)
+            .unwrap()
+    };
+    Ok(compiled_bytecode)
+}
+
 impl CompilerService {
     async fn inner_compile(
         &self,
@@ -147,27 +176,8 @@ impl CompilerService {
         };
         let account_address = AccountAddress::from_hex_literal(&address_lit).unwrap();
 
-        let mut compiler = compiler::Compiler::default();
-        compiler.skip_stdlib_deps = true;
-        compiler.extra_deps = deps;
-        compiler.address = account_address;
-
-        let mut compiled_bytecode = vec![];
-        if is_module {
-            compiler
-                .into_compiled_module(&source_text)
-                .unwrap()
-                .serialize(&mut compiled_bytecode)
-                .unwrap()
-        } else {
-            compiler
-                .into_compiled_program(&source_text)
-                .unwrap()
-                .script
-                .serialize(&mut compiled_bytecode)
-                .unwrap()
-        };
-        Ok(Ok(compiled_bytecode))
+        let compiled = compile_mvir(&source_text, account_address, is_module, deps);
+        Ok(compiled)
     }
 }
 
