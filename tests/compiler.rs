@@ -17,7 +17,6 @@ use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient};
-use move_vm_in_cosmos::compiler::test_utils::{new_error_response, new_response};
 use move_vm_in_cosmos::vm::Lang;
 
 fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
@@ -74,15 +73,17 @@ impl DsClient for DsServiceMock {
             "First byte should be 0 as in AccessPath::CODE_TAG"
         );
 
-        let response = match self.deps.get(&access_path) {
+        let ds_response = match self.deps.get(&access_path) {
             Some(module) => {
                 let mut buffer = vec![];
                 module.serialize(&mut buffer).unwrap();
-                new_response(&buffer[..])
+                DsRawResponse::with_blob(&buffer[..])
             }
-            None => new_error_response(ErrorCode::NoData, format!("'{}' not found", access_path)),
+            None => {
+                DsRawResponse::with_error(ErrorCode::NoData, format!("'{}' not found", access_path))
+            }
         };
-        Ok(response)
+        Ok(Response::new(ds_response))
     }
 }
 
