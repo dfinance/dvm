@@ -94,19 +94,17 @@ pub fn compile_mvir(
 
     let mut compiled_bytecode = vec![];
     if is_module {
-        compiler
+        let compiled_module = compiler
             .into_compiled_module(source_text)
-            .unwrap()
-            .serialize(&mut compiled_bytecode)
-            .unwrap()
+            .map_err(|err| vec![err.to_string()])?;
+        compiled_module.serialize(&mut compiled_bytecode).unwrap();
     } else {
-        compiler
+        let compiled_script = compiler
             .into_compiled_program(source_text)
-            .unwrap()
-            .script
-            .serialize(&mut compiled_bytecode)
-            .unwrap()
-    };
+            .map_err(|err| vec![err.to_string()])?
+            .script;
+        compiled_script.serialize(&mut compiled_bytecode).unwrap();
+    }
     Ok(compiled_bytecode)
 }
 

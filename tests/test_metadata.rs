@@ -1,5 +1,5 @@
 use libra_types::account_address::AccountAddress;
-use tonic::Request;
+use tonic::{Request, Code};
 
 use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmScript, VmTypeTag};
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
@@ -51,5 +51,26 @@ async fn test_multiple_arguments_for_mvir_script() {
             VmTypeTag::U128 as i32,
             VmTypeTag::ByteArray as i32
         ]
+    );
+}
+
+#[tokio::test]
+async fn test_cannot_deserialize_bytecode() {
+    let source_text = r"
+            main(recipient: address, amount: u128, denom: bytearray) {
+                return;
+            }
+        ";
+    let mut script_bytecode =
+        compile_mvir(source_text, AccountAddress::random(), false, vec![]).unwrap();
+    script_bytecode.pop();
+
+    let metadata_service = MetadataService::default();
+    let request = Request::new(VmScript::new(script_bytecode));
+    let err_status = metadata_service.get_signature(request).await.unwrap_err();
+    assert_eq!(err_status.code(), Code::InvalidArgument);
+    assert_eq!(
+        err_status.message(),
+        "Cannot deserialize script from provided bytecode"
     );
 }

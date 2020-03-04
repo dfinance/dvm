@@ -260,3 +260,19 @@ async fn test_pass_empty_string_as_address() {
     let error_status = compiler_service.compile(request).await.unwrap_err();
     assert_eq!(error_status.message(), "Address is not a valid bech32");
 }
+
+#[tokio::test]
+async fn test_compilation_error_on_variable_redefinition() {
+    let source_text = r#"
+            main() {
+                let a: u128;
+                let a: bytearray;
+                return;
+            }
+        "#;
+    let compilation_result = compile_source_file(source_text, ContractType::Script)
+        .await
+        .unwrap()
+        .into_inner();
+    assert_eq!(compilation_result.errors, vec!["variable redefinition a"]);
+}
