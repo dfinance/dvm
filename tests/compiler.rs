@@ -123,8 +123,7 @@ async fn test_compile_mvir_module() {
         compilation_result.errors
     );
 
-    let compiled_module = CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
-    dbg!(compiled_module);
+    CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
 }
 
 #[tokio::test]
