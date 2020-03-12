@@ -8,6 +8,8 @@ use tonic::transport::{Server, Uri};
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
 use move_vm_in_cosmos::compiler::mvir::CompilerService;
+use move_vm_in_cosmos::vm::metadata::MetadataService;
+use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
@@ -32,9 +34,11 @@ async fn main() -> Result<()> {
     println!("Connected to ds server");
 
     let compiler_service = CompilerService::new(Box::new(ds_client));
+    let metadata_service = MetadataService::default();
 
     Server::builder()
         .add_service(VmCompilerServer::new(compiler_service))
+        .add_service(VmScriptMetadataServer::new(metadata_service))
         .serve(address)
         .await?;
     Ok(())

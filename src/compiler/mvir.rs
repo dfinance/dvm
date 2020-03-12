@@ -81,6 +81,37 @@ impl CompilerService {
     }
 }
 
+pub fn compile_mvir(
+    source_text: &str,
+    sender_address: AccountAddress,
+    is_module: bool,
+    deps: Vec<VerifiedModule>,
+) -> Result<Vec<u8>, Vec<String>> {
+    let mut compiler = compiler::Compiler::default();
+    compiler.skip_stdlib_deps = true;
+    compiler.extra_deps = deps;
+    compiler.address = sender_address;
+
+    let mut compiled_bytecode = vec![];
+    if is_module {
+        let compiled_module = compiler
+            .into_compiled_module(source_text)
+            .map_err(|err| vec![err.to_string()])?;
+        compiled_module
+            .serialize(&mut compiled_bytecode)
+            .expect("Module serialization failed");
+    } else {
+        let compiled_script = compiler
+            .into_compiled_program(source_text)
+            .map_err(|err| vec![err.to_string()])?
+            .script;
+        compiled_script
+            .serialize(&mut compiled_bytecode)
+            .expect("Script serialization failed");
+    }
+    Ok(compiled_bytecode)
+}
+
 impl CompilerService {
     async fn inner_compile(
         &self,
@@ -108,20 +139,24 @@ impl CompilerService {
             let response = client
                 .resolve_ds_path(Request::new(import_access_path))
                 .await;
-            if let Err(status) = response {
-                return Err(Status::unavailable(format!(
-                    "DS server request failed with {}",
-                    status.to_string()
-                )));
-            }
-            let ds_response = response.unwrap().into_inner();
+            let ds_response = response
+                .map_err(|status| {
+                    Status::unavailable(format!(
+                        "DS server request failed with {}",
+                        status.to_string()
+                    ))
+                })?
+                .into_inner();
             let error_code =
                 ErrorCode::from_i32(ds_response.error_code).expect("DS returned invalid ErrorCode");
             match error_code {
                 ErrorCode::None => {
                     let resolved_dep_module = CompiledModule::deserialize(&ds_response.blob)
                         .expect("Module deserialization failed");
-                    deps.push(VerifiedModule::new(resolved_dep_module).unwrap());
+                    deps.push(
+                        VerifiedModule::new(resolved_dep_module)
+                            .expect("Module verification failed"),
+                    );
                 }
                 // should not happen
                 ErrorCode::BadRequest => panic!("DS returned BAD_REQUEST"),
@@ -147,27 +182,8 @@ impl CompilerService {
         };
         let account_address = AccountAddress::from_hex_literal(&address_lit).unwrap();
 
-        let mut compiler = compiler::Compiler::default();
-        compiler.skip_stdlib_deps = true;
-        compiler.extra_deps = deps;
-        compiler.address = account_address;
-
-        let mut compiled_bytecode = vec![];
-        if is_module {
-            compiler
-                .into_compiled_module(&source_text)
-                .unwrap()
-                .serialize(&mut compiled_bytecode)
-                .unwrap()
-        } else {
-            compiler
-                .into_compiled_program(&source_text)
-                .unwrap()
-                .script
-                .serialize(&mut compiled_bytecode)
-                .unwrap()
-        };
-        Ok(Ok(compiled_bytecode))
+        let compiled = compile_mvir(&source_text, account_address, is_module, deps);
+        Ok(compiled)
     }
 }
 

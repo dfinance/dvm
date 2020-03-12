@@ -16,7 +16,6 @@ use move_vm_in_cosmos::compiled_protos::ds_grpc::{
     DsRawResponse, DsAccessPath, DsAccessPaths, DsRawResponses,
 };
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
-use move_vm_in_cosmos::compiler::test_utils::new_response;
 
 use vm_runtime_types::values::Struct;
 
@@ -56,14 +55,15 @@ impl DsService for DataSourceService {
         // if Resource
         if is_resource(&access_path) {
             println!("Access path {}", &access_path);
-            return Ok(new_response(
+            let ds_response = DsRawResponse::with_blob(
                 &account_data
                     .to_resource()
                     .value_as::<Struct>()
                     .unwrap()
                     .simple_serialize(&AccountData::layout())
                     .unwrap(),
-            ));
+            );
+            return Ok(Response::new(ds_response));
         }
         println!("No data for request");
         Err(Status::invalid_argument("No data for request."))

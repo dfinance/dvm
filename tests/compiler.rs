@@ -17,7 +17,6 @@ use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient};
-use move_vm_in_cosmos::compiler::test_utils::{new_error_response, new_response};
 use move_vm_in_cosmos::vm::Lang;
 
 fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
@@ -74,15 +73,17 @@ impl DsClient for DsServiceMock {
             "First byte should be 0 as in AccessPath::CODE_TAG"
         );
 
-        let response = match self.deps.get(&access_path) {
+        let ds_response = match self.deps.get(&access_path) {
             Some(module) => {
                 let mut buffer = vec![];
                 module.serialize(&mut buffer).unwrap();
-                new_response(&buffer[..])
+                DsRawResponse::with_blob(&buffer[..])
             }
-            None => new_error_response(ErrorCode::NoData, format!("'{}' not found", access_path)),
+            None => {
+                DsRawResponse::with_error(ErrorCode::NoData, format!("'{}' not found", access_path))
+            }
         };
-        Ok(response)
+        Ok(Response::new(ds_response))
     }
 }
 
@@ -122,8 +123,7 @@ async fn test_compile_mvir_module() {
         compilation_result.errors
     );
 
-    let compiled_module = CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
-    dbg!(compiled_module);
+    CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
 }
 
 #[tokio::test]
@@ -259,4 +259,20 @@ async fn test_pass_empty_string_as_address() {
     let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
     let error_status = compiler_service.compile(request).await.unwrap_err();
     assert_eq!(error_status.message(), "Address is not a valid bech32");
+}
+
+#[tokio::test]
+async fn test_compilation_error_on_variable_redefinition() {
+    let source_text = r#"
+            main() {
+                let a: u128;
+                let a: bytearray;
+                return;
+            }
+        "#;
+    let compilation_result = compile_source_file(source_text, ContractType::Script)
+        .await
+        .unwrap()
+        .into_inner();
+    assert_eq!(compilation_result.errors, vec!["variable redefinition a"]);
 }
