@@ -15,6 +15,7 @@ use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
 use crate::vm::bech32_utils;
+use regex::Regex;
 
 pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessPath>> {
     let imports = if is_module {
@@ -31,6 +32,17 @@ pub fn extract_imports(source_text: &str, is_module: bool) -> Result<Vec<AccessP
         }
     }
     Ok(imported_modules)
+}
+
+pub fn find_and_replace_s_prefixed_strings(source: &str) -> String {
+    let mut replaced = source.to_string();
+    let regex = Regex::new(r#"s".*""#).unwrap();
+    for mat in regex.find_iter(source) {
+        let content = &mat.as_str()[2..mat.as_str().len() - 1];
+        let hex = hex::encode(&content.bytes().collect::<Vec<u8>>());
+        replaced.replace_range(mat.range(), &format!("h\"{}\"", hex));
+    }
+    replaced
 }
 
 #[tonic::async_trait]
@@ -120,6 +132,7 @@ impl CompilerService {
         let source_file_data = request.into_inner();
 
         let source_text = bech32_utils::find_and_replace_bech32_addresses(&source_file_data.text);
+        let source_text = find_and_replace_s_prefixed_strings(&source_text);
         let is_module = ContractType::from_i32(source_file_data.r#type)
             .expect("Invalid ContractType")
             == ContractType::Module;
