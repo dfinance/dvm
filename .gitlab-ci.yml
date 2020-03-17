@@ -2,4 +2,4 @@
 include:
   - project: 'DevOps/gitlab-templates'
     ref: master
-    file: '/include/blockchain/move-vm-in-cosmos.yml'
+    file: '/include/dfinance/dvm.yml'
