@@ -1,3 +1,7 @@
 .git
 .vscode
 .build/*Dockerfile
+.gitignore
+.gitlab-ci.yml
+*.md
+.*
