@@ -12,9 +12,9 @@ use libra_types::byte_array::ByteArray;
 fn test_create_account() {
     let test_kit = TestKit::new(Lang::MvIr);
     let create_account = "\
-        import 0x0.WBAccount;
+        import 0x0.Account;
         main(fresh_address: address) {
-          WBAccount.create_account(move(fresh_address));
+          Account.create_account(move(fresh_address));
           return;
         }
     ";

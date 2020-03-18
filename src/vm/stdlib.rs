@@ -203,6 +203,7 @@ pub fn move_std() -> Vec<&'static str> {
         include_str!("../../stdlib/move/bytearray_util.move"),
         include_str!("../../stdlib/move/event.move"),
         include_str!("../../stdlib/move/hash.move"),
+        // TODO: libra_account & libra_coin .move
         include_str!("../../stdlib/move/libra_account.move"),
         include_str!("../../stdlib/move/libra_coin.move"),
         include_str!("../../stdlib/move/signature.move"),
@@ -221,8 +222,8 @@ pub fn mvir_std() -> Vec<&'static str> {
         include_str!("../../stdlib/mvir/bytearray_util.mvir"),
         include_str!("../../stdlib/mvir/gas_schedule.mvir"),
         include_str!("../../stdlib/mvir/hash.mvir"),
-        include_str!("../../stdlib/mvir/wb_account.mvir"),
-        include_str!("../../stdlib/mvir/wb_coins.mvir"),
+        include_str!("../../stdlib/mvir/account.mvir"),
+        include_str!("../../stdlib/mvir/coins.mvir"),
         include_str!("../../stdlib/mvir/signature.mvir"),
         include_str!("../../stdlib/mvir/u64_util.mvir"),
         include_str!("../../stdlib/mvir/validator_config.mvir"),
