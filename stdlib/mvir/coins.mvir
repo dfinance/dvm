@@ -1,4 +1,4 @@
-module WBCoins {
+module Coins {
     import 0x0.Vector;
 
     // coin struct
