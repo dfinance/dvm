@@ -102,15 +102,15 @@ mod tests {
         )
         .unwrap();
         let source = r"
-            import 0x0.WBCoins;
-            import 0x0.WBAccount;
+            import 0x0.Coins;
+            import 0x0.Account;
 
             main() {
                 return;
             }
         ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["WBAccount".to_string(), "WBCoins".to_string()]
+            AccountAddress::default() => vec!["Account".to_string(), "Coins".to_string()]
         };
         let verifier = WhitelistVerifier::new(sender_address, vec![], whitelist);
 
@@ -170,22 +170,22 @@ mod tests {
         )
         .unwrap();
         let source = r"
-                import 0x0.WBCoins;
-                import 0x0.WBAccount;
+                import 0x0.Coins;
+                import 0x0.Account;
 
                 main() {
                     return;
                 }
             ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["WBCoins".to_string()]
+            AccountAddress::default() => vec!["Coins".to_string()]
         };
         let verifier =
             WhitelistVerifier::new(sender_address, vec!["WingsAccount".to_string()], whitelist);
         let verified_err = verify_source_code(source, verifier, sender_address).unwrap_err();
         assert_eq!(
             verified_err.to_string(),
-            "Module 0000000000000000000000000000000000000000000000000000000000000000.WBAccount is not whitelisted"
+            "Module 0000000000000000000000000000000000000000000000000000000000000000.Account is not whitelisted"
         );
     }
 }

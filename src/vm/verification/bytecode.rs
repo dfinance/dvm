@@ -76,11 +76,11 @@ mod tests {
     #[test]
     fn test_call_module_is_accepted() {
         let source = r"
-            import 0x0.WBAccount;
+            import 0x0.Account;
 
             main() {
-                let account: WBAccount.T;
-                account = WBAccount.create_account(0x0);
+                let account: Account.T;
+                account = Account.create_account(0x0);
                 return;
             }
         ";
