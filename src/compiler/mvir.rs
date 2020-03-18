@@ -14,6 +14,7 @@ use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
+use crate::compiled_protos::*;
 use crate::vm::bech32_utils;
 use regex::Regex;
 
@@ -59,25 +60,9 @@ impl DsClient for DsServiceClient<Channel> {
         &mut self,
         request: Request<AccessPath>,
     ) -> Result<Response<DsRawResponse>, Status> {
-        let ds_access_path: DsAccessPath = request.into_inner().into();
+        let ds_access_path: DsAccessPath = access_path_into_ds(request.into_inner());
         let request = Request::new(ds_access_path);
         self.get_raw(request).await
-    }
-}
-
-impl CompilationResult {
-    pub fn with_bytecode(bytecode: Vec<u8>) -> Self {
-        CompilationResult {
-            bytecode,
-            errors: vec![],
-        }
-    }
-
-    pub fn with_errors(errors: Vec<String>) -> Self {
-        CompilationResult {
-            bytecode: vec![],
-            errors,
-        }
     }
 }
 

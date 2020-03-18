@@ -13,6 +13,7 @@ use tonic::transport::{Channel, Server};
 
 use move_vm_in_cosmos::ds::view as rds;
 use move_vm_in_cosmos::service::MoveVmService;
+use move_vm_in_cosmos::compiled_protos::access_path_into_ds;
 use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use move_vm_in_cosmos::vm::native::{oracle::PriceOracle, Reg};
@@ -73,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 3. send response to blocking data-source, so unblock it.
     rx.iter().for_each(move |ap| {
         let mut client = client.borrow_mut();
-        let request = tonic::Request::new(ap.into());
+        let request = tonic::Request::new(access_path_into_ds(ap));
         runtime.block_on(async {
             let res = client.get_raw(request).await;
             if let Err(ref err) = res {

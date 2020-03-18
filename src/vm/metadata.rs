@@ -5,19 +5,6 @@ use vm::printers::TableAccess;
 use crate::compiled_protos::vm_grpc::{Signature, VmScript, VmTypeTag};
 use crate::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
 
-impl VmScript {
-    pub fn new(bytecode: Vec<u8>) -> Self {
-        Self { code: bytecode }
-    }
-}
-
-impl Signature {
-    pub fn new(args: &[VmTypeTag]) -> Self {
-        let arguments = args.iter().map(|&tag| tag as i32).collect();
-        Self { arguments }
-    }
-}
-
 #[derive(Default)]
 pub struct MetadataService {}
 

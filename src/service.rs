@@ -50,7 +50,7 @@ impl MoveVmService {
     }
 
     pub fn execute_contract(&self, contract: VmContract, _options: u64) -> VmExecuteResponse {
-        VmExecuteResponse::from(Contract::try_from(contract).and_then(|contract| {
+        vm_result_to_execute_response(Contract::try_from(contract).and_then(|contract| {
             let res = match contract.code {
                 Code::Module(code) => self.vm.publish_module(contract.meta, code),
                 Code::Script(script) => self.vm.execute_script(contract.meta, script),
@@ -204,32 +204,30 @@ pub fn parse_as_bool(s: &str) -> Result<Value, Error> {
     Ok(Value::bool(s.parse::<bool>()?))
 }
 
-impl From<VmResult> for VmExecuteResponse {
-    fn from(res: Result<ExecutionResult, VMStatus>) -> Self {
-        match res {
-            Ok(res) => {
-                let (status, status_struct) = match res.status {
-                    TransactionStatus::Discard(status) => (0, Some(convert_status(status))),
-                    TransactionStatus::Keep(status) => (1, Some(convert_status(status))),
-                };
+fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmExecuteResponse {
+    match res {
+        Ok(res) => {
+            let (status, status_struct) = match res.status {
+                TransactionStatus::Discard(status) => (0, Some(convert_status(status))),
+                TransactionStatus::Keep(status) => (1, Some(convert_status(status))),
+            };
 
-                VmExecuteResponse {
-                    gas_used: res.gas_used,
-                    status,
-                    status_struct,
-                    events: convert_events(res.events),
-                    write_set: convert_write_set(res.write_set),
-                }
+            VmExecuteResponse {
+                gas_used: res.gas_used,
+                status,
+                status_struct,
+                events: convert_events(res.events),
+                write_set: convert_write_set(res.write_set),
             }
-            Err(err) => {
-                // This is't execution error!
-                VmExecuteResponse {
-                    gas_used: 0,
-                    status: 0,
-                    status_struct: Some(convert_status(err)),
-                    events: vec![],
-                    write_set: vec![],
-                }
+        }
+        Err(err) => {
+            // This is't execution error!
+            VmExecuteResponse {
+                gas_used: 0,
+                status: 0,
+                status_struct: Some(convert_status(err)),
+                events: vec![],
+                write_set: vec![],
             }
         }
     }

@@ -1,6 +1,13 @@
+[workspace]
+members = [
+    "api/rust",
+    # "testkit",
+]
+
+
 [package]
 name = "move-vm-in-cosmos"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
     "Dm. Yakushev <dmitryyakushev@wings.ai>",
@@ -8,9 +15,11 @@ authors = [
     ]
 edition = "2018"
 
-build = "src/build.rs"
 
 [dependencies]
+# TODO: point to git-repo instead of local submodule:
+dvm-api = { path = "api/rust" }
+
 move-lang = { git = "https://github.com/dfinance/libra.git", branch = "14.02.2020" }
 libra-crypto = { git = "https://github.com/dfinance/libra.git", branch = "14.02.2020" }
 vm-runtime-types = { git = "https://github.com/dfinance/libra.git", branch = "14.02.2020" }
@@ -35,8 +44,7 @@ slog = "=2.5.2"
 once_cell = "=1.3.1"
 
 tonic = "=0.1.1"
-prost = "=0.6"
-prost-types = "=0.6"
+
 tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
 futures = { version = "=0.3.4", features = ["async-await"] }
 futures-core = "=0.3.4"
@@ -50,6 +58,3 @@ maplit = "=1.0.2"
 regex = "=1.3.5"
 bech32 = "=0.7.2"
 slice_as_array = "=1.1.0"
-
-[build-dependencies]
-tonic-build = "=0.1.1"
