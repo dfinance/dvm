@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "api/rust",
     "test-kit",
 ]
 

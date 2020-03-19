@@ -590,20 +590,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "dvm-api"
-version = "0.1.0"
-dependencies = [
- "prost",
- "tonic",
- "tonic-build",
-]
-
-[[package]]
 name = "dvm-test-kit"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "dvm-api 0.1.0 (git+https://github.com/dfinance/dvm-proto.git?branch=feature-pregenerated-rust-code)",
+ "dvm-api",
  "futures",
  "libra-types",
  "move-vm-in-cosmos",
@@ -1444,7 +1435,7 @@ dependencies = [
  "bytecode-verifier",
  "byteorder",
  "compiler",
- "dvm-api 0.1.0 (git+https://github.com/dfinance/dvm-proto.git?branch=feature-pregenerated-rust-code)",
+ "dvm-api",
  "dvm-test-kit",
  "futures",
  "futures-core",
