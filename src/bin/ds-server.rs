@@ -20,7 +20,6 @@ use tonic::transport::Server;
 use dvm::compiled_protos::ds_grpc::{DsRawResponse, DsAccessPath, DsAccessPaths, DsRawResponses};
 use dvm::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
 
-
 #[derive(Debug, StructOpt)]
 struct Options {
     #[structopt(help = "Address in the form of HOST_ADDRESS:PORT")]
