@@ -16,7 +16,7 @@ use crate::compiled_protos::vm_grpc::{
 };
 use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
 use crate::ds::MergeWriteSet;
-use crate::vm::{ExecutionMeta, VM, VmResult, bech32_utils, Script};
+use crate::vm::{ExecutionMeta, VM, bech32_utils, Script};
 use crate::vm::ExecutionResult;
 use crate::vm::MoveVm;
 use vm_runtime_types::values::Value;
