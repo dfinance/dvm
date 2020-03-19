@@ -2,8 +2,10 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Error, Formatter};
 
 use anyhow::Result;
-use libra_types::account_address::AccountAddress;
 use maplit::hashmap;
+
+use libra::{libra_types, vm};
+use libra_types::account_address::AccountAddress;
 use vm::access::ScriptAccess;
 use vm::file_format::{CompiledScript, ModuleHandle};
 
@@ -129,11 +131,8 @@ mod tests {
                 return;
             }
         ";
-        let verifier = WhitelistVerifier::new(
-            sender_address,
-            vec!["Account".to_string()],
-            hashmap! {},
-        );
+        let verifier =
+            WhitelistVerifier::new(sender_address, vec!["Account".to_string()], hashmap! {});
 
         verify_source_code(source, verifier, sender_address).unwrap()
     }
@@ -150,11 +149,8 @@ mod tests {
                 return;
             }
         ";
-        let verifier = WhitelistVerifier::new(
-            sender_address,
-            vec!["Account".to_string()],
-            hashmap! {},
-        );
+        let verifier =
+            WhitelistVerifier::new(sender_address, vec!["Account".to_string()], hashmap! {});
 
         let err = verify_source_code(source, verifier, sender_address).unwrap_err();
         assert_eq!(

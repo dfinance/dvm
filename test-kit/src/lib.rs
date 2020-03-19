@@ -7,7 +7,8 @@ use std::ops::Range;
 use dvm::ds::MockDataSource;
 use dvm::vm::{ExecutionMeta, bech32_utils};
 use dvm_api::tonic::Request;
-// use tonic::Request;
+
+use libra::{libra_types, vm};
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;

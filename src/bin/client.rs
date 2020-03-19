@@ -2,6 +2,7 @@
 
 use structopt::StructOpt;
 use http::Uri;
+use dvm_api::tonic;
 use dvm::compiled_protos::vm_grpc::VmExecuteRequest;
 use dvm::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
 
@@ -42,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 mod mocks {
     use super::*;
-    use dvm::libra_types::account_address::AccountAddress;
+    use libra::libra_types::account_address::AccountAddress;
     use dvm::vm::Lang;
     use dvm::compiled_protos::vm_grpc::VmContract;
 

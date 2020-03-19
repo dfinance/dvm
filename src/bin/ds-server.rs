@@ -5,17 +5,21 @@
 extern crate slice_as_array;
 
 use std::net::SocketAddr;
+use structopt::StructOpt;
 
+use libra::{libra_types, vm_runtime_types, language_e2e_tests};
 use language_e2e_tests::account::{Account, AccountData};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
-use structopt::StructOpt;
+use vm_runtime_types::values::Struct;
+
+use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 use tonic::transport::Server;
+
 use dvm::compiled_protos::ds_grpc::{DsRawResponse, DsAccessPath, DsAccessPaths, DsRawResponses};
 use dvm::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
 
-use vm_runtime_types::values::Struct;
 
 #[derive(Debug, StructOpt)]
 struct Options {

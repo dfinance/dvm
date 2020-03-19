@@ -1,16 +1,11 @@
 #[macro_use]
-extern crate vm_runtime;
-#[macro_use]
 extern crate anyhow;
+extern crate libra;
 
 pub mod compiler;
 pub mod ds;
 pub mod service;
-#[macro_use]
 pub mod vm;
-
-// reshare libra crates
-pub use libra_types;
 
 mod api_grpc_ext;
 // TODO: [REF] rename to api_grpc

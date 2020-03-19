@@ -2,6 +2,8 @@ extern crate lazy_static;
 
 use lazy_static::lazy_static;
 
+use libra::{libra_types, libra_state_view, vm_runtime_types};
+use libra::{vm, vm_runtime, vm_cache_map};
 use libra_state_view::StateView;
 use libra_types::transaction::TransactionStatus;
 use libra_types::{account_address::AccountAddress, transaction::Module};
@@ -11,6 +13,7 @@ use vm::{
     CompiledModule,
 };
 use vm_cache_map::Arena;
+use vm_runtime::record_stats;
 use vm_runtime::{
     chain_state::TransactionExecutionContext, data_cache::BlockDataCache,
     execution_context::InterpreterContext, loaded_data::loaded_module::LoadedModule,
@@ -279,18 +282,19 @@ impl fmt::Debug for Script {
 
 #[cfg(test)]
 mod test {
-    use crate::vm::{MoveVm, VM, Lang};
+    use libra::{vm, vm_runtime, vm_runtime_types, libra_types};
     use libra_types::account_address::AccountAddress;
-    use crate::ds::{MockDataSource, MergeWriteSet, DataAccess};
     use libra_types::transaction::Module;
-    use vm::CompiledModule;
-    use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use libra_types::identifier::Identifier;
     use libra_types::account_config::{core_code_address, association_address, transaction_fee_address};
-    use crate::vm::move_vm::ExecutionMeta;
     use libra_types::vm_error::StatusCode::DUPLICATE_MODULE_NAME;
-    use crate::vm::compiler::mv::{build, Code};
+    use vm::CompiledModule;
+    use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use vm_runtime_types::values::Value;
+    use crate::vm::{MoveVm, VM, Lang};
+    use crate::ds::{MockDataSource, MergeWriteSet, DataAccess};
+    use crate::vm::move_vm::ExecutionMeta;
+    use crate::vm::compiler::mv::{build, Code};
 
     #[test]
     fn test_create_account() {

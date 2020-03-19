@@ -1,12 +1,15 @@
 use byteorder::{LittleEndian, ByteOrder};
-use dvm_test_kit::*;
+
+use libra::libra_types;
 use libra_types::account_address::AccountAddress;
+use libra_types::byte_array::ByteArray;
+
+use dvm_test_kit::*;
 use dvm::vm::{Lang, bech32_utils};
 use dvm::vm::native::{Reg, dbg};
 use dvm::vm::native::oracle::PriceOracle;
 use dvm::ds::MockDataSource;
 use dvm::compiled_protos::vm_grpc::{VmTypeTag, VmArgs};
-use libra_types::byte_array::ByteArray;
 
 #[test]
 fn test_create_account() {

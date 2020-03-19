@@ -6,9 +6,11 @@ use std::sync::mpsc;
 use std::time::Duration;
 
 use http::Uri;
-use libra_logger::try_init_for_testing;
+use libra::libra_logger::try_init_for_testing;
 use structopt::StructOpt;
 use tokio::runtime::Runtime;
+
+use dvm_api::tonic;
 use tonic::transport::{Channel, Server};
 
 use dvm::ds::view as rds;

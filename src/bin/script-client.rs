@@ -3,6 +3,7 @@
 use std::fs;
 
 use http::Uri;
+use libra::libra_types;
 use libra_types::account_address::AccountAddress;
 use structopt::StructOpt;
 

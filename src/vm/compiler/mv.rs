@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 
 use anyhow::{Error, Result};
+use libra::{libra_types, move_lang};
 use libra_types::account_address::AccountAddress;
 use move_lang::{
     compile_program, parser, parser::syntax::parse_file_string, shared::Address, stdlib,
@@ -124,6 +125,7 @@ fn parse_program(
 
 #[cfg(test)]
 mod test {
+    use libra::{vm, libra_types};
     use libra_types::account_address::AccountAddress;
     use vm::access::{ModuleAccess, ScriptAccess};
     use vm::CompiledModule;

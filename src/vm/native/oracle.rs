@@ -1,18 +1,19 @@
-use libra_types::language_storage::TypeTag;
+use std::fmt;
 use std::collections::VecDeque;
+use libra::{vm, libra_types, libra_state_view, vm_runtime_types, libra_crypto};
+use libra_types::language_storage::TypeTag;
 use vm::gas_schedule::{CostTable, GasCost};
 use vm_runtime_types::{pop_arg, native_functions::dispatch::NativeResult};
 use vm_runtime_types::values::Value;
 use libra_types::vm_error::{VMStatus, StatusCode};
 use libra_types::byte_array::ByteArray;
-use crate::vm::native::Function;
-use crate::module;
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use libra_types::account_config::core_code_address;
 use libra_crypto::hash::{DefaultHasher, CryptoHasher};
 use byteorder::{LittleEndian, ByteOrder};
-use std::fmt;
+use crate::vm::native::Function;
+use crate::module;
 
 const COST: u64 = 929;
 const PRICE_ORACLE_TAG: u8 = 255;

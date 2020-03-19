@@ -1,3 +1,4 @@
+use libra::libra_types;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use libra_types::identifier::Identifier;

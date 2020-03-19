@@ -1,12 +1,13 @@
 pub mod mv;
 
 use std::sync::Mutex;
+use std::str::FromStr;
 
+use libra::{libra_types, bytecode_verifier, move_lang, compiler, ir_to_bytecode};
+use libra_types::account_address::AccountAddress;
 use bytecode_verifier::VerifiedModule;
 use compiler::Compiler as MvIrCompiler;
-use libra_types::account_address::AccountAddress;
 use anyhow::Error;
-use std::str::FromStr;
 use ir_to_bytecode::parser::parse_program;
 use move_lang::parser::ast::{FileDefinition, ModuleOrAddress};
 use crate::vm::compiler::mv::{build_with_deps, Code, parse_module};

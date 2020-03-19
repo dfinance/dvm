@@ -1,4 +1,5 @@
 use anyhow::Result;
+use libra::{libra_types, vm};
 use libra_types::account_address::AccountAddress;
 use vm::access::ScriptAccess;
 use vm::file_format::{Bytecode, CompiledScript};

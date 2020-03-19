@@ -3,6 +3,7 @@ extern crate lazy_static;
 use anyhow::Result;
 use bech32::u5;
 use lazy_static::lazy_static;
+use libra::libra_types;
 use libra_types::access_path::AccessPath;
 use regex::Regex;
 

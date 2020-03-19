@@ -1,4 +1,6 @@
+use dvm_api::tonic;
 use tonic::{Request, Response, Status};
+use libra::vm;
 use vm::file_format::{CompiledScript, SignatureToken};
 use vm::printers::TableAccess;
 

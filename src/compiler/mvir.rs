@@ -1,10 +1,12 @@
 use anyhow::Result;
-use bytecode_verifier::VerifiedModule;
 use futures::lock::Mutex;
+use libra::{libra_types, bytecode_verifier, move_ir_types, ir_to_bytecode, compiler, vm};
+use bytecode_verifier::VerifiedModule;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use libra_types::language_storage::ModuleId;
 use move_ir_types::ast::ModuleIdent;
+use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 use tonic::transport::Channel;
 use vm::CompiledModule;

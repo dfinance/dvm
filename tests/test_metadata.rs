@@ -1,4 +1,6 @@
+use libra::libra_types;
 use libra_types::account_address::AccountAddress;
+use dvm_api::tonic;
 use tonic::{Request, Code};
 
 use dvm::compiled_protos::vm_grpc::{VmScript, VmTypeTag};

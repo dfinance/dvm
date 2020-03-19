@@ -1,16 +1,19 @@
 use std::collections::HashMap;
 
+use libra::{libra_types, bytecode_verifier, vm};
 use bytecode_verifier::VerifiedModule;
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use libra_types::identifier::Identifier;
 use libra_types::language_storage::ModuleId;
-use maplit::hashmap;
-use tonic::{Request, Response, Status};
 use vm::access::ScriptAccess;
 use vm::CompiledModule;
 use vm::file_format::{Bytecode, ModuleHandleIndex, ByteArrayPoolIndex};
 use vm::file_format::CompiledScript;
+
+use maplit::hashmap;
+use dvm_api::tonic;
+use tonic::{Request, Response, Status};
 
 use dvm::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
 use dvm::compiled_protos::ds_grpc::DsRawResponse;

@@ -1,6 +1,6 @@
 use std::fs;
 
-use libra_types::account_address::AccountAddress;
+use libra::libra_types::account_address::AccountAddress;
 use maplit::hashmap;
 use structopt::StructOpt;
 

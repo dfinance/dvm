@@ -1,3 +1,4 @@
+use libra::libra_types;
 use libra_types::access_path::AccessPath;
 use dvm_api::grpc::ds_grpc::DsAccessPath;
 

@@ -3,6 +3,8 @@ use std::net::SocketAddr;
 use anyhow::Result;
 use structopt::StructOpt;
 use tokio::time::Duration;
+
+use dvm_api::tonic;
 use tonic::transport::{Server, Uri};
 
 use dvm::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;

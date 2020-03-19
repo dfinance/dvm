@@ -1,11 +1,8 @@
 pub mod mock;
 pub mod view;
 
-use anyhow::Error;
+use libra::{libra_types, libra_state_view, vm_runtime, lcs};
 use libra_types::write_set::WriteSet;
-
-pub use mock::MockDataSource;
-
 use libra_types::account_address::AccountAddress;
 use libra_types::account_config::AccountResource;
 use libra_types::account_config::account_struct_tag;
@@ -14,6 +11,9 @@ use libra_types::transaction::Module;
 use libra_types::access_path::AccessPath;
 use libra_state_view::StateView;
 use vm_runtime::identifier::create_access_path;
+use anyhow::Error;
+
+pub use mock::MockDataSource;
 
 pub trait MergeWriteSet {
     fn merge_write_set(&self, write_set: WriteSet);
