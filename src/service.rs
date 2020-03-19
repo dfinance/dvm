@@ -14,8 +14,8 @@ use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
 use crate::compiled_protos::vm_grpc::{
-    ContractType, VmAccessPath, VmContract, VmStatus, VmEvent, VmExecuteRequest,
-    VmExecuteResponse, VmExecuteResponses, VmStructTag, VmType, VmTypeTag, VmValue,
+    ContractType, VmAccessPath, VmContract, VmStatus, VmEvent, VmExecuteRequest, VmExecuteResponse,
+    VmExecuteResponses, VmStructTag, VmType, VmTypeTag, VmValue,
 };
 use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
 use crate::ds::MergeWriteSet;
