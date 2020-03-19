@@ -580,6 +580,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "dvm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bech32 0.7.2",
+ "bytecode-verifier",
+ "byteorder",
+ "compiler",
+ "dvm-api",
+ "dvm-test-kit",
+ "futures",
+ "futures-core",
+ "hex",
+ "http",
+ "ir-to-bytecode",
+ "language-e2e-tests",
+ "lazy_static",
+ "libra-canonical-serialization",
+ "libra-config",
+ "libra-crypto",
+ "libra-logger",
+ "libra-state-view",
+ "libra-types",
+ "maplit",
+ "move-ir-types",
+ "move-lang",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_json",
+ "slice_as_array",
+ "slog",
+ "stdlib",
+ "structopt",
+ "tokio",
+ "tonic",
+ "vm",
+ "vm-cache-map",
+ "vm-runtime",
+ "vm-runtime-types",
+]
+
+[[package]]
 name = "dvm-api"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/dvm-proto.git?branch=feature-pregenerated-rust-code#454e575525437e01b87829bae5b5ad5a5277a965"
@@ -594,10 +637,10 @@ name = "dvm-test-kit"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dvm",
  "dvm-api",
  "futures",
  "libra-types",
- "move-vm-in-cosmos",
  "tokio",
  "vm",
 ]
@@ -1424,49 +1467,6 @@ dependencies = [
  "regex",
  "structopt",
  "vm",
-]
-
-[[package]]
-name = "move-vm-in-cosmos"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bech32 0.7.2",
- "bytecode-verifier",
- "byteorder",
- "compiler",
- "dvm-api",
- "dvm-test-kit",
- "futures",
- "futures-core",
- "hex",
- "http",
- "ir-to-bytecode",
- "language-e2e-tests",
- "lazy_static",
- "libra-canonical-serialization",
- "libra-config",
- "libra-crypto",
- "libra-logger",
- "libra-state-view",
- "libra-types",
- "maplit",
- "move-ir-types",
- "move-lang",
- "once_cell",
- "regex",
- "serde",
- "serde_json",
- "slice_as_array",
- "slog",
- "stdlib",
- "structopt",
- "tokio",
- "tonic",
- "vm",
- "vm-cache-map",
- "vm-runtime",
- "vm-runtime-types",
 ]
 
 [[package]]

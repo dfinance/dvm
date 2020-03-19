@@ -6,9 +6,9 @@ use http::Uri;
 use libra_types::account_address::AccountAddress;
 use structopt::StructOpt;
 
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmExecuteRequest, VmArgs, VmContract};
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
-use move_vm_in_cosmos::vm::Lang;
+use dvm::compiled_protos::vm_grpc::{VmExecuteRequest, VmArgs, VmContract};
+use dvm::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
+use dvm::vm::Lang;
 
 #[derive(Debug, StructOpt)]
 struct Options {

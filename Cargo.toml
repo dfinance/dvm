@@ -5,7 +5,7 @@ members = [
 
 
 [package]
-name = "move-vm-in-cosmos"
+name = "dvm"
 version = "0.1.0"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",

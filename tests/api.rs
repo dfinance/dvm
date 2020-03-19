@@ -1,11 +1,11 @@
 use byteorder::{LittleEndian, ByteOrder};
 use dvm_test_kit::*;
 use libra_types::account_address::AccountAddress;
-use move_vm_in_cosmos::vm::{Lang, bech32_utils};
-use move_vm_in_cosmos::vm::native::{Reg, dbg};
-use move_vm_in_cosmos::vm::native::oracle::PriceOracle;
-use move_vm_in_cosmos::ds::MockDataSource;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmTypeTag, VmArgs};
+use dvm::vm::{Lang, bech32_utils};
+use dvm::vm::native::{Reg, dbg};
+use dvm::vm::native::oracle::PriceOracle;
+use dvm::ds::MockDataSource;
+use dvm::compiled_protos::vm_grpc::{VmTypeTag, VmArgs};
 use libra_types::byte_array::ByteArray;
 
 #[test]

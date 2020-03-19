@@ -1,4 +1,4 @@
-use move_vm_in_cosmos::compiler::mvir;
+use dvm::compiler::mvir;
 
 #[test]
 fn test_replace_s_prefixed_string() {

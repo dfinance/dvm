@@ -1,8 +1,8 @@
 use std::{fs, io, path::PathBuf};
 use structopt::StructOpt;
 use serde_json::{to_string, to_string_pretty};
-use move_vm_in_cosmos::vm::stdlib::{Stdlib, build_std, WS};
-use move_vm_in_cosmos::vm::Lang;
+use dvm::vm::stdlib::{Stdlib, build_std, WS};
+use dvm::vm::Lang;
 
 #[derive(StructOpt)]
 struct Opts {

@@ -2,8 +2,8 @@
 
 use structopt::StructOpt;
 use http::Uri;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::VmExecuteRequest;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
+use dvm::compiled_protos::vm_grpc::VmExecuteRequest;
+use dvm::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
 
 #[derive(Debug, StructOpt)]
 struct Options {
@@ -42,9 +42,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 mod mocks {
     use super::*;
-    use move_vm_in_cosmos::libra_types::account_address::AccountAddress;
-    use move_vm_in_cosmos::vm::Lang;
-    use move_vm_in_cosmos::compiled_protos::vm_grpc::VmContract;
+    use dvm::libra_types::account_address::AccountAddress;
+    use dvm::vm::Lang;
+    use dvm::compiled_protos::vm_grpc::VmContract;
 
     pub fn req_publish_mod() -> Result<VmExecuteRequest, Box<dyn std::error::Error>> {
         let compiler = Lang::MvIr.compiler();

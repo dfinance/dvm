@@ -4,7 +4,7 @@ use libra_types::account_address::AccountAddress;
 use maplit::hashmap;
 use structopt::StructOpt;
 
-use move_vm_in_cosmos::vm::{self, validate_bytecode_instructions, WhitelistVerifier, Lang};
+use dvm::vm::{self, validate_bytecode_instructions, WhitelistVerifier, Lang};
 
 #[derive(StructOpt)]
 struct Opts {

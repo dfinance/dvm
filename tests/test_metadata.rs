@@ -1,10 +1,10 @@
 use libra_types::account_address::AccountAddress;
 use tonic::{Request, Code};
 
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmScript, VmTypeTag};
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
-use move_vm_in_cosmos::compiler::mvir::compile_mvir;
-use move_vm_in_cosmos::vm::metadata::MetadataService;
+use dvm::compiled_protos::vm_grpc::{VmScript, VmTypeTag};
+use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
+use dvm::compiler::mvir::compile_mvir;
+use dvm::vm::metadata::MetadataService;
 
 #[tokio::test]
 async fn test_no_arguments_for_mvir_script() {

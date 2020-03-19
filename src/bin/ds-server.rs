@@ -12,10 +12,8 @@ use libra_types::account_address::AccountAddress;
 use structopt::StructOpt;
 use tonic::{Request, Response, Status};
 use tonic::transport::Server;
-use move_vm_in_cosmos::compiled_protos::ds_grpc::{
-    DsRawResponse, DsAccessPath, DsAccessPaths, DsRawResponses,
-};
-use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
+use dvm::compiled_protos::ds_grpc::{DsRawResponse, DsAccessPath, DsAccessPaths, DsRawResponses};
+use dvm::compiled_protos::ds_grpc::ds_service_server::{DsService, DsServiceServer};
 
 use vm_runtime_types::values::Struct;
 

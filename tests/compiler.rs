@@ -12,12 +12,12 @@ use vm::CompiledModule;
 use vm::file_format::{Bytecode, ModuleHandleIndex, ByteArrayPoolIndex};
 use vm::file_format::CompiledScript;
 
-use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
-use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
-use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient};
-use move_vm_in_cosmos::vm::Lang;
+use dvm::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
+use dvm::compiled_protos::ds_grpc::DsRawResponse;
+use dvm::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
+use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
+use dvm::compiler::mvir::{CompilerService, DsClient};
+use dvm::vm::Lang;
 
 fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
     MvIrSourceFile {

@@ -5,11 +5,11 @@ use structopt::StructOpt;
 use tokio::time::Duration;
 use tonic::transport::{Server, Uri};
 
-use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
-use move_vm_in_cosmos::compiler::mvir::CompilerService;
-use move_vm_in_cosmos::vm::metadata::MetadataService;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
+use dvm::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
+use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
+use dvm::compiler::mvir::CompilerService;
+use dvm::vm::metadata::MetadataService;
+use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
