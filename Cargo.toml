@@ -17,7 +17,7 @@ edition = "2018"
 
 
 [dependencies]
-dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "feature-pregenerated-rust-code" }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "rename-error-status" }
 libra = { path = "libra", package = "dvm-libra-deps" }
 
 anyhow = "=1.0.27"

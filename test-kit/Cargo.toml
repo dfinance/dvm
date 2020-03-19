@@ -11,7 +11,7 @@ edition = "2018"
 
 [dependencies]
 dvm = { path = ".." }
-dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "feature-pregenerated-rust-code" }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "rename-error-status" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
 anyhow = "=1.0.27"
 tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }

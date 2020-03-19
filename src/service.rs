@@ -14,7 +14,7 @@ use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
 use crate::compiled_protos::vm_grpc::{
-    ContractType, VmAccessPath, VmContract, VmErrorStatus, VmEvent, VmExecuteRequest,
+    ContractType, VmAccessPath, VmContract, VmStatus, VmEvent, VmExecuteRequest,
     VmExecuteResponse, VmExecuteResponses, VmStructTag, VmType, VmTypeTag, VmValue,
 };
 use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
@@ -236,8 +236,8 @@ fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmEx
     }
 }
 
-fn convert_status(status: VMStatus) -> VmErrorStatus {
-    VmErrorStatus {
+fn convert_status(status: VMStatus) -> VmStatus {
+    VmStatus {
         major_status: status.major_status as u64,
         sub_status: status.sub_status.map(|status| status as u64).unwrap_or(0),
         message: status.message.unwrap_or_default(),

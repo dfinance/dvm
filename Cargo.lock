@@ -608,7 +608,7 @@ dependencies = [
 [[package]]
 name = "dvm-api"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/dvm-proto.git?branch=feature-pregenerated-rust-code#454e575525437e01b87829bae5b5ad5a5277a965"
+source = "git+https://github.com/dfinance/dvm-proto.git?branch=rename-error-status#686c17129a7940dd9aff1a34f466e80a128c884d"
 dependencies = [
  "prost",
  "tonic",
