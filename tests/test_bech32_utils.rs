@@ -11,20 +11,20 @@ use move_vm_in_cosmos::vm::bech32_utils::{
 
 #[test]
 fn test_match_valid_import_bech32_lines() {
-    let sources = "import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount; import wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6.WingsAccount;";
+    let sources = "import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account; import wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6.Account;";
     let replaced_line = find_and_replace_bech32_addresses(sources);
     assert_eq!(
-        r"import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.WingsAccount; import 0x77616c6c65747300000000002eb8d97a078f3ae572b0ea70362080c3e188a7e6.WingsAccount;",
+        r"import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.Account; import 0x77616c6c65747300000000002eb8d97a078f3ae572b0ea70362080c3e188a7e6.Account;",
         replaced_line
     );
 }
 
 #[test]
 fn test_match_arbitrary_import_whitespaces() {
-    let line = "import          cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount;";
+    let line = "import          cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account;";
     let replaced_line = find_and_replace_bech32_addresses(line);
     assert_eq!(
-        r"import          0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.WingsAccount;",
+        r"import          0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.Account;",
         replaced_line
     );
 }
@@ -49,7 +49,7 @@ fn test_leave_libra_addresses_untouched_mvir() {
 #[test]
 fn test_valid_bech32_libra_address_not_replaced() {
     let source = r"
-            import 0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.WingsAccount;
+            import 0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.Account;
             main() {
                 return;
             }
@@ -73,11 +73,11 @@ fn test_do_not_replace_invalid_bech32_addresses() {
 
 #[test]
 fn test_match_valid_import_bech32_lines_move() {
-    let line = "use cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e::WingsAccount; use wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6::WingsAccount;";
+    let line = "use cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e::Account; use wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6::Account;";
     let replaced_line = find_and_replace_bech32_addresses(line);
     assert_eq!(
         replaced_line,
-        r"use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::WingsAccount; use 0x77616c6c65747300000000002eb8d97a078f3ae572b0ea70362080c3e188a7e6::WingsAccount;",
+        r"use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::Account; use 0x77616c6c65747300000000002eb8d97a078f3ae572b0ea70362080c3e188a7e6::Account;",
     );
 }
 

@@ -206,7 +206,7 @@ mod test {
     #[test]
     fn test_parse_mvir_script_with_bech32_addresses() {
         let program = r"
-            import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount;
+            import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account;
             main() {
                 return;
             }
@@ -217,7 +217,7 @@ mod test {
         let module = script
             .module_handles()
             .iter()
-            .find(|h| script.identifier_at(h.name).to_string() == "WingsAccount")
+            .find(|h| script.identifier_at(h.name).to_string() == "Account")
             .unwrap();
         let address = script.address_at(module.address);
         assert_eq!(
@@ -230,7 +230,7 @@ mod test {
     fn test_parse_mvir_module_with_bech32_addresses() {
         let program = r"
             module M {
-                import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.WingsAccount;
+                import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account;
             }
         ";
 
@@ -239,7 +239,7 @@ mod test {
         let module = main_module
             .module_handles()
             .iter()
-            .find(|h| main_module.identifier_at(h.name).to_string() == "WingsAccount")
+            .find(|h| main_module.identifier_at(h.name).to_string() == "Account")
             .unwrap();
         let address = main_module.address_at(module.address);
         assert_eq!(

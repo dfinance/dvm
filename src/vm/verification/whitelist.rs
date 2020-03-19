@@ -124,14 +124,14 @@ mod tests {
         )
         .unwrap();
         let source = r"
-            import 0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.WingsAccount;
+            import 0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.Account;
             main() {
                 return;
             }
         ";
         let verifier = WhitelistVerifier::new(
             sender_address,
-            vec!["WingsAccount".to_string()],
+            vec!["Account".to_string()],
             hashmap! {},
         );
 
@@ -152,7 +152,7 @@ mod tests {
         ";
         let verifier = WhitelistVerifier::new(
             sender_address,
-            vec!["WingsAccount".to_string()],
+            vec!["Account".to_string()],
             hashmap! {},
         );
 
@@ -181,7 +181,7 @@ mod tests {
             AccountAddress::default() => vec!["Coins".to_string()]
         };
         let verifier =
-            WhitelistVerifier::new(sender_address, vec!["WingsAccount".to_string()], whitelist);
+            WhitelistVerifier::new(sender_address, vec!["Account".to_string()], whitelist);
         let verified_err = verify_source_code(source, verifier, sender_address).unwrap_err();
         assert_eq!(
             verified_err.to_string(),
