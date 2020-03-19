@@ -1,15 +1,15 @@
 use std::sync::mpsc::{Sender, Receiver, channel};
-use tonic::{transport::Server as TService, codegen::Pin};
+use dvm_api::tonic::{transport::Server as TService, codegen::Pin};
 use futures::Future;
 use futures::task::{Context, Poll};
 use std::sync::{Arc, Mutex};
-use crate::test_kit::{ArcMut, PORT_RANGE, Client};
+use crate::{ArcMut, PORT_RANGE, Client};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::thread;
 use tokio::runtime::Runtime;
 use std::io::{ErrorKind, Error as IoError};
-use crate::service::MoveVmService;
-use crate::ds::MockDataSource;
+use dvm::service::MoveVmService;
+use dvm::ds::MockDataSource;
 use std::mem;
 use crate::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 

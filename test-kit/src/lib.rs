@@ -4,9 +4,10 @@ mod grpc_server;
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
-use crate::ds::MockDataSource;
-use crate::vm::{ExecutionMeta, bech32_utils};
-use tonic::Request;
+use dvm::ds::MockDataSource;
+use dvm::vm::{ExecutionMeta, bech32_utils};
+use dvm_api::tonic::Request;
+// use tonic::Request;
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
@@ -14,10 +15,17 @@ use std::convert::TryFrom;
 use crate::compiled_protos::vm_grpc::{
     VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue, ContractType,
 };
-use crate::vm::compiler::{Compiler, Lang};
-use crate::test_kit::grpc_client::Client;
-use crate::vm::stdlib::{move_std, build_std_with_compiler, mvir_std, Stdlib};
+use dvm::vm::compiler::{Compiler, Lang};
+use dvm::vm::stdlib::{move_std, build_std_with_compiler, mvir_std, Stdlib};
+use crate::grpc_client::Client;
 use vm::CompiledModule;
+
+extern crate dvm;
+// TODO: [REF] rename to api_grpc
+pub mod compiled_protos {
+    extern crate dvm_api;
+    pub use dvm_api::grpc::*;
+}
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 

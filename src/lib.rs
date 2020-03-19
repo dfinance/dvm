@@ -9,8 +9,6 @@ pub mod service;
 #[macro_use]
 pub mod vm;
 
-pub mod test_kit;
-
 // reshare libra crates
 pub use libra_types;
 

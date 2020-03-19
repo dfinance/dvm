@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, ByteOrder};
-use move_vm_in_cosmos::test_kit::*;
+use dvm_test_kit::*;
 use libra_types::account_address::AccountAddress;
 use move_vm_in_cosmos::vm::{Lang, bech32_utils};
 use move_vm_in_cosmos::vm::native::{Reg, dbg};
