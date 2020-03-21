@@ -23,6 +23,14 @@ struct Options {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    match dvm::get_sentry_dsn() {
+        Ok(dsn) => {
+            let _init_guard = sentry::init(dsn);
+            sentry::integrations::panic::register_panic_handler();
+        }
+        Err(error) => println!("{}", error),
+    }
+
     let address = Options::from_args().address;
     let ds_address = Options::from_args().ds;
 

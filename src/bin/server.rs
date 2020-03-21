@@ -30,6 +30,14 @@ struct Options {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    match dvm::get_sentry_dsn() {
+        Ok(dsn) => {
+            let _init_guard = sentry::init(dsn);
+            sentry::integrations::panic::register_panic_handler();
+        }
+        Err(error) => println!("{}", error),
+    }
+
     let (tx, rx) = mpsc::channel::<rds::Request>();
     let (rtx, rrx) = mpsc::channel::<rds::Response>();
 

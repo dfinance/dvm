@@ -14,3 +14,10 @@ pub mod compiled_protos {
     pub use dvm_api::grpc::*;
     pub use crate::api_grpc_ext::*;
 }
+
+use anyhow::Result;
+
+pub fn get_sentry_dsn() -> Result<String> {
+    std::env::var("SENTRY_DSN")
+        .map_err(|_| anyhow!("SENTRY_DSN environment variable is not provided, Sentry integration is going to be disabled"))
+}
