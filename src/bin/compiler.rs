@@ -7,32 +7,55 @@ use tokio::time::Duration;
 use dvm_api::tonic;
 use tonic::transport::{Server, Uri};
 
+use dvm::cli::config::*;
 use dvm::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
 use dvm::compiler::mvir::CompilerService;
 use dvm::vm::metadata::MetadataService;
 use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 
+/// Move & Mvir compiler with grpc interface.
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
-    #[structopt(help = "Address in the form of HOST_ADDRESS:PORT")]
+    /// Address in the form of HOST_ADDRESS:PORT.
+    /// This address will be listen to by compilation server.
+    /// Listening localhost by default.
+    #[structopt(
+        name = "listen address",
+        default_value = "[::1]:50053",
+        help = "Address in the form of HOST_ADDRESS:PORT"
+    )]
     address: SocketAddr,
-    #[structopt(help = "DataSource Server internet address")]
+
+    /// DataSource Server internet address.
+    #[structopt(
+        name = "data-source uri",
+        env = "DVM_DATA_SOURCE",
+        default_value = "http://[::1]:50052"
+    )]
     ds: Uri,
+
+    #[structopt(flatten)]
+    logging: LoggingOptions,
+
+    #[structopt(flatten)]
+    integrations: IntegrationsOptions,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    match dvm::get_sentry_dsn() {
-        Ok(dsn) => {
+    let options = Options::from_args();
+
+    match options.integrations.sentry_dsn {
+        Some(dsn) => {
             let _init_guard = sentry::init(dsn);
             sentry::integrations::panic::register_panic_handler();
         }
-        Err(error) => println!("{}", error),
+        None => println!("SENTRY_DSN environment variable is not provided, Sentry integration is going to be disabled.")
     }
 
-    let address = Options::from_args().address;
-    let ds_address = Options::from_args().ds;
+    let address = options.address;
+    let ds_address = options.ds;
 
     println!("Connecting to ds server...");
     let ds_client = loop {

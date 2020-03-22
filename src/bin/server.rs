@@ -13,6 +13,7 @@ use tokio::runtime::Runtime;
 use dvm_api::tonic;
 use tonic::transport::{Channel, Server};
 
+use dvm::cli::config::*;
 use dvm::ds::view as rds;
 use dvm::service::MoveVmService;
 use dvm::compiled_protos::access_path_into_ds;
@@ -20,30 +21,52 @@ use dvm::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 use dvm::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use dvm::vm::native::{oracle::PriceOracle, Reg};
 
+/// Definance Virtual Machine with gRPC interface.
+///
+/// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
-    #[structopt(help = "Address in the form of HOST_ADDRESS:PORT")]
+    /// Address in the form of HOST_ADDRESS:PORT.
+    /// This address will be listen to by DVM (this) server.
+    /// Listening localhost by default.
+    #[structopt(
+        name = "listen address",
+        default_value = "[::1]:50051",
+        verbatim_doc_comment
+    )]
     address: SocketAddr,
 
-    #[structopt(help = "DataSource Server internet address")]
+    /// DataSource Server internet address.
+    #[structopt(
+        name = "Data-Source URI",
+        env = "DVM_DATA_SOURCE",
+        default_value = "http://[::1]:50052"
+    )]
     ds: Uri,
+
+    #[structopt(flatten)]
+    logging: LoggingOptions,
+
+    #[structopt(flatten)]
+    integrations: IntegrationsOptions,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    match dvm::get_sentry_dsn() {
-        Ok(dsn) => {
+    let options = Options::from_args();
+
+    match options.integrations.sentry_dsn {
+        Some(dsn) => {
             let _init_guard = sentry::init(dsn);
             sentry::integrations::panic::register_panic_handler();
         }
-        Err(error) => println!("{}", error),
+        None => println!("SENTRY_DSN environment variable is not provided, Sentry integration is going to be disabled.")
     }
+
+    let serv_addr = options.address;
+    let ds_addr = options.ds;
 
     let (tx, rx) = mpsc::channel::<rds::Request>();
     let (rtx, rrx) = mpsc::channel::<rds::Response>();
-
-    let options = Options::from_args();
-    let serv_addr = options.address;
-    let ds_addr = options.ds;
 
     let mut runtime = Runtime::new().unwrap();
 
