@@ -13,6 +13,7 @@ use tokio::runtime::Runtime;
 use dvm_api::tonic;
 use tonic::transport::{Channel, Server};
 
+use dvm::cli::config::*;
 use dvm::ds::view as rds;
 use dvm::service::MoveVmService;
 use dvm::compiled_protos::access_path_into_ds;
@@ -43,23 +44,29 @@ struct Options {
     )]
     ds: Uri,
 
-    /// Enables verbose logging mode.
-    #[structopt(long = "verbose", short = "v")]
-    verbose: bool,
+    #[structopt(flatten)]
+    logging: LoggingOptions,
 
-    /// Optional crash logging service integration.
-    // If value ommited, crash logging service will not be initialized.
-    #[structopt(name = "Sentry DSN", env = "DVM_SENTRY_DSN")]
-    sentry_dsn: Option<String>,
+    #[structopt(flatten)]
+    integrations: IntegrationsOptions,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let (tx, rx) = mpsc::channel::<rds::Request>();
-    let (rtx, rrx) = mpsc::channel::<rds::Response>();
-
     let options = Options::from_args();
+
+    match options.integrations.sentry_dsn {
+        Some(dsn) => {
+            let _init_guard = sentry::init(dsn);
+            sentry::integrations::panic::register_panic_handler();
+        }
+        None => println!("SENTRY_DSN environment variable is not provided, Sentry integration is going to be disabled.")
+    }
+
     let serv_addr = options.address;
     let ds_addr = options.ds;
+
+    let (tx, rx) = mpsc::channel::<rds::Request>();
+    let (rtx, rrx) = mpsc::channel::<rds::Response>();
 
     let mut runtime = Runtime::new().unwrap();
 

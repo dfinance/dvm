@@ -7,6 +7,10 @@ pub mod ds;
 pub mod service;
 pub mod vm;
 
+pub mod cli {
+    pub mod config;
+}
+
 mod api_grpc_ext;
 // TODO: [REF] rename to api_grpc
 pub mod compiled_protos {

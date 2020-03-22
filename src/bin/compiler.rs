@@ -7,6 +7,7 @@ use tokio::time::Duration;
 use dvm_api::tonic;
 use tonic::transport::{Server, Uri};
 
+use dvm::cli::config::*;
 use dvm::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
 use dvm::compiler::mvir::CompilerService;
@@ -34,20 +35,27 @@ struct Options {
     )]
     ds: Uri,
 
-    /// Enables verbose logging mode.
-    #[structopt(long = "verbose", short = "v")]
-    verbose: bool,
+    #[structopt(flatten)]
+    logging: LoggingOptions,
 
-    /// Optional crash logging service integration.
-    // If value ommited, crash logging service will not be initialized.
-    #[structopt(name = "Sentry DSN", env = "DVM_SENTRY_DSN")]
-    sentry_dsn: Option<String>,
+    #[structopt(flatten)]
+    integrations: IntegrationsOptions,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let address = Options::from_args().address;
-    let ds_address = Options::from_args().ds;
+    let options = Options::from_args();
+
+    match options.integrations.sentry_dsn {
+        Some(dsn) => {
+            let _init_guard = sentry::init(dsn);
+            sentry::integrations::panic::register_panic_handler();
+        }
+        None => println!("SENTRY_DSN environment variable is not provided, Sentry integration is going to be disabled.")
+    }
+
+    let address = options.address;
+    let ds_address = options.ds;
 
     println!("Connecting to ds server...");
     let ds_client = loop {
