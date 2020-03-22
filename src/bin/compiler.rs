@@ -13,12 +13,35 @@ use dvm::compiler::mvir::CompilerService;
 use dvm::vm::metadata::MetadataService;
 use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 
+/// Move & Mvir compiler with grpc interface.
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
-    #[structopt(help = "Address in the form of HOST_ADDRESS:PORT")]
+    /// Address in the form of HOST_ADDRESS:PORT.
+    /// This address will be listen to by compilation server.
+    /// Listening localhost by default.
+    #[structopt(
+        name = "listen address",
+        default_value = "[::1]:50053",
+        help = "Address in the form of HOST_ADDRESS:PORT"
+    )]
     address: SocketAddr,
-    #[structopt(help = "DataSource Server internet address")]
+
+    /// DataSource Server internet address.
+    #[structopt(
+        name = "data-source uri",
+        env = "DVM_DATA_SOURCE",
+        default_value = "http://[::1]:50052"
+    )]
     ds: Uri,
+
+    /// Enables verbose logging mode.
+    #[structopt(long = "verbose", short = "v")]
+    verbose: bool,
+
+    /// Optional crash logging service integration.
+    // If value ommited, crash logging service will not be initialized.
+    #[structopt(name = "Sentry DSN", env = "DVM_SENTRY_DSN")]
+    sentry_dsn: Option<String>,
 }
 
 #[tokio::main]

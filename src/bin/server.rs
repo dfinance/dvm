@@ -20,13 +20,37 @@ use dvm::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 use dvm::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use dvm::vm::native::{oracle::PriceOracle, Reg};
 
+/// Definance Virtual Machine with gRPC interface.
+///
+/// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
-    #[structopt(help = "Address in the form of HOST_ADDRESS:PORT")]
+    /// Address in the form of HOST_ADDRESS:PORT.
+    /// This address will be listen to by DVM (this) server.
+    /// Listening localhost by default.
+    #[structopt(
+        name = "listen address",
+        default_value = "[::1]:50051",
+        verbatim_doc_comment
+    )]
     address: SocketAddr,
 
-    #[structopt(help = "DataSource Server internet address")]
+    /// DataSource Server internet address.
+    #[structopt(
+        name = "Data-Source URI",
+        env = "DVM_DATA_SOURCE",
+        default_value = "http://[::1]:50052"
+    )]
     ds: Uri,
+
+    /// Enables verbose logging mode.
+    #[structopt(long = "verbose", short = "v")]
+    verbose: bool,
+
+    /// Optional crash logging service integration.
+    // If value ommited, crash logging service will not be initialized.
+    #[structopt(name = "Sentry DSN", env = "DVM_SENTRY_DSN")]
+    sentry_dsn: Option<String>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
