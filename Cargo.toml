@@ -2,6 +2,8 @@
 members = [
     "libra",
     "test-kit",
+    "lang",
+    "data-source",
 ]
 
 
@@ -19,6 +21,8 @@ edition = "2018"
 [dependencies]
 dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "rename-error-status" }
 libra = { path = "libra", package = "dvm-libra-deps" }
+lang = { path = "lang", package = "dvm-lang" }
+data_source = { path = "data-source", package = "dvm-data-source" }
 
 anyhow = "=1.0.27"
 lazy_static = "=1.4.0"

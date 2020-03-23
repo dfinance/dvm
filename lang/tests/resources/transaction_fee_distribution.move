@@ -12,7 +12,6 @@ address 0x0:
 //    the validator set.
 module TransactionFeeDistribution {
     use 0x0::LibraCoin;
-    use 0x0::ValidatorSet;
     use 0x0::LibraAccount;
     use 0x0::Transaction;
     // import 0x0::Epoch;
@@ -54,7 +53,7 @@ module TransactionFeeDistribution {
             amount_collected,
         );
 
-        let num_validators = ValidatorSet::size();
+        let num_validators = 0x0::ValidatorSet::size();
         // Calculate the amount of money to be dispursed, along with the remainder.
         let amount_to_distribute_per_validator = Self::per_validator_distribution_amount(
             amount_collected,
@@ -93,7 +92,7 @@ module TransactionFeeDistribution {
     ) {
         let index = 0;
         while (index < num_validators) {
-            let addr = ValidatorSet::get_ith_validator_address(index);
+            let addr = 0x0::ValidatorSet::get_ith_validator_address(index);
             // Increment the index into the validator set.
             index = index + 1;
             let payment;

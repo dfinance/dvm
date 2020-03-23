@@ -7,9 +7,8 @@ use libra_types::access_path::AccessPath;
 use libra_types::write_set::{WriteSet, WriteOp};
 use vm_runtime::data_cache::RemoteCache;
 use vm::errors::VMResult;
-use crate::vm::stdlib::{Stdlib, build_std, move_std, mvir_std};
-use crate::vm::compiler::Lang;
-use crate::ds::MergeWriteSet;
+use crate::MergeWriteSet;
+use vm::CompiledModule;
 
 #[derive(Debug, Clone)]
 pub struct MockDataSource {
@@ -17,25 +16,22 @@ pub struct MockDataSource {
 }
 
 impl MockDataSource {
-    pub fn new(lang: Lang) -> MockDataSource {
-        let ds = MockDataSource {
-            data: Arc::new(Mutex::new(Default::default())),
-        };
-
-        let std = match &lang {
-            Lang::Move => move_std(),
-            Lang::MvIr => mvir_std(),
-        };
-
-        let ws = build_std(Stdlib { modules: std, lang }).unwrap();
-        ds.merge_write_set(ws);
-        ds
-    }
-
-    pub fn without_std() -> MockDataSource {
+    pub fn new() -> MockDataSource {
         MockDataSource {
             data: Arc::new(Mutex::new(Default::default())),
         }
+    }
+
+    pub fn with_write_set(write_set: WriteSet) -> MockDataSource {
+        let ds = MockDataSource::new();
+        ds.merge_write_set(write_set);
+        ds
+    }
+
+    pub fn publish_module(&self, module: Vec<u8>) -> Result<(), Error> {
+        let id = CompiledModule::deserialize(&module)?.self_id();
+        self.insert((&id).into(), module);
+        Ok(())
     }
 }
 

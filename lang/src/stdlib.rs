@@ -1,25 +1,29 @@
+use libra::libra_types::write_set::{WriteSet, WriteOp};
 use anyhow::Error;
-use libra::{libra_types, libra_state_view};
-use libra::{vm, vm_runtime, bytecode_verifier, lcs};
-use libra_types::write_set::{WriteSet, WriteOp};
-use libra_types::account_address::AccountAddress;
-use vm::CompiledModule;
-use vm_runtime::data_cache::TransactionDataCache;
-use crate::ds::MockDataSource;
-use libra_types::language_storage::ModuleId;
+use libra::libra_types::account_address::AccountAddress;
+use libra::vm::CompiledModule;
+use libra::vm_runtime::data_cache::TransactionDataCache;
+use libra::libra_types::language_storage::ModuleId;
+use libra::lcs;
 use serde::{Deserialize, Serialize};
-use libra_types::identifier::Identifier;
-use bytecode_verifier::VerifiedModule;
-use libra_state_view::StateView;
-use libra_types::access_path::AccessPath;
+use libra::libra_types::identifier::Identifier;
+use libra::bytecode_verifier::VerifiedModule;
+use libra::libra_state_view::StateView;
+use libra::libra_types::access_path::AccessPath;
 use std::collections::HashMap;
-use crate::vm::compiler::{Lang, ModuleMeta, Compiler};
+use crate::compiler::{ModuleMeta, Compiler};
+use ds::MockDataSource;
 
 const STDLIB_META_ID: &str = "std_meta";
 
 pub struct Stdlib<'a> {
     pub modules: Vec<&'a str>,
-    pub lang: Lang,
+}
+
+impl Default for Stdlib<'static> {
+    fn default() -> Self {
+        Stdlib { modules: stdlib() }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Hash, Eq, Clone, PartialOrd, Ord)]
@@ -33,13 +37,20 @@ enum Module<'a> {
     Binary((ModuleId, Vec<u8>)),
 }
 
-pub fn build_std_with_compiler(stdlib: Stdlib, compiler: &dyn Compiler) -> Result<WriteSet, Error> {
+pub fn build_std() -> WriteSet {
+    build_external_std(Stdlib::default()).unwrap()
+}
+
+pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
+    let ds = MockDataSource::new();
+    let compiler = Compiler::new(ds.clone());
+
     let mut std_with_meta: HashMap<String, Module> = stdlib
         .modules
         .into_iter()
         .map(|code| {
             compiler
-                .module_meta(&code)
+                .code_meta(code)
                 .and_then(|meta| Ok((meta.module_name.clone(), Module::Source((meta, code)))))
         })
         .collect::<Result<HashMap<_, _>, Error>>()?;
@@ -50,11 +61,12 @@ pub fn build_std_with_compiler(stdlib: Stdlib, compiler: &dyn Compiler) -> Resul
             &module,
             &mut std_with_meta,
             &AccountAddress::default(),
-            compiler,
+            &compiler,
+            &ds,
         )?;
     }
 
-    let ds = MockDataSource::without_std();
+    let ds = MockDataSource::new();
     let mut data_view = TransactionDataCache::new(&ds);
 
     let mut ids = Vec::with_capacity(std_with_meta.len());
@@ -69,6 +81,8 @@ pub fn build_std_with_compiler(stdlib: Stdlib, compiler: &dyn Compiler) -> Resul
         }
     }
 
+    ids.sort_unstable();
+
     let meta = lcs::to_bytes(&StdMeta { modules: ids })?;
     let std_meta_id = meta_module_id()?;
     data_view.publish_module(std_meta_id, meta)?;
@@ -76,16 +90,12 @@ pub fn build_std_with_compiler(stdlib: Stdlib, compiler: &dyn Compiler) -> Resul
     Ok(data_view.make_write_set()?)
 }
 
-pub fn build_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
-    let compiler = stdlib.lang.compiler();
-    build_std_with_compiler(stdlib, compiler.as_ref())
-}
-
 fn build_module_with_dep(
     module_name: &str,
     std_with_meta: &mut HashMap<String, Module>,
     account: &AccountAddress,
-    compiler: &dyn Compiler,
+    compiler: &Compiler<MockDataSource>,
+    ds: &MockDataSource,
 ) -> Result<(), Error> {
     if let Some(module) = std_with_meta.remove(module_name) {
         match module {
@@ -94,12 +104,17 @@ fn build_module_with_dep(
             }
             Module::Source((meta, source)) => {
                 for dep in &meta.dep_list {
-                    build_module_with_dep(&dep, std_with_meta, account, compiler)?;
+                    build_module_with_dep(
+                        dep.name().as_str(),
+                        std_with_meta,
+                        account,
+                        compiler,
+                        ds,
+                    )?;
                 }
-                std_with_meta.insert(
-                    meta.module_name,
-                    Module::Binary(build_module(&source, &account, compiler)?),
-                );
+                let module = build_module(&source, &account, compiler)?;
+                ds.publish_module(module.1.clone())?;
+                std_with_meta.insert(meta.module_name, Module::Binary(module));
             }
         }
     }
@@ -109,13 +124,11 @@ fn build_module_with_dep(
 fn build_module(
     code: &str,
     account: &AccountAddress,
-    compiler: &dyn Compiler,
+    compiler: &Compiler<MockDataSource>,
 ) -> Result<(ModuleId, Vec<u8>), Error> {
-    compiler
-        .build_module(code, account, true)
-        .and_then(|module| {
-            Ok(CompiledModule::deserialize(&module).and_then(|m| Ok((m.self_id(), module)))?)
-        })
+    compiler.compile(code, account).and_then(|module| {
+        Ok(CompiledModule::deserialize(module.as_ref()).and_then(|m| Ok((m.self_id(), module)))?)
+    })
 }
 
 pub fn load_std(view: &dyn StateView) -> Result<Option<Vec<VerifiedModule>>, Error> {
@@ -195,39 +208,21 @@ impl From<WriteSet> for WS {
     }
 }
 
-pub fn move_std() -> Vec<&'static str> {
+fn stdlib() -> Vec<&'static str> {
     vec![
-        include_str!("../../stdlib/move/address_util.move"),
-        include_str!("../../stdlib/move/block.move"),
-        include_str!("../../stdlib/move/bytearray_util.move"),
-        include_str!("../../stdlib/move/event.move"),
-        include_str!("../../stdlib/move/hash.move"),
-        include_str!("../../stdlib/move/libra_account.move"),
-        include_str!("../../stdlib/move/libra_coin.move"),
-        include_str!("../../stdlib/move/signature.move"),
-        include_str!("../../stdlib/move/transaction.move"),
-        include_str!("../../stdlib/move/u64_util.move"),
-        include_str!("../../stdlib/move/validator_config.move"),
-        include_str!("../../stdlib/move/validator_set.move"),
-        include_str!("../../stdlib/move/vector.move"),
-    ]
-}
-
-pub fn mvir_std() -> Vec<&'static str> {
-    vec![
-        include_str!("../../stdlib/mvir/address_util.mvir"),
-        include_str!("../../stdlib/mvir/bytearray_util.mvir"),
-        include_str!("../../stdlib/mvir/gas_schedule.mvir"),
-        include_str!("../../stdlib/mvir/hash.mvir"),
-        include_str!("../../stdlib/mvir/account.mvir"),
-        include_str!("../../stdlib/mvir/coins.mvir"),
-        include_str!("../../stdlib/mvir/signature.mvir"),
-        include_str!("../../stdlib/mvir/u64_util.mvir"),
-        include_str!("../../stdlib/mvir/validator_config.mvir"),
-        include_str!("../../stdlib/mvir/vector.mvir"),
-        include_str!("../../stdlib/mvir/libra_time.mvir"),
-        include_str!("../../stdlib/mvir/libra_transaction_timeout.mvir"),
-        include_str!("../../stdlib/mvir/offer.mvir"),
-        include_str!("../../stdlib/mvir/oracle.mvir"),
+        include_str!("../stdlib/address_util.mvir"),
+        include_str!("../stdlib/bytearray_util.mvir"),
+        include_str!("../stdlib/gas_schedule.mvir"),
+        include_str!("../stdlib/hash.mvir"),
+        include_str!("../stdlib/account.mvir"),
+        include_str!("../stdlib/coins.mvir"),
+        include_str!("../stdlib/signature.mvir"),
+        include_str!("../stdlib/u64_util.mvir"),
+        include_str!("../stdlib/validator_config.mvir"),
+        include_str!("../stdlib/vector.mvir"),
+        include_str!("../stdlib/libra_time.mvir"),
+        include_str!("../stdlib/libra_transaction_timeout.mvir"),
+        include_str!("../stdlib/offer.mvir"),
+        include_str!("../stdlib/oracle.mvir"),
     ]
 }

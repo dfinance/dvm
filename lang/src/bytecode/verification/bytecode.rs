@@ -1,24 +1,6 @@
 use anyhow::Result;
-use crate::vm::compiler::Lang;
-use crate::vm::stdlib::{build_std_with_compiler, Stdlib, mvir_std};
-use libra::vm::file_format::{CompiledScript, Bytecode};
-use libra::libra_types::account_address::AccountAddress;
 use libra::vm::access::ScriptAccess;
-
-pub fn compile_script(source: &str, lang: Lang, sender_address: &AccountAddress) -> CompiledScript {
-    let compiler = lang.compiler();
-    build_std_with_compiler(
-        Stdlib {
-            modules: mvir_std(),
-            lang,
-        },
-        compiler.as_ref(),
-    )
-    .unwrap();
-
-    CompiledScript::deserialize(&compiler.build_script(source, sender_address, true).unwrap())
-        .unwrap()
-}
+use libra::vm::file_format::{Bytecode, CompiledScript};
 
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
     let instructions = &script.main().code.code;
@@ -49,13 +31,15 @@ pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use libra::libra_types::account_address::AccountAddress;
+    use crate::compiler::test::compile_script;
 
     #[test]
     fn test_trivial_script_is_accepted() {
         let source = r"
             main() {return;}
         ";
-        let compiled = compile_script(source, Lang::MvIr, &AccountAddress::default());
+        let compiled = compile_script(source, None, &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
@@ -68,7 +52,7 @@ mod tests {
                 return;
             }
         ";
-        let compiled = compile_script(source, Lang::MvIr, &AccountAddress::default());
+        let compiled = compile_script(source, None, &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
@@ -78,12 +62,11 @@ mod tests {
             import 0x0.Account;
 
             main() {
-                let account: Account.T;
-                account = Account.create_account(0x0);
-                return;
+               Account.create_account(0x0);
+               return;
             }
         ";
-        let compiled = compile_script(source, Lang::MvIr, &AccountAddress::default());
+        let compiled = compile_script(source, None, &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
@@ -97,7 +80,7 @@ mod tests {
                 return;
             }
         ";
-        let compiled = compile_script(source, Lang::MvIr, &AccountAddress::default());
+        let compiled = compile_script(source, None, &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap_err();
     }
 
@@ -111,7 +94,7 @@ mod tests {
                 return;
             }
         ";
-        let compiled = compile_script(source, Lang::MvIr, &AccountAddress::default());
+        let compiled = compile_script(source, None, &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap_err();
     }
 }
