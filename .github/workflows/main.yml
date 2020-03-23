@@ -1,0 +1,33 @@
+name: Build & Push
+
+# on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - feature-*
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+  # pull_request:
+  #   branches:
+  #     - master
+  #     - feature-*
+  #   tags:
+  #     - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build and push docker image to own registry
+      uses: dfinance/gh-actions@master
+      with:
+        name: registry.wings.toys/dfinance/dvm
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_PWD }}
+        dockerfile: ./.build/Dockerfile
+        registry: registry.wings.toys
+        cache: true
