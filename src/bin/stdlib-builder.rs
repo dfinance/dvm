@@ -64,19 +64,17 @@ fn main() {
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
 
-    let modules = modules.iter()
-        .map(|m| m.as_str())
-        .collect();
+    let modules = modules.iter().map(|m| m.as_str()).collect();
 
-    let vm_value = build_external_std(Stdlib { modules })
-        .unwrap();
+    let vm_value = build_external_std(Stdlib { modules }).unwrap();
 
     // Serialize
     let ws = if opts.pretty_print {
         to_string_pretty(&WS::from(vm_value))
     } else {
         to_string(&WS::from(vm_value))
-    }.expect("Cannot serialize results to json.");
+    }
+    .expect("Cannot serialize results to json.");
 
     // Export the output
     if let Some(path) = opts.output {

@@ -8,10 +8,10 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::thread;
 use tokio::runtime::Runtime;
 use std::io::{ErrorKind, Error as IoError};
-use dvm::service::MoveVmService;
-use ds::MockDataSource;
 use std::mem;
 use crate::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
+use dvm::services::vm::VmService;
+use data_source::MockDataSource;
 
 pub struct Server {
     signal: Signal,
@@ -33,7 +33,7 @@ impl Server {
                     service_port.store(port, Ordering::SeqCst);
                     let service_res = TService::builder()
                         .add_service(VmServiceServer::new(
-                            MoveVmService::new(Box::new(data_source.clone())).unwrap(),
+                            VmService::new(Box::new(data_source.clone())).unwrap(),
                         ))
                         .serve_with_shutdown(
                             format!("0.0.0.0:{}", port).parse().unwrap(),

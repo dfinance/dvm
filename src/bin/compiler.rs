@@ -1,5 +1,7 @@
-use std::net::SocketAddr;
+#[macro_use]
+extern crate log;
 
+use std::net::SocketAddr;
 use anyhow::Result;
 use structopt::StructOpt;
 
@@ -7,32 +9,37 @@ use dvm_api::tonic;
 use tonic::transport::{Server, Uri};
 
 use dvm::cli::config::*;
-use dvm::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
 use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
-use dvm::compiler::mvir::CompilerService;
-use dvm::vm::metadata::MetadataService;
 use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
-use std::time::Duration;
-use data_source::GrpcDataSource;
+use data_source::{
+    GrpcDataSource, ModuleCache
+};
+
 use lang::compiler::Compiler;
+use dvm::services::compiler::CompilerService;
+use dvm::services::metadata::MetadataService;
+
+const MODULE_CACHE: usize = 1000;
 
 /// Move & Mvir compiler with grpc interface.
+///
+/// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
     /// Address in the form of HOST_ADDRESS:PORT.
-    /// This address will be listen to by compilation server.
+    /// The address will be listen to by this compilation server.
     /// Listening localhost by default.
     #[structopt(
         name = "listen address",
         default_value = "[::1]:50053",
-        help = "Address in the form of HOST_ADDRESS:PORT"
+        verbatim_doc_comment
     )]
     address: SocketAddr,
 
     /// DataSource Server internet address.
     #[structopt(
-        name = "data-source uri",
-        env = "DVM_DATA_SOURCE",
+        name = "Data-Source URI",
+        env = DVM_DATA_SOURCE,
         default_value = "http://[::1]:50052"
     )]
     ds: Uri,
@@ -47,34 +54,18 @@ struct Options {
 #[tokio::main]
 async fn main() -> Result<()> {
     let options = Options::from_args();
+    let _guard = dvm::cli::init(&options.logging, &options.integrations);
 
-    match options.integrations.sentry_dsn {
-        Some(dsn) => {
-            let _init_guard = sentry::init(dsn);
-            sentry::integrations::panic::register_panic_handler();
-        }
-        None => println!("SENTRY_DSN environment variable is not provided, Sentry integration is going to be disabled.")
-    }
-
-    let address = options.address;
-    let ds_address = options.ds;
-
-    println!("Connecting to ds server...");
-    let ds_client = loop {
-        match DsServiceClient::connect(ds_address.clone()).await {
-            Ok(client) => break client,
-            Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
-        }
-    };
-    println!("Connected to ds server");
-
-    let compiler_service = CompilerService::new(Compiler::new(GrpcDataSource::new(ds_address).unwrap()));
+    let ds = GrpcDataSource::new(options.ds).expect("GrpcDataSource expect.");
+    let ds = ModuleCache::new(ds, MODULE_CACHE);
+    let compiler_service = CompilerService::new(Compiler::new(ds));
     let metadata_service = MetadataService::default();
 
+    info!("DVM server listening on {}", options.address);
     Server::builder()
         .add_service(VmCompilerServer::new(compiler_service))
         .add_service(VmScriptMetadataServer::new(metadata_service))
-        .serve(address)
+        .serve(options.address)
         .await?;
     Ok(())
 }

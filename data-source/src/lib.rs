@@ -1,8 +1,11 @@
 #[macro_use]
 extern crate anyhow;
+#[macro_use]
+extern crate log;
 
-pub mod mock;
 pub mod grpc;
+pub mod mock;
+pub mod wrappers;
 
 use libra::{libra_types, libra_state_view, vm_runtime, lcs};
 use libra_types::write_set::WriteSet;
@@ -17,6 +20,7 @@ use vm_runtime::identifier::create_access_path;
 use anyhow::Error;
 
 pub use mock::MockDataSource;
+pub use wrappers::ModuleCache;
 pub use grpc::GrpcDataSource;
 
 pub trait MergeWriteSet {

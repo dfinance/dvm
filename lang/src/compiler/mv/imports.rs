@@ -46,7 +46,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn usages(&mut self, deps: &Vec<(ModuleIdent, Option<ModuleName>)>) -> Result<(), Error> {
+    fn usages(&mut self, deps: &[(ModuleIdent, Option<ModuleName>)]) -> Result<(), Error> {
         for (dep, _) in deps {
             let ident = &dep.0.value;
             let name = Identifier::new(ident.name.0.value.to_owned())?;
@@ -86,7 +86,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn block_usages(&mut self, seq: &Vec<SequenceItem>) -> Result<(), Error> {
+    fn block_usages(&mut self, seq: &[SequenceItem]) -> Result<(), Error> {
         for item in seq {
             match &item.value {
                 SequenceItem_::Seq(exp) => self.expresion_usages(&exp.value)?,

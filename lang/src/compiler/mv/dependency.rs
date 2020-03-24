@@ -114,7 +114,7 @@ impl Dependency {
                     .to_owned();
 
                 let types = types.iter().map(|s| self.map_type(s)).collect();
-                if &module_name != self.module_name() {
+                if module_name != self.module_name() {
                     SingleType_::Apply(
                         spanned(ModuleAccess_::ModuleAccess(
                             ModuleName(spanned(module_name)),

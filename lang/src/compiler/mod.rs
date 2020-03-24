@@ -46,7 +46,7 @@ where
         let loader = ModuleLoader::new(view);
         Compiler {
             mvir: mvir(loader.clone()),
-            mv: mv(loader.clone()),
+            mv: mv(loader),
         }
     }
 
@@ -174,13 +174,13 @@ pub mod test {
     fn test_create_compiler() {
         let view = MockDataSource::new();
         let _compiler = Lang::Move.compiler(view.clone());
-        let _compiler = Lang::MvIr.compiler(view.clone());
+        let _compiler = Lang::MvIr.compiler(view);
     }
 
     #[test]
     fn test_move_meta() {
         let view = MockDataSource::new();
-        let compiler = Lang::Move.compiler(view.clone());
+        let compiler = Lang::Move.compiler(view);
         let meta = compiler
             .module_meta(&include_str!(
                 "../../tests/resources/transaction_fee_distribution.move"
@@ -215,7 +215,7 @@ pub mod test {
     #[test]
     fn test_mvir_meta() {
         let view = MockDataSource::new();
-        let compiler = Lang::MvIr.compiler(view.clone());
+        let compiler = Lang::MvIr.compiler(view);
         let meta = compiler
             .module_meta(&include_str!("../../stdlib/account.mvir"))
             .unwrap();
@@ -234,7 +234,7 @@ pub mod test {
     #[test]
     fn test_mvir_script_meta() {
         let view = MockDataSource::new();
-        let compiler = Lang::MvIr.compiler(view.clone());
+        let compiler = Lang::MvIr.compiler(view);
         let meta = compiler
             .module_meta(
                 "
@@ -268,7 +268,7 @@ pub mod test {
     #[test]
     fn test_move_script_meta() {
         let view = MockDataSource::new();
-        let compiler = Lang::Move.compiler(view.clone());
+        let compiler = Lang::Move.compiler(view);
         let meta = compiler
             .module_meta(
                 "\

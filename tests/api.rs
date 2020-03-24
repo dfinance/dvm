@@ -5,15 +5,15 @@ use libra_types::account_address::AccountAddress;
 use libra_types::byte_array::ByteArray;
 
 use dvm_test_kit::*;
-use dvm::vm::{Lang, bech32_utils};
 use dvm::vm::native::{Reg, dbg};
 use dvm::vm::native::oracle::PriceOracle;
-use dvm::ds::MockDataSource;
 use dvm::compiled_protos::vm_grpc::{VmTypeTag, VmArgs};
+use lang::banch32::bech32_into_libra;
+use data_source::MockDataSource;
 
 #[test]
 fn test_create_account() {
-    let test_kit = TestKit::new(Lang::MvIr);
+    let test_kit = TestKit::new();
     let create_account = "\
         import 0x0.Account;
         main(fresh_address: address) {
@@ -24,7 +24,7 @@ fn test_create_account() {
     let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
-        bech32_utils::bech32_into_libra(bech32_sender_address).expect("Invalid bech32 address")
+        bech32_into_libra(bech32_sender_address).expect("Invalid bech32 address")
     ))
     .expect("Cannot make AccountAddress");
 
@@ -42,7 +42,7 @@ fn test_create_account() {
 fn test_native_func() {
     dbg::PrintByteArray {}.reg_function();
 
-    let test_kit = TestKit::new(Lang::MvIr);
+    let test_kit = TestKit::new();
 
     test_kit.add_std_module(include_str!("./resources/dbg.mvir"));
 
@@ -61,7 +61,7 @@ fn test_native_func() {
     let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
-        bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
+        bech32_into_libra(bech32_sender_address).unwrap()
     ))
     .unwrap();
     let res = test_kit.execute_script(script, meta(&account_address), args);
@@ -70,7 +70,7 @@ fn test_native_func() {
 
 #[test]
 fn test_oracle() {
-    let ds = MockDataSource::without_std();
+    let ds = MockDataSource::new();
     let ticker = hex::decode("425443555344").unwrap();
 
     let mut price = vec![0; 8];
@@ -84,7 +84,7 @@ fn test_oracle() {
     let dump = dbg::DumpU64::new();
     dump.clone().reg_function();
 
-    let test_kit = TestKit::new(Lang::MvIr);
+    let test_kit = TestKit::new();
     test_kit.add_std_module(include_str!("./resources/dbg.mvir"));
 
     let script = "\
@@ -100,7 +100,7 @@ fn test_oracle() {
     let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
-        bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
+        bech32_into_libra(bech32_sender_address).unwrap()
     ))
     .unwrap();
     let res = test_kit.execute_script(script, meta(&account_address), vec![]);
@@ -110,11 +110,11 @@ fn test_oracle() {
 
 #[test]
 fn test_publish_module() {
-    let test_kit = TestKit::new(Lang::MvIr);
+    let test_kit = TestKit::new();
     let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
-        bech32_utils::bech32_into_libra(bech32_sender_address).unwrap()
+        bech32_into_libra(bech32_sender_address).unwrap()
     ))
     .unwrap();
     let res = test_kit.publish_module(

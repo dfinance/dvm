@@ -1,59 +1,66 @@
 use anyhow::Result;
-use libra::{libra_types, bytecode_verifier, move_ir_types, vm};
+use libra::libra_types;
 use libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
-use tonic::transport::Channel;
-use vm::CompiledModule;
 
-use crate::compiled_protos::ds_grpc::{DsAccessPath, DsRawResponse};
-use crate::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
-use crate::compiled_protos::ds_grpc::ds_service_client::DsServiceClient;
-use crate::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
+use crate::compiled_protos::vm_grpc::{CompilationResult, MvIrSourceFile};
 use crate::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
-use crate::compiled_protos::*;
-use regex::Regex;
-use lang::{
-    compiler::Compiler,
-    banch32::bech32_into_libra,
-};
+use lang::{compiler::Compiler, banch32::bech32_into_libra};
 use libra::libra_state_view::StateView;
 
-pub struct CompilerService<S> where S: StateView + Clone + Send + Sync + 'static {
+pub struct CompilerService<S>
+where
+    S: StateView + Clone + Send + Sync + 'static,
+{
     compiler: Compiler<S>,
 }
 
-impl<S> CompilerService<S> where S: StateView + Clone + Send + Sync + 'static {
+impl<S> CompilerService<S>
+where
+    S: StateView + Clone + Send + Sync + 'static,
+{
     pub fn new(compiler: Compiler<S>) -> Self {
-        CompilerService {
-            compiler,
-        }
+        CompilerService { compiler }
     }
 }
 
 fn convert_address(addr: &[u8]) -> Result<AccountAddress, Status> {
     std::str::from_utf8(&addr)
         .map_err(|_| Status::invalid_argument("Address is not a valid utf8"))
-        .and_then(|address| bech32_into_libra(address).map_err(|_| Status::invalid_argument("Address is not a valid bech32")))
+        .and_then(|address| {
+            bech32_into_libra(address)
+                .map_err(|_| Status::invalid_argument("Address is not a valid bech32"))
+        })
         .and_then(|address| Ok(format!("0x{}", address)))
-        .and_then(|address| AccountAddress::from_hex_literal(&address)
-            .map_err(|_| Status::invalid_argument("Address is not valid")))
+        .and_then(|address| {
+            AccountAddress::from_hex_literal(&address)
+                .map_err(|_| Status::invalid_argument("Address is not valid"))
+        })
 }
 
-impl<S> CompilerService<S> where S: StateView + Clone + Send + Sync + 'static {
+impl<S> CompilerService<S>
+where
+    S: StateView + Clone + Send + Sync + 'static,
+{
     async fn inner_compile(
         &self,
         request: Request<MvIrSourceFile>,
     ) -> Result<Result<Vec<u8>, String>, Status> {
         let source_file_data = request.into_inner();
         let address = convert_address(&source_file_data.address)?;
-        Ok(self.compiler.compile(&source_file_data.text, &address)
+        Ok(self
+            .compiler
+            .compile(&source_file_data.text, &address)
             .map_err(|err| err.to_string()))
     }
 }
 
 #[tonic::async_trait]
-impl<S> VmCompiler for CompilerService<S> where S: StateView + Clone + Send + Sync + 'static {
+impl<S> VmCompiler for CompilerService<S>
+where
+    S: StateView + Clone + Send + Sync + 'static,
+{
     async fn compile(
         &self,
         request: Request<MvIrSourceFile>,

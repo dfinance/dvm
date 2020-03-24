@@ -1,5 +1,4 @@
 mod gas_schedule;
-pub mod metadata;
 mod move_vm;
 pub mod native;
 

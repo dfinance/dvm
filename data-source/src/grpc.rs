@@ -7,17 +7,14 @@ use std::thread::JoinHandle;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 use std::thread;
-use crossbeam::channel::{
-    Sender, Receiver, bounded,
-};
+use crossbeam::channel::{Sender, Receiver, bounded};
 use std::time::Duration;
 use dvm_api::grpc::ds_grpc::{
-    ds_service_client::DsServiceClient,
-    DsAccessPath,
-    ds_raw_response::ErrorCode
+    ds_service_client::DsServiceClient, DsAccessPath, ds_raw_response::ErrorCode,
 };
 
 use dvm_api::tonic;
+use std::process::exit;
 
 #[derive(Clone)]
 pub struct GrpcDataSource {
@@ -29,7 +26,7 @@ impl GrpcDataSource {
     pub fn new(uri: Uri) -> Result<GrpcDataSource, Error> {
         let rt = Runtime::new()?;
         let (sender, receiver) = bounded(10);
-        let handler = thread::spawn(move || { Self::internal_loop(rt, uri, receiver) });
+        let handler = thread::spawn(move || Self::internal_loop(rt, uri, receiver));
 
         Ok(GrpcDataSource {
             handler: Arc::new(handler),
@@ -38,30 +35,29 @@ impl GrpcDataSource {
     }
 
     fn internal_loop(mut rt: Runtime, ds_addr: Uri, receiver: Receiver<Request>) {
-        println!("Connecting to data-source: {}", ds_addr);
-        let mut client: DsServiceClient<_> = rt
-            .block_on(async {
-                loop {
-                    match DsServiceClient::connect(ds_addr.clone()).await {
-                        Ok(client) => return client,
-                        Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
-                    }
+        info!("Connecting to data-source: {}", ds_addr);
+        let mut client: DsServiceClient<_> = rt.block_on(async {
+            loop {
+                match DsServiceClient::connect(ds_addr.clone()).await {
+                    Ok(client) => return client,
+                    Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
                 }
-            })
-            .into();
-        println!("Connected to data-source");
+            }
+        });
+
+        info!("Connected to data-source");
         rt.block_on(async {
             loop {
                 if let Ok(request) = receiver.recv() {
                     let grpc_request = tonic::Request::new(access_path_into_ds(request.path));
                     let res = client.get_raw(grpc_request).await;
-                    if let Err(ref _err) = res {
-                        //todo log and exit exit
-                        return;
+                    if let Err(ref err) = res {
+                        error!("Failed to send request to data source:{:?}", err);
+                        exit(-1);
                     }
                     let response = res.unwrap().into_inner();
-                    let error_code =
-                        ErrorCode::from_i32(response.error_code).expect("Invalid ErrorCode enum value");
+                    let error_code = ErrorCode::from_i32(response.error_code)
+                        .expect("Invalid ErrorCode enum value");
 
                     let response = match error_code {
                         // if no error code, return blob
@@ -72,7 +68,7 @@ impl GrpcDataSource {
                         ErrorCode::NoData => Ok(None),
                     };
                     if let Err(err) = request.sender.send(response) {
-                        eprintln!("ERR: Internal VM-DS channel error: {:?}", err);
+                        error!("Internal VM-DS channel error: {:?}", err);
                     }
                 }
             }
@@ -91,9 +87,7 @@ impl StateView for GrpcDataSource {
     }
 
     fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
-        access_paths.iter()
-            .map(|path| self.get(path))
-            .collect()
+        access_paths.iter().map(|path| self.get(path)).collect()
     }
 
     fn is_genesis(&self) -> bool {

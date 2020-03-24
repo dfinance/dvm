@@ -292,14 +292,14 @@ mod test {
     use vm::CompiledModule;
     use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use vm_runtime_types::values::Value;
-    use crate::vm::{MoveVm, VM, Lang};
-    use crate::ds::{MockDataSource, MergeWriteSet, DataAccess};
+    use crate::vm::{MoveVm, VM};
     use crate::vm::move_vm::ExecutionMeta;
-    use crate::vm::compiler::mv::{build, Code};
+    use data_source::{MockDataSource, DataAccess, MergeWriteSet};
+    use lang::{compiler::Compiler, stdlib::build_std};
 
     #[test]
     fn test_create_account() {
-        let ds = MockDataSource::new(Lang::MvIr);
+        let ds = MockDataSource::with_write_set(build_std());
         let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
         let account = AccountAddress::random();
         assert!(ds.get_account(&account).unwrap().is_none());
@@ -310,15 +310,15 @@ mod test {
 
     #[test]
     fn test_publish_module() {
-        let ds = MockDataSource::new(Lang::MvIr);
+        let ds = MockDataSource::with_write_set(build_std());
+        let compiler = Compiler::new(ds.clone());
         let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
         let account = AccountAddress::random();
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
         ds.merge_write_set(output.write_set);
 
         let program = "module M {}";
-        let unit = build(Code::module("M", program), &account, false).unwrap();
-        let module = Module::new(unit.serialize());
+        let module = Module::new(compiler.compile(program, &account).unwrap());
         let output = vm
             .publish_module(ExecutionMeta::test(), module.clone())
             .unwrap();
@@ -346,7 +346,7 @@ mod test {
 
     #[test]
     fn test_execute_function() {
-        let ds = MockDataSource::new(Lang::MvIr);
+        let ds = MockDataSource::with_write_set(build_std());
         let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
 
         ds.merge_write_set(

@@ -58,10 +58,10 @@ where
         let mut extractor = ImportsExtractor::default();
         extractor.extract(&file_definition)?;
 
-        return Ok(ModuleMeta {
+        Ok(ModuleMeta {
             module_name,
             dep_list: Vec::from_iter(extractor.imports().into_iter()),
-        });
+        })
     }
 
     fn compile(&self, source: &str, address: &AccountAddress) -> Result<CompiledUnit, Error> {

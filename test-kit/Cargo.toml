@@ -13,6 +13,8 @@ edition = "2018"
 dvm = { path = ".." }
 dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "rename-error-status" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
+data_source = { path = "../data-source", package = "dvm-data-source" }
+lang = { path = "../lang", package = "dvm-lang" }
 anyhow = "=1.0.27"
 tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
 futures = { version = "=0.3.4", features = ["async-await"] }

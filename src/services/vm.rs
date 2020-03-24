@@ -17,7 +17,7 @@ use crate::compiled_protos::vm_grpc::{
     ContractType, VmAccessPath, VmContract, VmStatus, VmEvent, VmExecuteRequest, VmExecuteResponse,
     VmExecuteResponses, VmStructTag, VmType, VmTypeTag, VmValue,
 };
-use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
+use crate::compiled_protos::vm_grpc::vm_service_server::VmService as GrpcVmService;
 use crate::vm::{ExecutionMeta, VM, Script};
 use crate::vm::ExecutionResult;
 use crate::vm::MoveVm;
@@ -26,18 +26,18 @@ use libra_types::byte_array::ByteArray;
 use lang::banch32::bech32_into_libra;
 use data_source::MergeWriteSet;
 
-pub struct MoveVmService {
+pub struct VmService {
     vm: MoveVm,
     write_set_handler: Option<Box<dyn MergeWriteSet>>, // Used for auto write change set.
 }
 
-unsafe impl Send for MoveVmService {}
+unsafe impl Send for VmService {}
 
-unsafe impl Sync for MoveVmService {}
+unsafe impl Sync for VmService {}
 
-impl MoveVmService {
-    pub fn new(view: Box<dyn StateView>) -> Result<MoveVmService, Error> {
-        Ok(MoveVmService {
+impl VmService {
+    pub fn new(view: Box<dyn StateView>) -> Result<VmService, Error> {
+        Ok(VmService {
             vm: MoveVm::new(view)?,
             write_set_handler: None,
         })
@@ -46,8 +46,8 @@ impl MoveVmService {
     pub fn with_auto_commit(
         view: Box<dyn StateView>,
         write_set_handler: Box<dyn MergeWriteSet>,
-    ) -> Result<MoveVmService, Error> {
-        Ok(MoveVmService {
+    ) -> Result<VmService, Error> {
+        Ok(VmService {
             vm: MoveVm::new(view)?,
             write_set_handler: Some(write_set_handler),
         })
@@ -71,7 +71,7 @@ impl MoveVmService {
 }
 
 #[tonic::async_trait]
-impl VmService for MoveVmService {
+impl GrpcVmService for VmService {
     async fn execute_contracts(
         &self,
         request: Request<VmExecuteRequest>,
@@ -129,12 +129,10 @@ impl TryFrom<VmContract> for Contract {
                             Some(VmTypeTag::Bool) => parse_as_bool(&arg.value),
                             Some(VmTypeTag::U64) => parse_as_u64(&arg.value),
                             Some(VmTypeTag::ByteArray) => parse_as_byte_array(&arg.value),
-                            Some(VmTypeTag::Address) => {
-                                match bech32_into_libra(&arg.value) {
-                                    Ok(address) => parse_as_address(&format!("0x{}", address)),
-                                    Err(_) => Err(Error::msg("Invalid args type.")),
-                                }
-                            }
+                            Some(VmTypeTag::Address) => match bech32_into_libra(&arg.value) {
+                                Ok(address) => parse_as_address(&format!("0x{}", address)),
+                                Err(_) => Err(Error::msg("Invalid args type.")),
+                            },
                             Some(VmTypeTag::U128) => parse_as_u128(&arg.value),
                             _ => Err(Error::msg("Invalid args type.")),
                         }

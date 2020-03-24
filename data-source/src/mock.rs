@@ -10,7 +10,7 @@ use vm::errors::VMResult;
 use crate::MergeWriteSet;
 use vm::CompiledModule;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MockDataSource {
     data: Arc<Mutex<HashMap<AccessPath, Vec<u8>>>>,
 }
