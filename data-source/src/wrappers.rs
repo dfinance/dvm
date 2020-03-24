@@ -7,12 +7,18 @@ use anyhow::Error;
 const CODE_TAG: u8 = 0;
 
 #[derive(Debug, Clone)]
-pub struct ModuleCache<D> where D: StateView + Clone {
+pub struct ModuleCache<D>
+where
+    D: StateView + Clone,
+{
     inner: D,
     cache: Arc<Mutex<LruCache<AccessPath, Vec<u8>>>>,
 }
 
-impl<D> ModuleCache<D> where D: StateView + Clone {
+impl<D> ModuleCache<D>
+where
+    D: StateView + Clone,
+{
     pub fn new(inner: D, cache_size: usize) -> ModuleCache<D> {
         ModuleCache {
             inner,
@@ -21,7 +27,10 @@ impl<D> ModuleCache<D> where D: StateView + Clone {
     }
 }
 
-impl<D> StateView for ModuleCache<D> where D: StateView + Clone {
+impl<D> StateView for ModuleCache<D>
+where
+    D: StateView + Clone,
+{
     fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
         if access_path.path[0] == CODE_TAG {
             let module = {

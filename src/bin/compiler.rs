@@ -11,9 +11,7 @@ use tonic::transport::{Server, Uri};
 use dvm::cli::config::*;
 use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
 use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
-use data_source::{
-    GrpcDataSource, ModuleCache
-};
+use data_source::{GrpcDataSource, ModuleCache};
 
 use lang::compiler::Compiler;
 use dvm::services::compiler::CompilerService;

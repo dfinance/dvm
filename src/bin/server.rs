@@ -15,9 +15,7 @@ use tonic::transport::Server;
 use dvm::cli::config::*;
 use dvm::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 use dvm::vm::native::{oracle::PriceOracle, Reg};
-use data_source::{
-    GrpcDataSource, ModuleCache
-};
+use data_source::{GrpcDataSource, ModuleCache};
 use anyhow::Result;
 use dvm::services::vm::VmService;
 
