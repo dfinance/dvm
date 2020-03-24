@@ -1,4 +1,6 @@
 #[macro_use]
+pub extern crate log;
+#[macro_use]
 extern crate anyhow;
 extern crate libra;
 
@@ -6,10 +8,7 @@ pub mod compiler;
 pub mod ds;
 pub mod service;
 pub mod vm;
-
-pub mod cli {
-    pub mod config;
-}
+pub mod cli;
 
 mod api_grpc_ext;
 // TODO: [REF] rename to api_grpc
