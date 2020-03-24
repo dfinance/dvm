@@ -15,22 +15,24 @@ use dvm::vm::metadata::MetadataService;
 use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 
 /// Move & Mvir compiler with grpc interface.
+///
+/// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
     /// Address in the form of HOST_ADDRESS:PORT.
-    /// This address will be listen to by compilation server.
+    /// The address will be listen to by this compilation server.
     /// Listening localhost by default.
     #[structopt(
         name = "listen address",
         default_value = "[::1]:50053",
-        help = "Address in the form of HOST_ADDRESS:PORT"
+        verbatim_doc_comment
     )]
     address: SocketAddr,
 
     /// DataSource Server internet address.
     #[structopt(
-        name = "data-source uri",
-        env = "DVM_DATA_SOURCE",
+        name = "Data-Source URI",
+        env = DVM_DATA_SOURCE,
         default_value = "http://[::1]:50052"
     )]
     ds: Uri,

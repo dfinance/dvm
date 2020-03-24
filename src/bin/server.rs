@@ -5,6 +5,9 @@ use std::net::SocketAddr;
 use std::sync::mpsc;
 use std::time::Duration;
 
+#[macro_use]
+extern crate log;
+
 use http::Uri;
 use libra::libra_logger::try_init_for_testing;
 use structopt::StructOpt;
@@ -27,7 +30,7 @@ use dvm::vm::native::{oracle::PriceOracle, Reg};
 #[derive(Debug, StructOpt, Clone)]
 struct Options {
     /// Address in the form of HOST_ADDRESS:PORT.
-    /// This address will be listen to by DVM (this) server.
+    /// The address will be listen to by DVM (this) server.
     /// Listening localhost by default.
     #[structopt(
         name = "listen address",
@@ -39,7 +42,7 @@ struct Options {
     /// DataSource Server internet address.
     #[structopt(
         name = "Data-Source URI",
-        env = "DVM_DATA_SOURCE",
+        env = DVM_DATA_SOURCE,
         default_value = "http://[::1]:50052"
     )]
     ds: Uri,
@@ -53,14 +56,7 @@ struct Options {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = Options::from_args();
-
-    match options.integrations.sentry_dsn {
-        Some(dsn) => {
-            let _init_guard = sentry::init(dsn);
-            sentry::integrations::panic::register_panic_handler();
-        }
-        None => println!("SENTRY_DSN environment variable is not provided, Sentry integration is going to be disabled.")
-    }
+    let _guard = dvm::cli::init(&options.logging, &options.integrations);
 
     let serv_addr = options.address;
     let ds_addr = options.ds;
@@ -75,10 +71,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         PriceOracle::new(Box::new(ds.clone())).reg_function();
 
         // enable logging for libra MoveVM
-        std::env::set_var("RUST_LOG", "warn");
+        // std::env::set_var("RUST_LOG", "warn");
         try_init_for_testing();
 
-        println!("VM server listening on {}", serv_addr);
+        info!("DVM server listening on {}", serv_addr);
         runtime.spawn(async move {
             let service = MoveVmService::new(Box::new(ds)).unwrap();
             Server::builder()
@@ -88,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     }
 
-    println!("Connecting to data-source: {}", ds_addr);
+    info!("Connecting to data-source: {}", ds_addr);
     let client: RefCell<DsServiceClient<Channel>> = runtime
         .block_on(async {
             loop {
@@ -99,7 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         })
         .into();
-    println!("Connected to data-source");
+    info!("Connected to data-source");
 
     // finally looping over channel connected to the proxy data-source:
     // 1. receive request from blocking data-source
@@ -115,9 +111,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return;
             }
             let ds_response = res.unwrap().into_inner();
-            //            let channel_res = rtx.send(res.map(|resp| resp.into_inner().blob).ok());
             if let Err(err) = rtx.send(ds_response) {
-                eprintln!("ERR: Internal VM-DS channel error: {:?}", err);
+                error!("Internal VM-DS channel error: {:?}", err);
                 // TODO: Are we should break this loop when res is error?
             }
         });
