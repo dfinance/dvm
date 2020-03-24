@@ -24,12 +24,13 @@ use libra_types::language_storage::ModuleId;
 use libra_types::identifier::IdentStr;
 use libra_types::vm_error::{VMStatus, StatusCode};
 use vm::errors::{vm_error, Location, VMResult};
-use crate::vm::{gas_schedule::cost_table, stdlib::load_std};
+use crate::vm::{gas_schedule::cost_table};
 use libra_types::write_set::WriteSet;
 use libra_types::contract_event::ContractEvent;
 use vm_runtime::system_module_names::{ACCOUNT_MODULE, CREATE_ACCOUNT_NAME};
 use anyhow::Error;
 use vm_runtime_types::values::Value;
+use lang::stdlib::load_std;
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();

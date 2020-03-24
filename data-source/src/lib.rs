@@ -1,5 +1,8 @@
+#[macro_use]
+extern crate anyhow;
+
 pub mod mock;
-pub mod grps;
+pub mod grpc;
 
 use libra::{libra_types, libra_state_view, vm_runtime, lcs};
 use libra_types::write_set::WriteSet;
@@ -14,6 +17,7 @@ use vm_runtime::identifier::create_access_path;
 use anyhow::Error;
 
 pub use mock::MockDataSource;
+pub use grpc::GrpcDataSource;
 
 pub trait MergeWriteSet {
     fn merge_write_set(&self, write_set: WriteSet);

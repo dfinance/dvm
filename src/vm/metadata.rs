@@ -1,9 +1,8 @@
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 use libra::vm;
-use vm::file_format::{CompiledScript, SignatureToken};
-use vm::printers::TableAccess;
-
+use vm::file_format::SignatureToken;
+use lang::bytecode::extract_script_params;
 use crate::compiled_protos::vm_grpc::{Signature, VmScript, VmTypeTag};
 use crate::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
 
@@ -16,19 +15,11 @@ impl VmScriptMetadata for MetadataService {
         &self,
         request: Request<VmScript>,
     ) -> Result<Response<Signature>, Status> {
-        let compiled_script = CompiledScript::deserialize(&request.into_inner().code)
-            .map_err(|_| {
-                Status::invalid_argument("Cannot deserialize script from provided bytecode")
-            })?
-            .into_inner();
-        let main_function = compiled_script
-            .get_function_at(compiled_script.main.function)
-            .unwrap();
-        let main_function_signature = compiled_script
-            .get_function_signature_at(main_function.signature)
-            .unwrap();
-        let mut arg_types = Vec::with_capacity(main_function_signature.arg_types.len());
-        for sign_type in main_function_signature.arg_types.iter() {
+        let params = extract_script_params(&request.into_inner().code)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+
+        let mut arg_types = Vec::with_capacity(params.len());
+        for sign_type in params.iter() {
             let tag = match sign_type {
                 SignatureToken::Bool => VmTypeTag::Bool,
                 SignatureToken::Address => VmTypeTag::Address,

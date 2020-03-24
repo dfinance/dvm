@@ -1,16 +1,13 @@
 use std::{fs, io, path::PathBuf};
 use structopt::StructOpt;
 use serde_json::{to_string, to_string_pretty};
-use dvm::vm::stdlib::{Stdlib, build_std, WS};
-use dvm::vm::Lang;
+use lang::stdlib::{build_external_std, Stdlib, WS};
 
 #[derive(StructOpt)]
 struct Opts {
     /// Path to the directory with the standard library.
     #[structopt()]
     source_dir: String,
-    #[structopt(help = "Compiler type; [move, mvir]")]
-    lang: Lang,
     /// Optional path to the output file.
     /// If not passed, result will be printed to stdout.
     #[structopt(short, long, parse(from_os_str))]
@@ -28,11 +25,6 @@ struct Opts {
 fn main() {
     let opts = Opts::from_args();
 
-    let extension = match &opts.lang {
-        Lang::MvIr => "mvir",
-        Lang::Move => "move",
-    };
-
     let entries = fs::read_dir(&opts.source_dir)
         .unwrap()
         .map(|res| res.map(|e| e.path()))
@@ -40,7 +32,7 @@ fn main() {
             if match path {
                 Ok(path) => path
                     .extension()
-                    .map(|ext| ext == extension)
+                    .map(|ext| ext == "move" || ext == "mvir")
                     .unwrap_or(false),
                 Err(_) => true,
             } {
@@ -66,27 +58,25 @@ fn main() {
         )
     }
 
-    let modules: Vec<_> = entries
+    let modules = entries
         .iter()
         .map(fs::read_to_string)
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
 
-    let std = Stdlib {
-        modules: modules.iter().map(|s| s.as_str()).collect(),
-        lang: opts.lang,
-    };
+    let modules = modules.iter()
+        .map(|m| m.as_str())
+        .collect();
 
-    // Build
-    let vm_value = build_std(std).unwrap();
+    let vm_value = build_external_std(Stdlib { modules })
+        .unwrap();
 
     // Serialize
     let ws = if opts.pretty_print {
         to_string_pretty(&WS::from(vm_value))
     } else {
         to_string(&WS::from(vm_value))
-    }
-    .expect("Cannot serialize results to json.");
+    }.expect("Cannot serialize results to json.");
 
     // Export the output
     if let Some(path) = opts.output {

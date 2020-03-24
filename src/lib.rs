@@ -3,7 +3,6 @@ extern crate anyhow;
 extern crate libra;
 
 pub mod compiler;
-pub mod ds;
 pub mod service;
 pub mod vm;
 

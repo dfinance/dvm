@@ -702,7 +702,11 @@ name = "dvm-data-source"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "crossbeam",
+ "dvm-api",
  "dvm-libra-deps",
+ "http",
+ "tokio",
 ]
 
 [[package]]

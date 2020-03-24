@@ -11,3 +11,7 @@ edition = "2018"
 [dependencies]
 libra = { path = "../libra", package = "dvm-libra-deps" }
 anyhow = "=1.0.27"
+crossbeam = "0.7.3"
+http = "=0.2.0"
+tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "rename-error-status" }

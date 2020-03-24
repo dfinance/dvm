@@ -9,7 +9,7 @@ use std::thread;
 use tokio::runtime::Runtime;
 use std::io::{ErrorKind, Error as IoError};
 use dvm::service::MoveVmService;
-use dvm::ds::MockDataSource;
+use ds::MockDataSource;
 use std::mem;
 use crate::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
 

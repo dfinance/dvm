@@ -1,3 +1,0 @@
-module Oracle {
-    native public get_price(ticker: bytearray): u64;
-}

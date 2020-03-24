@@ -40,8 +40,8 @@ byteorder = "=1.3.4"
 structopt = "=0.3.11"
 http = "=0.2.0"
 maplit = "=1.0.2"
-regex = "=1.3.5"
-bech32 = "=0.7.2"
+regex = "=1.3.5"#-
+bech32 = "=0.7.2"#-
 slice_as_array = "=1.1.0"
 
 sentry = "=0.18.0"

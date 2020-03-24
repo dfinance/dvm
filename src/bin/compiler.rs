@@ -2,7 +2,6 @@ use std::net::SocketAddr;
 
 use anyhow::Result;
 use structopt::StructOpt;
-use tokio::time::Duration;
 
 use dvm_api::tonic;
 use tonic::transport::{Server, Uri};
@@ -13,6 +12,9 @@ use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompilerServer;
 use dvm::compiler::mvir::CompilerService;
 use dvm::vm::metadata::MetadataService;
 use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
+use std::time::Duration;
+use data_source::GrpcDataSource;
+use lang::compiler::Compiler;
 
 /// Move & Mvir compiler with grpc interface.
 #[derive(Debug, StructOpt, Clone)]
@@ -66,7 +68,7 @@ async fn main() -> Result<()> {
     };
     println!("Connected to ds server");
 
-    let compiler_service = CompilerService::new(Box::new(ds_client));
+    let compiler_service = CompilerService::new(Compiler::new(GrpcDataSource::new(ds_address).unwrap()));
     let metadata_service = MetadataService::default();
 
     Server::builder()

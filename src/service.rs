@@ -18,12 +18,13 @@ use crate::compiled_protos::vm_grpc::{
     VmExecuteResponses, VmStructTag, VmType, VmTypeTag, VmValue,
 };
 use crate::compiled_protos::vm_grpc::vm_service_server::VmService;
-use crate::ds::MergeWriteSet;
-use crate::vm::{ExecutionMeta, VM, bech32_utils, Script};
+use crate::vm::{ExecutionMeta, VM, Script};
 use crate::vm::ExecutionResult;
 use crate::vm::MoveVm;
 use vm_runtime_types::values::Value;
 use libra_types::byte_array::ByteArray;
+use lang::banch32::bech32_into_libra;
+use data_source::MergeWriteSet;
 
 pub struct MoveVmService {
     vm: MoveVm,
@@ -102,7 +103,7 @@ impl TryFrom<VmContract> for Contract {
     type Error = VMStatus;
 
     fn try_from(contract: VmContract) -> Result<Self, Self::Error> {
-        let address = bech32_utils::bech32_into_libra(&contract.address).map_err(|_| {
+        let address = bech32_into_libra(&contract.address).map_err(|_| {
             VMStatus::new(StatusCode::INVALID_DATA).with_message(format!(
                 "Invalid AccountAddress: invalid bech32 address {}",
                 &contract.address
@@ -129,7 +130,7 @@ impl TryFrom<VmContract> for Contract {
                             Some(VmTypeTag::U64) => parse_as_u64(&arg.value),
                             Some(VmTypeTag::ByteArray) => parse_as_byte_array(&arg.value),
                             Some(VmTypeTag::Address) => {
-                                match bech32_utils::bech32_into_libra(&arg.value) {
+                                match bech32_into_libra(&arg.value) {
                                     Ok(address) => parse_as_address(&format!("0x{}", address)),
                                     Err(_) => Err(Error::msg("Invalid args type.")),
                                 }
