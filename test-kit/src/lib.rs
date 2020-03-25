@@ -124,7 +124,10 @@ impl TestKit {
         let errs: Vec<_> = res
             .executions
             .iter()
-            .filter(|exec| exec.status == 0 /*Discard*/)
+            .filter(|exec| {
+                exec.status == 0 /*Discard*/ || exec.status_struct.as_ref().map(|v| v.major_status != 4001)
+                .unwrap_or(false)
+            })
             .map(|exec| format!("err: {:?}", exec.status_struct))
             .collect();
         if !errs.is_empty() {
