@@ -38,7 +38,7 @@ RUN ls -la ./target/release
 
 FROM ubuntu:18.04
 WORKDIR /opt/app
-COPY ./stdlib/ ./stdlib/
+COPY ./lang/stdlib/ ./stdlib/
 COPY --from=build \
     /opt/app/target/release/compiler \
     /opt/app/target/release/dvm \
