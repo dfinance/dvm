@@ -126,14 +126,14 @@ pub trait VM {
     ) -> VmResult;
 }
 
-pub struct MoveVm {
+pub struct Dvm {
     runtime: VMRuntime<'static>,
     view: Box<dyn StateView>,
     cost_table: CostTable,
 }
 
-impl MoveVm {
-    pub fn new(view: Box<dyn StateView>) -> Result<MoveVm, Error> {
+impl Dvm {
+    pub fn new(view: Box<dyn StateView>) -> Result<Dvm, Error> {
         let mut runtime = VMRuntime::new(allocator());
 
         match load_std(view.as_ref())? {
@@ -145,8 +145,8 @@ impl MoveVm {
             None => return Err(Error::msg("Stdlib not found.")),
         }
 
-        println!("MoveVM is ready.");
-        Ok(MoveVm {
+        trace!("DVM is ready.");
+        Ok(Dvm {
             runtime,
             view,
             cost_table: cost_table(),
@@ -166,13 +166,13 @@ impl MoveVm {
     }
 }
 
-impl fmt::Debug for MoveVm {
+impl fmt::Debug for Dvm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "MoveVm {{ }}")
+        write!(f, "Dvm {{ }}")
     }
 }
 
-impl VM for MoveVm {
+impl VM for Dvm {
     fn create_account(&self, meta: ExecutionMeta, address: AccountAddress) -> VmResult {
         let cache = self.make_data_cache();
         let meta = meta.into();
@@ -292,7 +292,7 @@ mod test {
     use vm::CompiledModule;
     use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use vm_runtime_types::values::Value;
-    use crate::vm::{MoveVm, VM};
+    use crate::vm::{Dvm, VM};
     use crate::vm::move_vm::ExecutionMeta;
     use data_source::{MockDataSource, DataAccess, MergeWriteSet};
     use lang::{compiler::Compiler, stdlib::build_std};
@@ -300,7 +300,7 @@ mod test {
     #[test]
     fn test_create_account() {
         let ds = MockDataSource::with_write_set(build_std());
-        let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
+        let vm = Dvm::new(Box::new(ds.clone())).unwrap();
         let account = AccountAddress::random();
         assert!(ds.get_account(&account).unwrap().is_none());
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
@@ -312,7 +312,7 @@ mod test {
     fn test_publish_module() {
         let ds = MockDataSource::with_write_set(build_std());
         let compiler = Compiler::new(ds.clone());
-        let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
+        let vm = Dvm::new(Box::new(ds.clone())).unwrap();
         let account = AccountAddress::random();
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
         ds.merge_write_set(output.write_set);
@@ -347,7 +347,7 @@ mod test {
     #[test]
     fn test_execute_function() {
         let ds = MockDataSource::with_write_set(build_std());
-        let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
+        let vm = Dvm::new(Box::new(ds.clone())).unwrap();
 
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), association_address())
