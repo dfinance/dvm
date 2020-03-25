@@ -11,7 +11,7 @@ edition = "2018"
 
 [dependencies]
 dvm = { path = ".." }
-dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "rename-error-status" }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
 lang = { path = "../lang", package = "dvm-lang" }
