@@ -20,14 +20,14 @@ use crate::compiled_protos::vm_grpc::{
 use crate::compiled_protos::vm_grpc::vm_service_server::VmService as GrpcVmService;
 use crate::vm::{ExecutionMeta, VM, Script};
 use crate::vm::ExecutionResult;
-use crate::vm::MoveVm;
+use crate::vm::Dvm;
 use vm_runtime_types::values::Value;
 use libra_types::byte_array::ByteArray;
 use lang::banch32::bech32_into_libra;
 use data_source::MergeWriteSet;
 
 pub struct VmService {
-    vm: MoveVm,
+    vm: Dvm,
     write_set_handler: Option<Box<dyn MergeWriteSet>>, // Used for auto write change set.
 }
 
@@ -38,7 +38,7 @@ unsafe impl Sync for VmService {}
 impl VmService {
     pub fn new(view: Box<dyn StateView>) -> Result<VmService, Error> {
         Ok(VmService {
-            vm: MoveVm::new(view)?,
+            vm: Dvm::new(view)?,
             write_set_handler: None,
         })
     }
@@ -48,7 +48,7 @@ impl VmService {
         write_set_handler: Box<dyn MergeWriteSet>,
     ) -> Result<VmService, Error> {
         Ok(VmService {
-            vm: MoveVm::new(view)?,
+            vm: Dvm::new(view)?,
             write_set_handler: Some(write_set_handler),
         })
     }
