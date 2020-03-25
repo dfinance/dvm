@@ -7,6 +7,7 @@ pub use support_sentry::*;
 #[cfg(feature = "sentry")]
 mod support_sentry {
     use super::*;
+    use sentry::internals::Dsn;
     use sentry::internals::ClientInitGuard;
     use sentry::integrations::panic::register_panic_handler;
     use sentry::integrations::env_logger::init as sentry_log_init;
@@ -35,7 +36,7 @@ mod support_sentry {
         }
     }
 
-    pub fn init_sentry(dsn: &str) -> ClientInitGuard {
+    pub fn init_sentry(dsn: &Dsn) -> ClientInitGuard {
         let client = sentry::init(dsn);
         if client.is_enabled() {
             register_panic_handler();

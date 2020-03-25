@@ -42,5 +42,5 @@ pub struct IntegrationsOptions {
     /// If value ommited, crash logging service will not be initialized.
     #[structopt(name = "Sentry DSN", long = "sentry-dsn", env = DVM_SENTRY_DSN)]
     #[cfg(feature = "sentry")]
-    pub sentry_dsn: Option<String>,
+    pub sentry_dsn: Option<sentry::internals::Dsn>,
 }
