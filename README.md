@@ -20,7 +20,7 @@ docker pull registry.wings.toys/dfinance/dvm:master
 
 Or the same for compose:
 
-```docker
+```yaml
 version: '3.7'
 services:
   dvm-compiler:
