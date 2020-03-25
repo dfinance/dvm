@@ -1,5 +1,5 @@
 //! Server implementation on tonic & tokio.
-//! Run with `cargo run --bin server "[::1]:50051" "http://[::1]:50052"`
+//! Run with `cargo run --bin dvm "[::1]:50051" "http://[::1]:50052"`
 use std::net::SocketAddr;
 
 #[macro_use]
