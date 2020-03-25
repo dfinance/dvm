@@ -93,7 +93,7 @@ Uninstallation: `cargo uninstall dvm`.
 
 ## Usage
 
-> Note: Following instructions are for stanalone binary executables. If you want use `cargo` to build & run, just add `cargo run --bin ` at start of the mentioned command.
+> Note: Following instructions are for standalone binary executables. If you want to use `cargo` to build & run, just add `cargo run --bin ` at the start of the mentioned command.
 
 
 ### DVM server
