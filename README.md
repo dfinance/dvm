@@ -32,4 +32,4 @@ Example:
 
 `cargo run --bin compiler "<which host:port to use>" <ds-server uri>"`
 
-Example: `cargo run --bin compiler "[::1]:50052" "http://[::1]:50051"`
+Example: `cargo run --bin compiler "[::1]:50053" "http://[::1]:50052"`
