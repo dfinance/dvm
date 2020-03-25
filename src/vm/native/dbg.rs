@@ -1,14 +1,15 @@
-use libra_types::language_storage::TypeTag;
+use std::sync::{Arc, Mutex};
 use std::collections::VecDeque;
+use libra::{libra_types, vm, vm_runtime_types};
+use libra_types::language_storage::TypeTag;
+use libra_types::vm_error::VMStatus;
+use libra_types::byte_array::ByteArray;
 use vm::gas_schedule::{CostTable, NativeCostIndex};
 use vm_runtime_types::{pop_arg, native_functions::dispatch::NativeResult};
 use vm_runtime_types::values::Value;
-use libra_types::vm_error::VMStatus;
-use libra_types::byte_array::ByteArray;
 use vm_runtime_types::native_functions::dispatch::native_gas;
 use crate::vm::native::Function;
 use crate::module;
-use std::sync::{Arc, Mutex};
 
 #[derive(Debug)]
 pub struct PrintByteArray {}

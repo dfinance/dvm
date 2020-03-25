@@ -1,89 +1,24 @@
-use std::collections::HashMap;
-
-use bytecode_verifier::VerifiedModule;
-use libra_types::access_path::AccessPath;
+use libra::{libra_types, vm};
 use libra_types::account_address::AccountAddress;
-use libra_types::identifier::Identifier;
-use libra_types::language_storage::ModuleId;
-use maplit::hashmap;
-use tonic::{Request, Response, Status};
 use vm::access::ScriptAccess;
 use vm::CompiledModule;
-use vm::file_format::{Bytecode, ModuleHandleIndex, ByteArrayPoolIndex};
+use vm::file_format::{Bytecode, ModuleHandleIndex};
 use vm::file_format::CompiledScript;
 
-use move_vm_in_cosmos::compiled_protos::ds_grpc::ds_raw_response::ErrorCode;
-use move_vm_in_cosmos::compiled_protos::ds_grpc::DsRawResponse;
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
-use move_vm_in_cosmos::compiler::mvir::{CompilerService, DsClient};
-use move_vm_in_cosmos::vm::Lang;
+use dvm_api::tonic;
+use tonic::{Request, Response, Status};
+
+use dvm::compiled_protos::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
+use dvm::compiled_protos::vm_grpc::vm_compiler_server::VmCompiler;
+use dvm::services::compiler::CompilerService;
+use lang::{compiler::Compiler, stdlib::build_std};
+use data_source::MockDataSource;
 
 fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
     MvIrSourceFile {
         text: source.to_string(),
         r#type: r#type as i32,
         address: address.to_string().into_bytes(),
-    }
-}
-
-fn hash_module() -> VerifiedModule {
-    let hash = Lang::MvIr
-        .compiler()
-        .build_module(
-            include_str!("../stdlib/mvir/hash.mvir"),
-            &AccountAddress::default(),
-            true,
-        )
-        .unwrap();
-    VerifiedModule::new(CompiledModule::deserialize(&hash).unwrap()).unwrap()
-}
-
-#[derive(Default)]
-struct DsServiceMock {
-    deps: HashMap<AccessPath, VerifiedModule>,
-}
-
-impl DsServiceMock {
-    #[allow(dead_code)]
-    pub fn with_deps(deps: HashMap<(AccountAddress, String), VerifiedModule>) -> Self {
-        let deps: HashMap<AccessPath, VerifiedModule> = deps
-            .iter()
-            .map(|(key, val)| {
-                let (address, path) = key;
-                let module_ident = Identifier::new(path.clone()).unwrap();
-                let module_id = ModuleId::new(*address, module_ident);
-                (AccessPath::code_access_path(&module_id), val.clone())
-            })
-            .collect();
-        Self { deps }
-    }
-}
-
-#[tonic::async_trait]
-impl DsClient for DsServiceMock {
-    async fn resolve_ds_path(
-        &mut self,
-        request: Request<AccessPath>,
-    ) -> Result<Response<DsRawResponse>, Status> {
-        let access_path = request.into_inner();
-        let path = &access_path.path;
-        assert_eq!(
-            path[0], 0,
-            "First byte should be 0 as in AccessPath::CODE_TAG"
-        );
-
-        let ds_response = match self.deps.get(&access_path) {
-            Some(module) => {
-                let mut buffer = vec![];
-                module.serialize(&mut buffer).unwrap();
-                DsRawResponse::with_blob(&buffer[..])
-            }
-            None => {
-                DsRawResponse::with_error(ErrorCode::NoData, format!("'{}' not found", access_path))
-            }
-        };
-        Ok(Response::new(ds_response))
     }
 }
 
@@ -98,9 +33,9 @@ async fn compile_source_file(
     r#type: ContractType,
 ) -> Result<Response<CompilationResult>, Status> {
     let source_file_request = new_source_file_request(source_text, r#type);
-    let mocked_ds_client = DsServiceMock::default();
 
-    let compiler_service = CompilerService::new(Box::new(mocked_ds_client));
+    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let compiler_service = CompilerService::new(compiler);
     compiler_service.compile(source_file_request).await
 }
 
@@ -154,14 +89,10 @@ async fn test_compile_mvir_script_with_dependencies() {
                return;
             }
         ";
-
-    let ds_client = DsServiceMock::with_deps(hashmap! {
-        (AccountAddress::default(), "Hash".to_string()) => hash_module()
-    });
-
     let source_file_request = new_source_file_request(source_text, ContractType::Script);
 
-    let compiler_service = CompilerService::new(Box::new(ds_client));
+    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let compiler_service = CompilerService::new(compiler);
     let compilation_result = compiler_service
         .compile(source_file_request)
         .await
@@ -188,7 +119,7 @@ async fn test_compile_mvir_script_with_dependencies() {
 #[tokio::test]
 async fn test_required_libracoin_dependency_is_not_available() {
     let source_text = r"
-            import 0x0.LibraCoin;
+            import 0x0.Coin;
             main() {
                return;
             }
@@ -196,7 +127,8 @@ async fn test_required_libracoin_dependency_is_not_available() {
 
     let source_file_request = new_source_file_request(source_text, ContractType::Script);
 
-    let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
+    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let compiler_service = CompilerService::new(compiler);
     let compilation_result = compiler_service
         .compile(source_file_request)
         .await
@@ -208,7 +140,7 @@ async fn test_required_libracoin_dependency_is_not_available() {
     let error = compilation_result.errors.get(0).unwrap();
     assert_eq!(
         error,
-        r#"'AccessPath { address: 0000000000000000000000000000000000000000000000000000000000000000, type: Module, hash: "1ff6fadddda5de4c8c9bc95c5b204a999070f1c90c97b8017d4beb7a55d5fb30", suffix: "" } ' not found"#
+        r#"Module with path [ModuleId { address: 0000000000000000000000000000000000000000000000000000000000000000, name: Identifier("Coin") }] not found"#
     )
 }
 
@@ -228,11 +160,19 @@ async fn test_allows_for_bech32_addresses() {
     )
     .unwrap();
 
-    let ds_client = DsServiceMock::with_deps(hashmap! {
-        (libra_address, "Hash".to_string()) => hash_module()
-    });
+    let ds = MockDataSource::with_write_set(build_std());
+    let compiler = Compiler::new(ds.clone());
+    let hash = compiler
+        .compile(
+            "\
+        module Hash {}
+    ",
+            &libra_address,
+        )
+        .unwrap();
+    ds.publish_module(hash).unwrap();
 
-    let compiler_service = CompilerService::new(Box::new(ds_client));
+    let compiler_service = CompilerService::new(compiler);
     let compilation_result = compiler_service
         .compile(source_file_request)
         .await
@@ -256,15 +196,16 @@ async fn test_pass_empty_string_as_address() {
     let source_file = new_source_file(source_text, ContractType::Script, "");
     let request = Request::new(source_file);
 
-    let compiler_service = CompilerService::new(Box::new(DsServiceMock::default()));
+    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let compiler_service = CompilerService::new(compiler);
     let error_status = compiler_service.compile(request).await.unwrap_err();
     assert_eq!(error_status.message(), "Address is not a valid bech32");
 }
 
 #[tokio::test]
-async fn test_compilation_error_on_variable_redefinition() {
+async fn test_compilation_error_on_expected_an_expression_term() {
     let source_text = r#"
-            main() {
+            fun main() {
                 let a: u128;
                 let a: bytearray;
                 return;
@@ -274,36 +215,5 @@ async fn test_compilation_error_on_variable_redefinition() {
         .await
         .unwrap()
         .into_inner();
-    assert_eq!(compilation_result.errors, vec!["variable redefinition a"]);
-}
-
-#[tokio::test]
-async fn test_s_prefixed_strings_should_be_replaced_with_hex_equivalent() {
-    let source_text = r#"
-            main() {
-                let pair: bytearray;
-                pair = s"BTCUSD";
-            }
-        "#;
-    let compiled = compile_source_file(source_text, ContractType::Script)
-        .await
-        .unwrap()
-        .into_inner();
-    assert!(compiled.errors.is_empty());
-    let compiled_script = CompiledScript::deserialize(&compiled.bytecode).unwrap();
-
-    let byte_array_idx = ByteArrayPoolIndex::new(0);
-    let byte_array = compiled_script.byte_array_pool()[byte_array_idx.0 as usize].clone();
-
-    assert_eq!(
-        byte_array.into_inner(),
-        hex::decode("425443555344").unwrap()
-    );
-    assert_eq!(
-        compiled_script.main().code.code,
-        vec![
-            Bytecode::LdByteArray(byte_array_idx),
-            Bytecode::StLoc(byte_array_idx.0 as u8)
-        ]
-    )
+    assert!(compilation_result.errors[0].contains("Expected an expression term"));
 }
