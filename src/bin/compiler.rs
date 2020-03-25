@@ -49,11 +49,14 @@ struct Options {
     integrations: IntegrationsOptions,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let options = Options::from_args();
     let _guard = dvm::cli::init(&options.logging, &options.integrations);
+    main_internal(options)
+}
 
+#[tokio::main]
+async fn main_internal(options: Options) -> Result<()> {
     let ds = GrpcDataSource::new(options.ds).expect("GrpcDataSource expect.");
     let ds = ModuleCache::new(ds, MODULE_CACHE);
     let compiler_service = CompilerService::new(Compiler::new(ds));
