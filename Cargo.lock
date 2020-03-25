@@ -663,7 +663,6 @@ name = "dvm"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bech32 0.7.2",
  "byteorder",
  "dvm-api",
  "dvm-data-source",
@@ -671,14 +670,11 @@ dependencies = [
  "dvm-libra-deps",
  "dvm-test-kit",
  "env_logger",
- "futures",
- "futures-core",
  "hex",
  "http",
  "lazy_static",
  "log",
  "once_cell",
- "regex",
  "sentry",
  "serde",
  "serde_json",
