@@ -9,7 +9,7 @@
 
 ## Installation
 
-There is two ways to install and try DVM - [with Docker](#the-docker-way) or [with Rust-toolchain](#installation-with-rust).
+There is two ways to install and try DVM - [with Docker](#the-docker-way) or [with Rust-toolchain](#installation-with-rust--cargo).
 
 ### The Docker-Way
 
