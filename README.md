@@ -59,7 +59,7 @@ Check out [Usage](#Usage) part for more info.
 - - - - - - - - - -
 
 
-### Installation with Rust & Cargo
+### Installation with Rust 🦀 Cargo
 
 <!-- TODO: type here something -->
 
