@@ -88,6 +88,8 @@ As result you will get the following executables into your `.cargo/bin` director
 - `compiler` - compilation server
 - `stdlib-builder` - standard library builder (useful for genesis creation)
 
+Uninstallation: `cargo uninstall dvm`.
+
 
 ## Usage
 
