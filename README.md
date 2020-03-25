@@ -154,7 +154,7 @@ stdlib-builder /path-to-your/std-lib -po ./stdlib.json
 
 ## Development
 
-Just clone [this repo][] and hack somehow:
+Just clone [this repo][] and hack some:
 
 ```bash
 # clone the repository
@@ -191,7 +191,7 @@ This project has the [following contributors](https://github.com/dfinance/dvm/gr
 To help project you always can open [issue](https://github.com/dfinance/dvm/pulls) or fork, do changes in your own fork and open [pull request](https://github.com/dfinance/dvm/pulls).
 
 
-Useful precommit-hook for check coud locally:
+Useful precommit-hook for check all locally:
 
 ```bash
 ln -s `git rev-parse --show-toplevel`/check_project.sh `git rev-parse --absolute-git-dir`/hooks/pre-commit
