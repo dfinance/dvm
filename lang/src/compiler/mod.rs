@@ -143,7 +143,7 @@ pub fn str_xxhash(val: &str) -> u64 {
 
 pub fn replace_u_literal(code: &str) -> String {
     let mut replaced = code.to_string();
-    let regex = pattern!(r#"x".*?""#);
+    let regex = pattern!(r#"#".*?""#);
 
     let replace_list = regex
         .find_iter(code)
@@ -250,7 +250,7 @@ pub mod test {
     fn test_u_literal() {
         assert_eq!(
             replace_u_literal(
-                "Oracle.get_price(x\"USD\") + Oracle.get_price(x\"BTC\") = x\"USDBTC\"",
+                "Oracle.get_price(#\"USD\") + Oracle.get_price(#\"BTC\") = #\"USDBTC\"",
             ),
             format!(
                 "Oracle.get_price({}) + Oracle.get_price({}) = {}",

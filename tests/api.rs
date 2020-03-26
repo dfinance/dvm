@@ -77,7 +77,7 @@ fn test_oracle() {
         import 0x0.Oracle;
 
         main() {
-          Dbg.dump_u64(Oracle.get_price(x\"USDBTC\"));
+          Dbg.dump_u64(Oracle.get_price(#\"USDBTC\"));
           return;
         }
     ";
@@ -97,7 +97,7 @@ fn test_oracle() {
         use 0x0::Oracle;
 
         fun main() {
-          Dbg::dump_u64(Oracle::get_price(x\"USDxrp\"));
+          Dbg::dump_u64(Oracle::get_price(#\"USDxrp\"));
         }
     ";
     let res = test_kit.execute_script(script, meta(&account_address), vec![]);
