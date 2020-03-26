@@ -10,6 +10,9 @@ use libra::libra_types::account_address::AccountAddress;
 use anyhow::Error;
 use libra::libra_types::language_storage::ModuleId;
 use crate::compiler::module_loader::ModuleLoader;
+use crate::pattern;
+use twox_hash::XxHash64;
+use std::hash::Hasher;
 
 pub enum Lang {
     Move,
@@ -132,10 +135,41 @@ pub trait Builder {
     fn module_meta(&self, code: &str) -> Result<ModuleMeta, Error>;
 }
 
+pub fn str_xxhash(val: &str) -> u64 {
+    let mut hash = XxHash64::default();
+    Hasher::write(&mut hash, val.as_bytes());
+    Hasher::finish(&hash)
+}
+
+pub fn replace_u_literal(code: &str) -> String {
+    let mut replaced = code.to_string();
+    let regex = pattern!(r#"#".*?""#);
+
+    let replace_list = regex
+        .find_iter(code)
+        .map(|mat| {
+            let content = mat
+                .as_str()
+                .to_lowercase()
+                .chars()
+                .skip(2)
+                .take(mat.as_str().len() - 3)
+                .collect::<String>();
+
+            (mat.range(), format!("{}", str_xxhash(&content)))
+        })
+        .collect::<Vec<_>>();
+
+    for (range, value) in replace_list.into_iter().rev() {
+        replaced.replace_range(range, &value);
+    }
+    replaced
+}
+
 #[cfg(test)]
 pub mod test {
     use std::collections::HashSet;
-    use crate::compiler::{Lang, ModuleMeta, Compiler};
+    use crate::compiler::{Lang, ModuleMeta, Compiler, replace_u_literal, str_xxhash};
     use libra::libra_types::language_storage::ModuleId;
     use libra::libra_types::account_address::AccountAddress;
     use libra::libra_types::identifier::Identifier;
@@ -213,22 +247,33 @@ pub mod test {
     }
 
     #[test]
+    fn test_u_literal() {
+        assert_eq!(
+            replace_u_literal(
+                "Oracle.get_price(#\"USD\") + Oracle.get_price(#\"BTC\") = #\"USDBTC\"",
+            ),
+            format!(
+                "Oracle.get_price({}) + Oracle.get_price({}) = {}",
+                str_xxhash("usd"),
+                str_xxhash("btc"),
+                str_xxhash("usdbtc")
+            )
+        )
+    }
+
+    #[test]
     fn test_mvir_meta() {
         let view = MockDataSource::new();
         let compiler = Lang::MvIr.compiler(view);
         let meta = compiler
             .module_meta(&include_str!("../../stdlib/account.mvir"))
             .unwrap();
+        assert_eq!("Account", meta.module_name);
+        assert!(meta.dep_list.len() >= 1);
         assert_eq!(
-            meta,
-            ModuleMeta {
-                module_name: "Account".to_string(),
-                dep_list: vec![ModuleId::new(
-                    AccountAddress::default(),
-                    Identifier::new("Coins").unwrap(),
-                ),],
-            }
-        )
+            &ModuleId::new(AccountAddress::default(), Identifier::new("Coins").unwrap(),),
+            &meta.dep_list[0]
+        );
     }
 
     #[test]
