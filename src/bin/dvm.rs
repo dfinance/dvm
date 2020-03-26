@@ -1,4 +1,5 @@
-//! Server implementation on tonic & tokio.
+//! Definance Virtual Machine
+//! server implementation on tonic & tokio.
 //! Run with `cargo run --bin dvm "[::1]:50051" "http://[::1]:50052"`
 use std::net::SocketAddr;
 
