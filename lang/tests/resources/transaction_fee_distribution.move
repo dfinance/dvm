@@ -11,14 +11,14 @@ address 0x0:
 //    This is meant to in part minimize the benefit of being the first validator in
 //    the validator set.
 module TransactionFeeDistribution {
-    use 0x0::LibraCoin;
-    use 0x0::LibraAccount;
+    use 0x0::Coin;
+    use 0x0::Account;
     use 0x0::Transaction;
     // import 0x0::Epoch;
 
     resource struct T {
         last_epoch_paid: u64,
-        fee_withdrawal_capability: LibraAccount::WithdrawalCapability,
+        fee_withdrawal_capability: Account::WithdrawalCapability,
     }
 
     // Initialize the transaction fee distribution module. We keep track of the last paid block
@@ -30,7 +30,7 @@ module TransactionFeeDistribution {
         move_to_sender(T {
             // last_epoch_paid: Epoch::get_current_epoch(),
             last_epoch_paid: 0,
-            fee_withdrawal_capability: LibraAccount::extract_sender_withdrawal_capability(),
+            fee_withdrawal_capability: Account::extract_sender_withdrawal_capability(),
         })
     }
 
@@ -45,10 +45,10 @@ module TransactionFeeDistribution {
         // Note: We don't enforce sequentiality for transaction fee distribution.
         //*(&mut copy(distribution_resource).last_epoch_paid) = move(current_epoch);
 
-        let amount_collected = LibraAccount::balance(0xFEE);
+        let amount_collected = Account::balance(0xFEE);
 
         let lib_coin_to_distribute =
-        LibraAccount::withdraw_with_capability(
+        Account::withdraw_with_capability(
             &distribution_resource.fee_withdrawal_capability,
             amount_collected,
         );
@@ -86,7 +86,7 @@ module TransactionFeeDistribution {
     // evenly divide the transaction fee pot) is distributed to the first
     // validator.
     fun distribute_transaction_fees_internal(
-        collected_fees: LibraCoin::T,
+        collected_fees: Coin::T,
         amount_to_distribute_per_validator: u64,
         num_validators: u64
     ) {
@@ -96,17 +96,17 @@ module TransactionFeeDistribution {
             // Increment the index into the validator set.
             index = index + 1;
             let payment;
-            (collected_fees, payment) = LibraCoin::split(
+            (collected_fees, payment) = Coin::split(
                 collected_fees,
                 amount_to_distribute_per_validator,
             );
-            LibraAccount::deposit(addr, payment);
+            Account::deposit(addr, payment);
         };
 
         // Now pay back any remainder to the transaction fees. Deposits with value zero
         // are not allowed so if the remainder is zero we have to destroy the coin.
-        if (LibraCoin::value(&collected_fees) == 0) LibraCoin::destroy_zero(collected_fees)
-        else LibraAccount::deposit(0xFEE, collected_fees)
+        if (Coin::value(&collected_fees) == 0) Coin::destroy_zero(collected_fees)
+        else Account::deposit(0xFEE, collected_fees)
     }
 
 }

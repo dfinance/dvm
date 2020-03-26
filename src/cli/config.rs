@@ -1,6 +1,9 @@
 use structopt::StructOpt;
 
-// env variables
+// rust env variables
+pub const RUST_LOG: &str = "RUST_LOG";
+pub const RUST_LOG_STYLE: &str = "RUST_LOG_STYLE";
+// dvm env variables
 pub const DVM_LOG: &str = "DVM_LOG";
 pub const DVM_LOG_STYLE: &str = "DVM_LOG_COLOR";
 pub const DVM_SENTRY_DSN: &str = "DVM_SENTRY_DSN";

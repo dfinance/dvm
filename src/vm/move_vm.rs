@@ -145,7 +145,7 @@ impl Dvm {
             None => return Err(Error::msg("Stdlib not found.")),
         }
 
-        trace!("DVM is ready.");
+        trace!("vm service is ready.");
         Ok(Dvm {
             runtime,
             view,

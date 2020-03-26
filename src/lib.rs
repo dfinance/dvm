@@ -1,3 +1,5 @@
+// TODO: #![warn(missing_docs)]
+
 #[macro_use]
 pub extern crate log;
 extern crate anyhow;

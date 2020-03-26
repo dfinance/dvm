@@ -126,14 +126,14 @@ where
     fn build_module(&self, code: &str, address: &AccountAddress) -> Result<Vec<u8>, Error> {
         let unit = self.compile_unit(code, address)?;
         VerifiedModule::new(CompiledModule::deserialize(&unit)?)
-            .map_err(|err| Error::msg(format!("Verification error:{:?}", err)))?;
+            .map_err(|err| Error::msg(format!("Verification error: {:?}", err)))?;
         Ok(unit)
     }
 
     fn build_script(&self, code: &str, address: &AccountAddress) -> Result<Vec<u8>, Error> {
         let unit = self.compile_unit(code, address)?;
         VerifiedScript::new(CompiledScript::deserialize(&unit)?)
-            .map_err(|err| Error::msg(format!("Verification error:{:?}", err)))?;
+            .map_err(|err| Error::msg(format!("Verification error: {:?}", err)))?;
         Ok(unit)
     }
 

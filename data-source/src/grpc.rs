@@ -14,7 +14,6 @@ use dvm_api::grpc::ds_grpc::{
 };
 
 use dvm_api::tonic;
-use std::process::exit;
 
 #[derive(Clone)]
 pub struct GrpcDataSource {
@@ -52,8 +51,13 @@ impl GrpcDataSource {
                     let grpc_request = tonic::Request::new(access_path_into_ds(request.path));
                     let res = client.get_raw(grpc_request).await;
                     if let Err(ref err) = res {
-                        error!("Failed to send request to data source:{:?}", err);
-                        exit(-1);
+                        error!(
+                            "Transport-level error received by data source ({:?}). {}",
+                            std::thread::current(),
+                            err
+                        );
+                        std::thread::sleep(Duration::from_millis(500));
+                        std::process::exit(-1);
                     }
                     let response = res.unwrap().into_inner();
                     let error_code = ErrorCode::from_i32(response.error_code)
