@@ -59,14 +59,14 @@ fn main() -> Result<()> {
 
 #[tokio::main]
 async fn main_internal(options: Options) -> Result<()> {
-    let ds = GrpcDataSource::new(options.ds).expect("GrpcDataSource expect.");
+    let ds = GrpcDataSource::new(options.ds).expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(ds, MODULE_CACHE);
 
     PriceOracle::new(Box::new(ds.clone())).reg_function();
 
     try_init_for_testing();
     info!("DVM server listening on {}", options.address);
-    let service = VmService::new(Box::new(ds)).expect("VmService expect.");
+    let service = VmService::new(Box::new(ds)).expect("Unable to initialize VmService.");
     Server::builder()
         .add_service(VmServiceServer::new(service))
         .serve(options.address)

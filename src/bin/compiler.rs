@@ -60,12 +60,12 @@ fn main() -> Result<()> {
 
 #[tokio::main]
 async fn main_internal(options: Options) -> Result<()> {
-    let ds = GrpcDataSource::new(options.ds).expect("GrpcDataSource expect.");
+    let ds = GrpcDataSource::new(options.ds).expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(ds, MODULE_CACHE);
     let compiler_service = CompilerService::new(Compiler::new(ds));
     let metadata_service = MetadataService::default();
 
-    info!("DVM server listening on {}", options.address);
+    info!("Compilation server listening on {}", options.address);
     Server::builder()
         .add_service(VmCompilerServer::new(compiler_service))
         .add_service(VmScriptMetadataServer::new(metadata_service))
