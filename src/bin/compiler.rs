@@ -1,3 +1,6 @@
+//! Compilation server implementation on tonic & tokio.
+//! Run with `cargo run --bin compiler "[::1]:50053" "http://[::1]:50052"`
+
 #[macro_use]
 extern crate log;
 
