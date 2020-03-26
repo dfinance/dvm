@@ -1,5 +1,6 @@
 mod grpc_client;
 mod grpc_server;
+mod genesis;
 
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
@@ -20,6 +21,8 @@ use vm::CompiledModule;
 use data_source::MockDataSource;
 use lang::{compiler::Compiler, stdlib::build_std};
 use lang::banch32::libra_into_bech32;
+pub use genesis::genesis_write_set;
+use data_source::MergeWriteSet;
 
 extern crate dvm;
 
@@ -50,6 +53,7 @@ impl Default for TestKit {
 impl TestKit {
     pub fn new() -> TestKit {
         let data_source = MockDataSource::with_write_set(build_std());
+        data_source.merge_write_set(genesis_write_set());
         let server = Server::new(data_source.clone());
         let client = Client::new(server.port()).unwrap_or_else(|_| {
             panic!(

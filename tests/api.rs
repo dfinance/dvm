@@ -125,32 +125,15 @@ fn test_publish_module() {
     test_kit.merge_result(&res);
 }
 
-//#[test]
-#[allow(dead_code)]
+#[test]
 fn test_account_event() {
     let test_kit = TestKit::new();
-    let bech32_sender_address = "wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6";
+    let bech32_sender_address = "wallet14ng6lzsvyy26sxmujmjthvrjde8x6gkk2gzeft";
     let account_address = AccountAddress::from_hex_literal(&format!(
         "0x{}",
         bech32_into_libra(bech32_sender_address).unwrap()
     ))
     .unwrap();
-
-    let create_account = "\
-        import 0x0.Account;
-        main(fresh_address: address) {
-          Account.create_account(move(fresh_address));
-          return;
-        }
-    ";
-    let args = vec![VmArgs {
-        r#type: VmTypeTag::Address as i32,
-        value: bech32_sender_address.to_string(),
-    }];
-    let res = test_kit.execute_script(create_account, meta(&account_address), args);
-    test_kit.assert_success(&res);
-    assert!(!res.executions[0].write_set.is_empty());
-    test_kit.merge_result(&res);
 
     let script = "\
         import 0x0.Account;
