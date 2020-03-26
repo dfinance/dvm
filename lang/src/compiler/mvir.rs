@@ -8,7 +8,7 @@ use libra::bytecode_verifier::VerifiedModule;
 use libra::bytecode_verifier::verifier::VerifiedProgram;
 use libra::ir_to_bytecode;
 use crate::compiler::module_loader::ModuleLoader;
-use crate::compiler::{ModuleMeta, Builder};
+use crate::compiler::{ModuleMeta, Builder, replace_u_literal};
 use crate::banch32::replace_bech32_addresses;
 
 #[derive(Clone)]
@@ -106,5 +106,6 @@ where
 }
 
 fn pre_processing(code: &str) -> String {
-    replace_bech32_addresses(code)
+    let code = replace_bech32_addresses(code);
+    replace_u_literal(&code)
 }
