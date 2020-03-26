@@ -52,7 +52,7 @@ impl GrpcDataSource {
                     let grpc_request = tonic::Request::new(access_path_into_ds(request.path));
                     let res = client.get_raw(grpc_request).await;
                     if let Err(ref err) = res {
-                        error!("Failed to send request to data source: {:?}", err);
+                        error!("Transport-level error received by data source. {}", err);
                         exit(-1);
                     }
                     let response = res.unwrap().into_inner();
