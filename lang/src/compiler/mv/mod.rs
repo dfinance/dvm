@@ -19,7 +19,7 @@ use std::iter::FromIterator;
 use libra::vm::CompiledModule;
 use libra::libra_types::language_storage::ModuleId;
 use crate::compiler::module_loader::ModuleLoader;
-use crate::compiler::{ModuleMeta, Builder};
+use crate::compiler::{ModuleMeta, Builder, replace_u_literal};
 use crate::compiler::mv::imports::ImportsExtractor;
 use crate::compiler::mv::dependency::Dependency;
 use crate::banch32::replace_bech32_addresses;
@@ -148,7 +148,8 @@ where
 }
 
 fn pre_processing(code: &str) -> String {
-    replace_bech32_addresses(code)
+    let code = replace_bech32_addresses(code);
+    replace_u_literal(&code)
 }
 
 pub fn parse_module(
