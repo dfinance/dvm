@@ -73,7 +73,7 @@ impl Function for PriceOracle {
                 }
                 None => Err(VMStatus::new(StatusCode::STORAGE_ERROR)
                     .with_sub_status(2)
-                    .with_message("Price not found".to_owned())),
+                    .with_message("Price is not found".to_owned())),
             });
 
         let cost = GasCost::new(COST, 1);
