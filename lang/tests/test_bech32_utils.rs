@@ -23,15 +23,15 @@ fn test_match_arbitrary_import_whitespaces() {
 #[test]
 fn test_leave_libra_addresses_untouched_mvir() {
     let source = r"
-            import 0x0.LibraAccount;
-            import 0x0.LibraCoin;
+            import 0x0.Account;
+            import 0x0.Coin;
             main() {return;}
         ";
     assert_eq!(replace_bech32_addresses(source), source);
 
     let source = r"
-            import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.LibraAccount;
-            import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.LibraCoin;
+            import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.Account;
+            import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.Coin;
             main() {return;}
         ";
     assert_eq!(replace_bech32_addresses(source), source);
@@ -75,15 +75,15 @@ fn test_match_valid_import_bech32_lines_move() {
 #[test]
 fn test_leave_libra_addresses_untouched_move() {
     let original_source = r"
-            use 0x0::LibraAccount;
-            use 0x0::LibraCoin;
+            use 0x0::Account;
+            use 0x0::Coin;
             main() {return;}
         ";
     assert_eq!(replace_bech32_addresses(original_source), original_source,);
 
     let original_source = r"
-            use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::LibraAccount;
-            use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::LibraCoin;
+            use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::Account;
+            use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::Coin;
             main() {return;}
         ";
     assert_eq!(replace_bech32_addresses(original_source), original_source,);

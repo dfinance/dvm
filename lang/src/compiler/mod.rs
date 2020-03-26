@@ -196,12 +196,9 @@ pub mod test {
                 ),
                 ModuleId::new(
                     AccountAddress::default(),
-                    Identifier::new("LibraAccount").unwrap(),
+                    Identifier::new("Account").unwrap(),
                 ),
-                ModuleId::new(
-                    AccountAddress::default(),
-                    Identifier::new("LibraCoin").unwrap(),
-                ),
+                ModuleId::new(AccountAddress::default(), Identifier::new("Coin").unwrap(),),
                 ModuleId::new(
                     AccountAddress::default(),
                     Identifier::new("Transaction").unwrap(),
@@ -238,10 +235,10 @@ pub mod test {
         let meta = compiler
             .module_meta(
                 "
-                import 0x0.LibraAccount;
-                import 0x0.LibraCoin;
+                import 0x0.Account;
+                import 0x0.Coin;
                 main(payee: address, amount: u64) {
-                  LibraAccount.mint_to_address(move(payee), move(amount));
+                  Account.mint_to_address(move(payee), move(amount));
                   return;
                 }
             ",
@@ -254,12 +251,9 @@ pub mod test {
                 dep_list: vec![
                     ModuleId::new(
                         AccountAddress::default(),
-                        Identifier::new("LibraAccount").unwrap(),
+                        Identifier::new("Account").unwrap(),
                     ),
-                    ModuleId::new(
-                        AccountAddress::default(),
-                        Identifier::new("LibraCoin").unwrap(),
-                    ),
+                    ModuleId::new(AccountAddress::default(), Identifier::new("Coin").unwrap(),),
                 ],
             }
         )
@@ -273,10 +267,10 @@ pub mod test {
             .module_meta(
                 "\
 
-            use 0x0::WBCoins;
+            use 0x0::Coins;
 
             fun main(payee: address, amount: u64) {
-                0x0::LibraAccount::mint_to_address(payee, amount)
+                0x0::Account::mint_to_address(payee, amount)
             }
             ",
             )
@@ -285,13 +279,10 @@ pub mod test {
         assert_eq!(
             meta.dep_list.into_iter().collect::<HashSet<_>>(),
             vec![
+                ModuleId::new(AccountAddress::default(), Identifier::new("Coins").unwrap(),),
                 ModuleId::new(
                     AccountAddress::default(),
-                    Identifier::new("WBCoins").unwrap(),
-                ),
-                ModuleId::new(
-                    AccountAddress::default(),
-                    Identifier::new("LibraAccount").unwrap(),
+                    Identifier::new("Account").unwrap(),
                 ),
             ]
             .into_iter()
