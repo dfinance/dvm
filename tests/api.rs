@@ -106,15 +106,44 @@ fn test_oracle() {
 }
 
 #[test]
-fn test_publish_module() {
+fn test_account_event() {
     let test_kit = TestKit::new();
-    let account_address = account("wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6");
-    let res = test_kit.publish_module(
-        include_str!("./resources/module_coin.mvir"),
-        meta(&account_address),
-    );
+    let bech32_sender_address = "wallet14ng6lzsvyy26sxmujmjthvrjde8x6gkk2gzeft";
+    let account_address = AccountAddress::from_hex_literal(&format!(
+        "0x{}",
+        bech32_into_libra(bech32_sender_address).unwrap()
+    ))
+    .unwrap();
+
+    let script = "\
+        import 0x0.Account;
+        import 0x0.Coins;
+
+        main(recipient: address, amount: u128, denom: bytearray) {
+            let coin: Coins.Coin;
+            coin = Account.withdraw_from_sender(move(amount), move(denom));
+
+            Account.deposit(move(recipient), move(coin));
+            return;
+        }
+    ";
+
+    let args = vec![
+        VmArgs {
+            r#type: VmTypeTag::Address as i32,
+            value: "wallets1y6pk6wjmvjm7hn79mpam5wcnsxy2z2dqmvj80p".to_string(),
+        },
+        VmArgs {
+            r#type: VmTypeTag::U128 as i32,
+            value: "10".to_string(),
+        },
+        VmArgs {
+            r#type: VmTypeTag::ByteArray as i32,
+            value: "b\"646669\"".to_string(),
+        },
+    ];
+    let res = test_kit.execute_script(script, meta(&account_address), args);
     test_kit.assert_success(&res);
-    test_kit.merge_result(&res);
 }
 
 fn account(bech32: &str) -> AccountAddress {
