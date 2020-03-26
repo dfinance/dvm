@@ -223,10 +223,21 @@ pub mod test {
             meta,
             ModuleMeta {
                 module_name: "Account".to_string(),
-                dep_list: vec![ModuleId::new(
-                    AccountAddress::default(),
-                    Identifier::new("Coins").unwrap(),
-                ),],
+                dep_list: vec![
+                    ModuleId::new(AccountAddress::default(), Identifier::new("Coins").unwrap(),),
+                    ModuleId::new(
+                        AccountAddress::default(),
+                        Identifier::new("AddressUtil").unwrap(),
+                    ),
+                    ModuleId::new(
+                        AccountAddress::default(),
+                        Identifier::new("U64Util").unwrap(),
+                    ),
+                    ModuleId::new(
+                        AccountAddress::default(),
+                        Identifier::new("BytearrayUtil").unwrap(),
+                    ),
+                ],
             }
         )
     }

@@ -1,6 +1,6 @@
+mod genesis;
 mod grpc_client;
 mod grpc_server;
-mod genesis;
 
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
