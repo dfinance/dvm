@@ -269,7 +269,7 @@ pub mod test {
             .module_meta(&include_str!("../../stdlib/account.mvir"))
             .unwrap();
         assert_eq!("Account", meta.module_name);
-        assert!(meta.dep_list.len() >= 1);
+        assert!(!meta.dep_list.is_empty());
         assert_eq!(
             &ModuleId::new(AccountAddress::default(), Identifier::new("Coins").unwrap(),),
             &meta.dep_list[0]
