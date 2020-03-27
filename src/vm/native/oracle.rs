@@ -1,18 +1,18 @@
-use libra_types::language_storage::TypeTag;
+use std::fmt;
 use std::collections::VecDeque;
+use libra::{vm, libra_types, libra_state_view, vm_runtime_types, libra_crypto};
+use libra_types::language_storage::TypeTag;
 use vm::gas_schedule::{CostTable, GasCost};
 use vm_runtime_types::{pop_arg, native_functions::dispatch::NativeResult};
 use vm_runtime_types::values::Value;
 use libra_types::vm_error::{VMStatus, StatusCode};
-use libra_types::byte_array::ByteArray;
-use crate::vm::native::Function;
-use crate::module;
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use libra_types::account_config::core_code_address;
 use libra_crypto::hash::{DefaultHasher, CryptoHasher};
-use byteorder::{LittleEndian, ByteOrder};
-use std::fmt;
+use byteorder::{ByteOrder, LittleEndian};
+use crate::vm::native::Function;
+use crate::module;
 
 const COST: u64 = 929;
 const PRICE_ORACLE_TAG: u8 = 255;
@@ -28,17 +28,11 @@ impl PriceOracle {
         PriceOracle { view }
     }
 
-    pub fn make_path(ticker_pair: ByteArray) -> Result<AccessPath, VMStatus> {
-        let ticker_pair = String::from_utf8(ticker_pair.into_inner())
-            .map_err(|err| {
-                VMStatus::new(StatusCode::TYPE_MISMATCH)
-                    .with_sub_status(1)
-                    .with_message(format!("Invalid ticker pair:[{:?}]", err))
-            })?
-            .to_ascii_lowercase();
-
+    pub fn make_path(ticker_pair: u64) -> Result<AccessPath, VMStatus> {
         let mut hasher = DefaultHasher::default();
-        hasher.write(ticker_pair.as_bytes());
+        let mut buf = [0; 8];
+        LittleEndian::write_u64(&mut buf, ticker_pair);
+        hasher.write(&buf);
         let mut hash = hasher.finish().to_vec();
         hash.insert(0, PRICE_ORACLE_TAG);
 
@@ -59,7 +53,7 @@ impl Function for PriceOracle {
         mut arguments: VecDeque<Value>,
         _cost_table: &CostTable,
     ) -> Result<NativeResult, VMStatus> {
-        let result = Self::make_path(pop_arg!(arguments, ByteArray))
+        let result = Self::make_path(pop_arg!(arguments, u64))
             .and_then(|path| {
                 self.view.get(&path).map_err(|err| {
                     VMStatus::new(StatusCode::STORAGE_ERROR)
@@ -79,7 +73,7 @@ impl Function for PriceOracle {
                 }
                 None => Err(VMStatus::new(StatusCode::STORAGE_ERROR)
                     .with_sub_status(2)
-                    .with_message("Price not found".to_owned())),
+                    .with_message("Price is not found".to_owned())),
             });
 
         let cost = GasCost::new(COST, 1);
@@ -92,5 +86,5 @@ impl Function for PriceOracle {
 
 module! {
     Oracle;
-    [PriceOracle::<All>get_price fn (ByteArray)->(U64)]
+    [PriceOracle::<All>get_price fn (U64)->(U64)]
 }

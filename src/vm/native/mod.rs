@@ -2,11 +2,12 @@ pub mod dbg;
 pub mod oracle;
 
 use std::collections::VecDeque;
-use vm_runtime_types::native_functions::dispatch::NativeResult;
+use libra::{libra_types, vm, vm_runtime_types};
 use libra_types::language_storage::TypeTag;
+use vm_runtime_types::native_functions::dispatch::NativeResult;
+use vm_runtime_types::values::Value;
 use vm::gas_schedule::CostTable;
 use vm::errors::VMResult;
-use vm_runtime_types::values::Value;
 
 pub trait Function {
     fn call(
@@ -37,6 +38,7 @@ macro_rules! module {
             $(
                 pub mod $name {
                     use std::collections::{VecDeque, HashMap};
+                    use libra::{libra_types, vm, vm_runtime_types};
                     use libra_types::account_config;
                     use once_cell::sync::OnceCell;
                     use vm::gas_schedule::CostTable;

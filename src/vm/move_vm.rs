@@ -2,6 +2,8 @@ extern crate lazy_static;
 
 use lazy_static::lazy_static;
 
+use libra::{libra_types, libra_state_view, vm_runtime_types};
+use libra::{vm, vm_runtime, vm_cache_map};
 use libra_state_view::StateView;
 use libra_types::transaction::TransactionStatus;
 use libra_types::{account_address::AccountAddress, transaction::Module};
@@ -11,6 +13,7 @@ use vm::{
     CompiledModule,
 };
 use vm_cache_map::Arena;
+use vm_runtime::record_stats;
 use vm_runtime::{
     chain_state::TransactionExecutionContext, data_cache::BlockDataCache,
     execution_context::InterpreterContext, loaded_data::loaded_module::LoadedModule,
@@ -21,12 +24,13 @@ use libra_types::language_storage::ModuleId;
 use libra_types::identifier::IdentStr;
 use libra_types::vm_error::{VMStatus, StatusCode};
 use vm::errors::{vm_error, Location, VMResult};
-use crate::vm::{gas_schedule::cost_table, stdlib::load_std};
+use crate::vm::{gas_schedule::cost_table};
 use libra_types::write_set::WriteSet;
 use libra_types::contract_event::ContractEvent;
 use vm_runtime::system_module_names::{ACCOUNT_MODULE, CREATE_ACCOUNT_NAME};
 use anyhow::Error;
 use vm_runtime_types::values::Value;
+use lang::stdlib::load_std;
 
 lazy_static! {
     static ref ALLOCATOR: Arena<LoadedModule> = Arena::new();
@@ -122,14 +126,14 @@ pub trait VM {
     ) -> VmResult;
 }
 
-pub struct MoveVm {
+pub struct Dvm {
     runtime: VMRuntime<'static>,
     view: Box<dyn StateView>,
     cost_table: CostTable,
 }
 
-impl MoveVm {
-    pub fn new(view: Box<dyn StateView>) -> Result<MoveVm, Error> {
+impl Dvm {
+    pub fn new(view: Box<dyn StateView>) -> Result<Dvm, Error> {
         let mut runtime = VMRuntime::new(allocator());
 
         match load_std(view.as_ref())? {
@@ -141,8 +145,8 @@ impl MoveVm {
             None => return Err(Error::msg("Stdlib not found.")),
         }
 
-        println!("MoveVM is ready.");
-        Ok(MoveVm {
+        trace!("vm service is ready.");
+        Ok(Dvm {
             runtime,
             view,
             cost_table: cost_table(),
@@ -162,13 +166,13 @@ impl MoveVm {
     }
 }
 
-impl fmt::Debug for MoveVm {
+impl fmt::Debug for Dvm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "MoveVm {{ }}")
+        write!(f, "Dvm {{ }}")
     }
 }
 
-impl VM for MoveVm {
+impl VM for Dvm {
     fn create_account(&self, meta: ExecutionMeta, address: AccountAddress) -> VmResult {
         let cache = self.make_data_cache();
         let meta = meta.into();
@@ -279,23 +283,24 @@ impl fmt::Debug for Script {
 
 #[cfg(test)]
 mod test {
-    use crate::vm::{MoveVm, VM, Lang};
+    use libra::{vm, vm_runtime, vm_runtime_types, libra_types};
     use libra_types::account_address::AccountAddress;
-    use crate::ds::{MockDataSource, MergeWriteSet, DataAccess};
     use libra_types::transaction::Module;
-    use vm::CompiledModule;
-    use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use libra_types::identifier::Identifier;
     use libra_types::account_config::{core_code_address, association_address, transaction_fee_address};
-    use crate::vm::move_vm::ExecutionMeta;
     use libra_types::vm_error::StatusCode::DUPLICATE_MODULE_NAME;
-    use crate::vm::compiler::mv::{build, Code};
+    use vm::CompiledModule;
+    use vm_runtime::system_module_names::{ACCOUNT_MODULE, COIN_MODULE};
     use vm_runtime_types::values::Value;
+    use crate::vm::{Dvm, VM};
+    use crate::vm::move_vm::ExecutionMeta;
+    use data_source::{MockDataSource, DataAccess, MergeWriteSet};
+    use lang::{compiler::Compiler, stdlib::build_std};
 
     #[test]
     fn test_create_account() {
-        let ds = MockDataSource::new(Lang::MvIr);
-        let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
+        let ds = MockDataSource::with_write_set(build_std());
+        let vm = Dvm::new(Box::new(ds.clone())).unwrap();
         let account = AccountAddress::random();
         assert!(ds.get_account(&account).unwrap().is_none());
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
@@ -305,15 +310,15 @@ mod test {
 
     #[test]
     fn test_publish_module() {
-        let ds = MockDataSource::new(Lang::MvIr);
-        let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
+        let ds = MockDataSource::with_write_set(build_std());
+        let compiler = Compiler::new(ds.clone());
+        let vm = Dvm::new(Box::new(ds.clone())).unwrap();
         let account = AccountAddress::random();
         let output = vm.create_account(ExecutionMeta::test(), account).unwrap();
         ds.merge_write_set(output.write_set);
 
         let program = "module M {}";
-        let unit = build(Code::module("M", program), &account, false).unwrap();
-        let module = Module::new(unit.serialize());
+        let module = Module::new(compiler.compile(program, &account).unwrap());
         let output = vm
             .publish_module(ExecutionMeta::test(), module.clone())
             .unwrap();
@@ -341,8 +346,8 @@ mod test {
 
     #[test]
     fn test_execute_function() {
-        let ds = MockDataSource::new(Lang::MvIr);
-        let vm = MoveVm::new(Box::new(ds.clone())).unwrap();
+        let ds = MockDataSource::with_write_set(build_std());
+        let vm = Dvm::new(Box::new(ds.clone())).unwrap();
 
         ds.merge_write_set(
             vm.create_account(ExecutionMeta::test(), association_address())

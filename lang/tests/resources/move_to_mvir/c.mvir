@@ -1,0 +1,31 @@
+module CMod {
+      resource C { b: bool }
+
+       public foo_c(val: bool): Self.C {
+         return C {b : move(val)};
+       }
+
+       public foo_c_1(val: Self.C): bool {
+         let v: bool;
+         C { v } = move(val);
+         return move(v);
+       }
+
+       public foo_c_ref(val: &Self.C): bool {
+          let f: &bool;
+          f = &move(val).b;
+          return *move(f);
+       }
+
+       public foo_c_mut_ref(val: &mut Self.C): bool {
+           let f: &bool;
+           f = &move(val).b;
+           return *move(f);
+       }
+
+       public pick_c(): bool acquires C {
+            let c: &Self.C;
+            c = borrow_global<C>(get_txn_sender());
+            return *&copy(c).b;
+       }
+}

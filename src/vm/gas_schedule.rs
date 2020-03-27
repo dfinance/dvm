@@ -1,3 +1,4 @@
+use libra::vm;
 use vm::file_format::Bytecode::*;
 use vm::file_format::{
     NUMBER_OF_NATIVE_FUNCTIONS, NO_TYPE_ACTUALS, StructDefinitionIndex, AddressPoolIndex,

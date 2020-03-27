@@ -1,10 +1,13 @@
+use libra::libra_types;
 use libra_types::account_address::AccountAddress;
+use dvm_api::tonic;
 use tonic::{Request, Code};
 
-use move_vm_in_cosmos::compiled_protos::vm_grpc::{VmScript, VmTypeTag};
-use move_vm_in_cosmos::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
-use move_vm_in_cosmos::compiler::mvir::compile_mvir;
-use move_vm_in_cosmos::vm::metadata::MetadataService;
+use dvm::compiled_protos::vm_grpc::{VmScript, VmTypeTag};
+use dvm::compiled_protos::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
+use dvm::services::metadata::MetadataService;
+use lang::compiler::Compiler;
+use data_source::MockDataSource;
 
 #[tokio::test]
 async fn test_no_arguments_for_mvir_script() {
@@ -13,9 +16,10 @@ async fn test_no_arguments_for_mvir_script() {
                 return;
             }
         ";
-    let script_bytecode =
-        compile_mvir(source_text, AccountAddress::random(), false, vec![]).unwrap();
-
+    let compiler = Compiler::new(MockDataSource::new());
+    let script_bytecode = compiler
+        .compile(source_text, &AccountAddress::random())
+        .unwrap();
     let metadata_service = MetadataService::default();
     let request = Request::new(VmScript::new(script_bytecode));
     let arguments = metadata_service
@@ -34,8 +38,10 @@ async fn test_multiple_arguments_for_mvir_script() {
                 return;
             }
         ";
-    let script_bytecode =
-        compile_mvir(source_text, AccountAddress::random(), false, vec![]).unwrap();
+    let compiler = Compiler::new(MockDataSource::new());
+    let script_bytecode = compiler
+        .compile(source_text, &AccountAddress::random())
+        .unwrap();
     let metadata_service = MetadataService::default();
     let request = Request::new(VmScript::new(script_bytecode));
     let arguments = metadata_service
@@ -61,16 +67,17 @@ async fn test_cannot_deserialize_bytecode() {
                 return;
             }
         ";
-    let mut script_bytecode =
-        compile_mvir(source_text, AccountAddress::random(), false, vec![]).unwrap();
-    script_bytecode.pop();
-
+    let compiler = Compiler::new(MockDataSource::new());
+    let mut script_bytecode = compiler
+        .compile(source_text, &AccountAddress::random())
+        .unwrap();
+    script_bytecode[13] = 0xff;
     let metadata_service = MetadataService::default();
     let request = Request::new(VmScript::new(script_bytecode));
     let err_status = metadata_service.get_signature(request).await.unwrap_err();
     assert_eq!(err_status.code(), Code::InvalidArgument);
     assert_eq!(
         err_status.message(),
-        "Cannot deserialize script from provided bytecode"
+        "Cannot deserialize script from provided bytecode. Error:[status BAD_HEADER_TABLE of type Deserialization]"
     );
 }

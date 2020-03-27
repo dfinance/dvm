@@ -1,15 +1,16 @@
+// TODO: #![warn(missing_docs)]
+
 #[macro_use]
-extern crate vm_runtime;
-#[macro_use]
+pub extern crate log;
 extern crate anyhow;
-pub mod compiled_protos;
-pub mod compiler;
-pub mod ds;
-pub mod service;
-#[macro_use]
+extern crate libra;
+
+pub mod cli;
+pub mod services;
 pub mod vm;
 
-pub mod test_kit;
-
-// reshare libra crates
-pub use libra_types;
+// TODO: [REF] rename to api_grpc
+pub mod compiled_protos {
+    extern crate dvm_api;
+    pub use dvm_api::grpc::*;
+}
