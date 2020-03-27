@@ -19,7 +19,7 @@ edition = "2018"
 
 
 [dependencies]
-dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "feature-ci" }
 libra = { path = "libra", package = "dvm-libra-deps" }
 lang = { path = "lang", package = "dvm-lang" }
 data_source = { path = "data-source", package = "dvm-data-source" }
