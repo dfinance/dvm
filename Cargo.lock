@@ -686,7 +686,7 @@ dependencies = [
 [[package]]
 name = "dvm-api"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/dvm-proto.git?branch=feature-ci#e30a790aaf83a01ecb00ae0a396ce9456a07a769"
+source = "git+https://github.com/dfinance/dvm-proto.git?branch=feature-ci#7bcb8282ecb65c8a7011aa6802ebcb640072a73b"
 dependencies = [
  "prost",
  "tonic",

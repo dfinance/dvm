@@ -50,16 +50,21 @@ jobs:
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
     - name: Compile
+      shell: bash
       run: cargo test --all --no-run
 
     - name: Check formatting
+      shell: bash
       run: cargo fmt -- --check
 
     - name: Run clippy
+      shell: bash
       run: cargo clippy --tests --examples -- -Dwarnings
 
     - name: Test
+      shell: bash
       run: cargo test --all --tests -- --nocapture
 
     - name: Test without default features
+      shell: bash
       run: cargo test --all --tests --no-default-features -- --nocapture
