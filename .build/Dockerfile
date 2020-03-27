@@ -38,8 +38,8 @@ RUN ls -la ./target/release
 
 FROM ubuntu:18.04
 WORKDIR /opt/app
-RUN apt-get update -y
-RUN apt-get install -y libssl1.1
+RUN apt-get update -y && \
+    apt-get install -y libssl1.1
 COPY ./lang/stdlib/ ./stdlib/
 COPY --from=build \
     /opt/app/target/release/compiler \
