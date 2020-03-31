@@ -21,7 +21,6 @@ jobs:
     env:
       RUSTFLAGS: -D warnings
       RUST_BACKTRACE: full
-      # CC: deny_c
       CARGO_INCREMENTAL: 1
       RUSTUP_MAX_RETRIES: 10
       CARGO_NET_RETRY: 10
@@ -30,14 +29,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Restore cargo cache
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo
-        key: ${{ runner.os }}-cargo
-        restore-keys: |
-          ${{ runner.os }}-cargo
-
     - name: Install cargo-audit
       uses: actions-rs/install@v0.1
       with:
@@ -45,5 +36,4 @@ jobs:
         version: latest
 
     - name: Run cargo-audit
-      # run: cargo audit --deny-warnings
-      run: cargo audit
+      run: cargo audit # --deny-warnings

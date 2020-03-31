@@ -21,7 +21,6 @@ jobs:
     env:
       RUSTFLAGS: -D warnings
       RUST_BACKTRACE: full
-      # CC: deny_c
       CARGO_INCREMENTAL: 1
       RUSTUP_MAX_RETRIES: 10
       CARGO_NET_RETRY: 10
@@ -53,7 +52,6 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.cargo
-        # incl ~/.cargo/advisory-db
         key: ${{ runner.os }}-cargo
         restore-keys: |
           ${{ runner.os }}-cargo
@@ -65,10 +63,6 @@ jobs:
         key: ${{ runner.os }}-target-debug
         restore-keys: |
           ${{ runner.os }}-target-debug
-
-    - name: Install cargo-audit
-      shell: bash
-      run: cargo install cargo-audit --features=fix
 
     # - name: Compile
     #   shell: bash
@@ -89,8 +83,3 @@ jobs:
     - name: Run clippy
       shell: bash
       run: cargo clippy --tests --examples -- -Dwarnings
-
-    - name: Run cargo-audit
-      shell: bash
-      # run: cargo audit fix --dry-run true --deny-warnings
-      run: cargo audit
