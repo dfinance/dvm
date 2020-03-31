@@ -34,6 +34,7 @@ jobs:
       with:
         crate: cargo-audit
         version: latest
+        use-tool-cache: true
 
     - name: Run cargo-audit
       run: cargo audit # --deny-warnings
