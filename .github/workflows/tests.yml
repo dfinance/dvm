@@ -76,7 +76,7 @@ jobs:
 
     - name: Test
       shell: bash
-      run: cargo test --all --tests -- --nocapture --test-threads=1
+      run: cargo test --all --tests -- --nocapture
 
     - name: Test without default features
       shell: bash
