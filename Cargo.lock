@@ -660,7 +660,7 @@ checksum = "4358a9e11b9a09cf52383b451b49a169e8d797b68aa02301ff586d70d9661ea3"
 
 [[package]]
 name = "dvm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -695,7 +695,7 @@ dependencies = [
 
 [[package]]
 name = "dvm-data-source"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "crossbeam",
@@ -709,7 +709,7 @@ dependencies = [
 
 [[package]]
 name = "dvm-lang"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "bech32 0.7.2",
