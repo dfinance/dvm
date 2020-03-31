@@ -59,14 +59,10 @@ jobs:
     - name: Restore previous build from cache
       uses: actions/cache@v1
       with:
-        path: ${{ github.workspace }}/dvm/target/debug
+        path: ${{ github.workspace }}/target/debug
         key: ${{ runner.os }}-target-debug
         restore-keys: |
           ${{ runner.os }}-target-debug
-
-    # - name: Compile
-    #   shell: bash
-    #   run: cargo test --all --no-run
 
     - name: Test
       shell: bash
