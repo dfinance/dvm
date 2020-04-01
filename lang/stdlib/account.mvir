@@ -42,7 +42,7 @@ module Account {
         guid: bytearray,
     }
 
-    // Withdraw `amount` LibraCoin.T from the transaction sender's account
+    // Withdraw `amount` Coin.T from the transaction sender's account
     public withdraw_from_sender(amount: u128, denom: bytearray): Coins.Coin acquires T {
         let sender_account: &mut Self.T;
 
@@ -68,7 +68,7 @@ module Account {
      // Save an account to a given address if the address does not have an account resource yet
      native save_account(addr: address, account: Self.T);
 
-    // Helper to withdraw `amount` from the given `account` and return the resulting LibraCoin.T
+    // Helper to withdraw `amount` from the given `account` and return the resulting Coin.T
     withdraw_from_account(account: &mut Self.T, amount: u128, denom: bytearray): Coins.Coin {
         let to_withdraw: Coins.Coin;
 
