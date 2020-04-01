@@ -1,4 +1,4 @@
-name: Tests & Checks
+name: Tests
 on:
   pull_request:
   push:
@@ -21,8 +21,7 @@ jobs:
     env:
       RUSTFLAGS: -D warnings
       RUST_BACKTRACE: full
-      # CC: deny_c
-      CARGO_INCREMENTAL: 0
+      CARGO_INCREMENTAL: 1
       RUSTUP_MAX_RETRIES: 10
       CARGO_NET_RETRY: 10
 
@@ -49,17 +48,21 @@ jobs:
     - if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    # - name: Compile
-    #   shell: bash
-    #   run: cargo test --all --no-run
+    - name: Restore cargo cache from cache
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-cargo
+        restore-keys: |
+          ${{ runner.os }}-cargo
 
-    - name: Check formatting
-      shell: bash
-      run: cargo fmt -- --check
-
-    - name: Run clippy
-      shell: bash
-      run: cargo clippy --tests --examples -- -Dwarnings
+    - name: Restore previous build from cache
+      uses: actions/cache@v1
+      with:
+        path: ${{ github.workspace }}/target/debug
+        key: ${{ runner.os }}-target-debug
+        restore-keys: |
+          ${{ runner.os }}-target-debug
 
     - name: Test
       shell: bash
@@ -68,3 +71,11 @@ jobs:
     - name: Test without default features
       shell: bash
       run: cargo test --all --tests --no-default-features -- --nocapture
+
+    - name: Check formatting
+      shell: bash
+      run: cargo fmt -- --check
+
+    - name: Run clippy
+      shell: bash
+      run: cargo clippy --tests --examples -- -Dwarnings
