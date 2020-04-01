@@ -1,7 +1,7 @@
-module EarmarkedLibraCoin {
+module EarmarkedCoin {
   import 0x0.Coins;
 
-  // A wrapper containing a Libra coin and the address of the recipient the
+  // A wrapper containing a coin and the address of the recipient the
   // coin is earmarked for.
   resource T {
     coin: Coins.T,
@@ -60,7 +60,7 @@ module EarmarkedLibraCoin {
     return move(t);
   }
 
-  // Extract the Libra coin from its wrapper and return it to the caller.
+  // Extract the coin from its wrapper and return it to the caller.
   public unwrap(t: Self.T): Coins.T {
     let coin: Coins.T;
     let recipient: address;

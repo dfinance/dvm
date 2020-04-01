@@ -12,7 +12,7 @@ module Coins {
         balances: Vector.T<Self.Coin>,
     }
 
-    // Create a new LibraCoin.T with a value of 0
+    // Create a new Coin.T with a value of 0
     public zero_balances(): Self.T {
         return T { balances: Vector.empty<Self.Coin>()};
     }
