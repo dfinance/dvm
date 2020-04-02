@@ -16,6 +16,7 @@
 
 There are two ways to install and try DVM - [with Docker](#the-docker-way) or [with Rust-toolchain](#installation-with-rust--cargo).
 
+
 ### The Docker way
 
 You can use this schema for your docker-compose to run everything at once:
@@ -64,9 +65,11 @@ Check out [Usage](#Usage) part for more info.
 
 - - - - - - - - - -
 
+
 ### Installation with Rust 🦀 Cargo
 
 <!-- TODO: type here something -->
+
 
 ### Prerequisites
 
@@ -76,6 +79,7 @@ Check out [Usage](#Usage) part for more info.
 [Rust]: https://www.rust-lang.org
 [Rustup]: https://rustup.rs
 [protoc]: https://github.com/protocolbuffers/protobuf/releases
+
 
 ### Build and Install
 
@@ -149,9 +153,8 @@ To build your stdlib run:
 stdlib-builder /path-to-your/std-lib -po ./stdlib.json
 ```
 
-> Note: currently supports Mvir only.
-
 - - - - - - - - - -
+
 
 ## Development
 
@@ -183,6 +186,7 @@ To launch tests run:
 cargo test --all
 ```
 
+
 ### Contributors
 
 List of contributors [is here](https://github.com/dfinance/dvm/graphs/contributors).
@@ -195,6 +199,7 @@ Useful precommit-hook to check changes locally:
 ```bash
 ln -s `git rev-parse --show-toplevel`/check_project.sh `git rev-parse --absolute-git-dir`/hooks/pre-commit
 ```
+
 
 ## License
 
