@@ -1,4 +1,4 @@
-# Definance Virtual Machine
+# Dfinance Virtual Machine
 
 <!-- ![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg) -->
 
