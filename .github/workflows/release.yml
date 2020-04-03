@@ -61,32 +61,32 @@ jobs:
       # or without Sentry integration:
       # run: cargo build --all --release --no-default-features
 
-    - name: Extract tag name
-      id: tag
-      uses: actions/github-script@0.2.0
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          return context.payload.ref.replace(/\/refs\/tags\//, '');
+    # TODO: extract tag for build name
+    # - name: Extract tag name
+    #   id: tag
+    #   uses: actions/github-script@0.2.0
+    #   with:
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     script: |
+    #       return context.payload.ref.replace(/\/refs\/tags\//, '');
 
-    - name: check paths
-      shell: bash
-      run: |
-        echo '${{ github.workspace }}/target/release/*'
-        ls ${{ github.workspace }}/target/release/*
-        ls target/release/*
-        echo '${{ github.ref }}'
-        echo ${{ steps.tag.outputs.result }}
+    # - name: check paths
+    #   shell: bash
+    #   run: |
+    #     echo '${{ github.workspace }}/target/release/*'
+    #     echo '${{ github.ref }}'
+    #     echo ${{ steps.tag.outputs.result }}
 
     - name: Archive artifacts
       if: matrix.os != 'windows-latest'
+      # zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip ...
       run: |
-        zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+        zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
     - name: Archive artifacts Windows
       shell: bash
       if: matrix.os == 'windows-latest'
       run: |
-        zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+        zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
 
     - name: Create Release
       id: create_release
@@ -97,7 +97,7 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
         draft: false
-        prerelease: false
+        prerelease: true
 
     - name: Upload Release Asset
       id: upload-release-asset
@@ -106,6 +106,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include an `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-        asset_path: ./dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip
-        asset_name: dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip
+        asset_path: ./dvm-${{ runner.os }}.zip
+        asset_name: dvm-${{ runner.os }}.zip
         asset_content_type: application/zip
