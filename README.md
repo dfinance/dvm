@@ -1,4 +1,4 @@
-# Dfinance Virtual Machine
+# DVM - Dfinance Virtual Machine
 
 <!-- ![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg) -->
 
@@ -14,41 +14,44 @@
 
 ## Installation
 
-There is two ways to install and try DVM - [with Docker](#the-docker-way) or [with Rust-toolchain](#installation-with-rust--cargo).
+There are two ways to install and try DVM - [with Docker](#the-docker-way) or [with Rust-toolchain](#installation-with-rust--cargo).
 
-### The Docker-Way
 
-```bash
-# pull the latest containers
-docker pull registry.wings.toys/dfinance/dvm:master
-```
+### The Docker way
 
-Or the same for compose:
+You can use this schema for your docker-compose to run everything at once:
 
 ```yaml
 version: '3.7'
 services:
   dvm-compiler:
     container_name: dvm-compiler
-    image: registry.wings.toys/dfinance/dvm:master
+    image: dfinance/dvm
     restart: always
     network_mode: host
     command: ./compiler "0.0.0.0:50053" "http://127.0.0.1:50052"
   dvm-server:
     container_name: dvm-server
-    image: registry.wings.toys/dfinance/dvm:master
+    image: dfinance/dvm
     restart: always
     network_mode: host
     command: ./dvm "0.0.0.0:50051" "http://127.0.0.1:50052"
 ```
 
-#### Containers Usage
+Or you can pull container from docker hub and run it by yourself:
 
 ```bash
-# execute compiler
+# pull the latest containers
+docker pull dfinance/dvm
+```
+
+That is how you do it:
+
+```bash
+# run compiler
 docker run -d --rm --network host --name compiler -p 50053:50053 registry.wings.toys/dfinance/dvm:master ./compiler "0.0.0.0:50053" "http://127.0.0.1:50052"
 
-# execute virtual machine
+# run virtual machine
 docker run -d --rm --network host --name dvm -p 50051:50051 registry.wings.toys/dfinance/dvm:master ./dvm "0.0.0.0:50051" "http://127.0.0.1:50052"
 ```
 
@@ -59,7 +62,6 @@ docker stop dvm
 ```
 
 Check out [Usage](#Usage) part for more info.
-
 
 - - - - - - - - - -
 
@@ -106,7 +108,7 @@ Uninstallation: `cargo uninstall dvm`.
 `dvm` is a Move/Mvir virtual machine gRPC server.
 API described in [protobuf schemas][].
 
-To launch the DVM server run following command:
+To launch the DVM server use this command:
 
 ```bash
 # format: <which host:port to listen> <data-source address>
@@ -151,9 +153,6 @@ To build your stdlib run:
 stdlib-builder /path-to-your/std-lib -po ./stdlib.json
 ```
 
-> Note: currently supports Mvir only.
-
-
 - - - - - - - - - -
 
 
@@ -176,8 +175,6 @@ cargo run --bin compiler -- --help
 
 <!-- TODO: guide for contributors should be here -->
 
-
-
 [this repo]: https://github.com/dfinance/dvm
 
 
@@ -189,22 +186,22 @@ To launch tests run:
 cargo test --all
 ```
 
+
 ### Contributors
 
-This project has the [following contributors](https://github.com/dfinance/dvm/graphs/contributors).
+List of contributors [is here](https://github.com/dfinance/dvm/graphs/contributors).
 
-To help project you always can open [issue](https://github.com/dfinance/dvm/pulls) or fork, do changes in your own fork and open [pull request](https://github.com/dfinance/dvm/pulls).
+To help project you always can [open issue](https://github.com/dfinance/dvm/issues/new) or fork, modify code in your own fork and open [pull request](https://github.com/dfinance/dvm/pulls).
 
 
-Useful precommit-hook for check all locally:
+Useful precommit-hook to check changes locally:
 
 ```bash
 ln -s `git rev-parse --show-toplevel`/check_project.sh `git rev-parse --absolute-git-dir`/hooks/pre-commit
 ```
 
 
-
-# License
+## License
 
 Copyright © 2020 Wings Stiftung
 
