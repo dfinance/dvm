@@ -23,7 +23,6 @@ jobs:
       CARGO_INCREMENTAL: 0
       RUSTUP_MAX_RETRIES: 10
       CARGO_NET_RETRY: 10
-      RELEASE_ZIP_NAME: dvm-${{ github.ref }}-${{ runner.os }}.zip
 
     steps:
     - name: Checkout repository
