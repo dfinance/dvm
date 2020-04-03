@@ -55,12 +55,19 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo
 
-
     - name: Build
       shell: bash
       run: cargo build --all --release
       # or without Sentry integration:
       # run: cargo build --all --release --no-default-features
+
+    - name: Extract tag name
+      id: tag
+      uses: actions/github-script@0.2.0
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          return context.payload.ref.replace(/\/refs\/tags\//, '');
 
     - name: check paths
       shell: bash
@@ -69,17 +76,17 @@ jobs:
         ls ${{ github.workspace }}/target/release/*
         ls target/release/*
         echo '${{ github.ref }}'
-        echo '$RELEASE_ZIP_NAME'
+        echo ${{ steps.tag.outputs.result }}
 
     - name: Archive artifacts
       if: matrix.os != 'windows-latest'
       run: |
-        zip --junk-paths dvm-${{ github.ref }}-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+        zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
     - name: Archive artifacts Windows
       shell: bash
       if: matrix.os == 'windows-latest'
       run: |
-        zip --junk-paths dvm-${{ github.ref }}-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+        zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
 
     - name: Create Release
       id: create_release
@@ -99,6 +106,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include an `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-        asset_path: ./dvm-${{ github.ref }}-${{ runner.os }}.zip
-        asset_name: dvm-${{ github.ref }}-${{ runner.os }}.zip
+        asset_path: ./dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip
+        asset_name: dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip
         asset_content_type: application/zip
