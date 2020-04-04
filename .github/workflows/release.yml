@@ -69,13 +69,21 @@ jobs:
     #     github-token: ${{ secrets.GITHUB_TOKEN }}
     #     script: |
     #       return context.payload.ref.replace(/\/refs\/tags\//, '');
+    - name: Extract tag, create artifact filename
+      id: artifact_name
+      uses: frabert/replace-string-action@v1.1
+      with:
+        pattern: '\/refs\/tags\/v(\d+(?:\.\d+)*)'
+        string: ${{ github.ref }}
+        replace-with: 'dvm-$1-${{ runner.os }}.zip'
 
-    # - name: check paths
-    #   shell: bash
-    #   run: |
-    #     echo '${{ github.workspace }}/target/release/*'
-    #     echo '${{ github.ref }}'
-    #     echo ${{ steps.tag.outputs.result }}
+    - name: check paths
+      shell: bash
+      run: |
+        echo '${{ github.workspace }}/target/release/*'
+        echo '${{ github.ref }}'
+        echo '$GITHUB_EVENT_PATH'
+        echo ${{ steps.artifact_name.outputs.replaced }}
 
     - name: Archive artifacts
       if: matrix.os != 'windows-latest'
@@ -88,16 +96,25 @@ jobs:
       run: |
         zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: true
+    # - name: Create Release
+    #   # TODO: if not created yet
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag_name: ${{ github.ref }}
+    #     release_name: Release ${{ github.ref }}
+    #     draft: true
+    #     prerelease: true
+
+    # - name: Upload Release Asset
+    #   uses: actions-github/upload-to-release@master
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     file: dvm-${{ runner.os }}.zip
+    #     type: application/zip
 
     - name: Upload Release Asset
       id: upload-release-asset
