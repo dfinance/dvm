@@ -5,7 +5,7 @@ on:
     - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-  rust:
+  build:
     name: Rust
     runs-on: ${{ matrix.os }}
 
@@ -61,21 +61,16 @@ jobs:
       # or without Sentry integration:
       # run: cargo build --all --release --no-default-features
 
-    # - name: Archive artifacts
-    #   if: matrix.os != 'windows-latest'
-    #   # zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip ...
-    #   run: |
-    #     zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
-    # - name: Archive artifacts (win)
-    #   shell: bash
-    #   if: matrix.os == 'windows-latest'
-    #   run: |
-    #     zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
     - name: Archive artifacts
-      # if: matrix.os == 'windows-latest'
+      if: matrix.os != 'windows-latest'
+      # zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip ...
+      run: |
+        zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+    - name: Archive artifacts
+      if: matrix.os == 'windows-latest'
       uses: papeloto/action-zip@v1
       with:
-        files: LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+        files: LICENSE target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
         dest: dvm-${{ runner.os }}.zip
 
     - uses: actions/upload-artifact@master
@@ -112,7 +107,8 @@ jobs:
 
 
   release:
-    name: Rust
+    needs: build
+    name: Upload artifacts
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
