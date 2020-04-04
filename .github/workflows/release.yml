@@ -61,6 +61,28 @@ jobs:
       # or without Sentry integration:
       # run: cargo build --all --release --no-default-features
 
+    # - name: Archive artifacts
+    #   if: matrix.os != 'windows-latest'
+    #   # zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip ...
+    #   run: |
+    #     zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+    # - name: Archive artifacts (win)
+    #   shell: bash
+    #   if: matrix.os == 'windows-latest'
+    #   run: |
+    #     zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
+    - name: Archive artifacts
+      # if: matrix.os == 'windows-latest'
+      uses: papeloto/action-zip@v1
+      with:
+        files: LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
+        dest: dvm-${{ runner.os }}.zip
+
+    - uses: actions/upload-artifact@master
+      with:
+        name: dvm-${{ runner.os }}
+        path: dvm-${{ runner.os }}.zip
+
     # TODO: extract tag for build name
     # - name: Extract tag name
     #   id: tag
@@ -69,61 +91,99 @@ jobs:
     #     github-token: ${{ secrets.GITHUB_TOKEN }}
     #     script: |
     #       return context.payload.ref.replace(/\/refs\/tags\//, '');
-    - name: Extract tag, create artifact filename
-      id: artifact_name
-      uses: frabert/replace-string-action@v1.1
-      with:
-        pattern: '\/refs\/tags\/v(\d+(?:\.\d+)*)'
-        string: ${{ github.ref }}
-        replace-with: 'dvm-$1-${{ runner.os }}.zip'
-
-    - name: check paths
-      shell: bash
-      run: |
-        echo '${{ github.workspace }}/target/release/*'
-        echo '${{ github.ref }}'
-        echo '$GITHUB_EVENT_PATH'
-        echo ${{ steps.artifact_name.outputs.replaced }}
-        echo ${{ github.release.id }}
-
-    - name: Archive artifacts
-      if: matrix.os != 'windows-latest'
-      # zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip ...
-      run: |
-        zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm target/release/compiler target/release/stdlib-builder
-    - name: Archive artifacts Windows
-      shell: bash
-      if: matrix.os == 'windows-latest'
-      run: |
-        zip --junk-paths dvm-${{ runner.os }}.zip LICENSE target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
-
-    # - name: Create Release
-    #   # TODO: if not created yet
-    #   id: create_release
-    #   uses: actions/create-release@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Extract tag, create artifact filename
+    #   id: artifact_name
+    #   uses: frabert/replace-string-action@v1.1
     #   with:
-    #     tag_name: ${{ github.ref }}
-    #     release_name: Release ${{ github.ref }}
-    #     draft: true
-    #     prerelease: true
+    #     pattern: '\\/refs\\/tags\\/v(\\d+(?:\\.\\d+)*)'
+    #     string: ${{ github.ref }}
+    #     replace-with: 'dvm-$1-${{ runner.os }}.zip'
 
-    - name: Upload Release Asset
-      uses: actions-github/upload-to-release@master
+    # - name: check paths
+    #   shell: bash
+    #   run: |
+    #     echo '${{ github.workspace }}/target/release/*'
+    #     echo '${{ github.ref }}'
+    #     echo '$GITHUB_EVENT_PATH'
+    #     echo ${{ steps.artifact_name.outputs.replaced }}
+    #     echo ${{ github.release.id }}
+
+
+
+
+  release:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Get macOS artifacts from Build Job
+      uses: actions/download-artifact@v1
+      with:
+        name: dvm-macOS
+        path: artifacts/dvm-macOS.zip
+
+    - name: Get Linux artifacts from Build Job
+      uses: actions/download-artifact@v1
+      with:
+        name: dvm-Linux
+        path: artifacts/dvm-Linux.zip
+
+    - name: Get Windows artifacts from Build Job
+      uses: actions/download-artifact@v1
+      with:
+        name: dvm-Windows
+        path: artifacts/dvm-Windows.zip
+
+    - run: ls artifacts/*
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        file: dvm-${{ runner.os }}.zip
-        type: application/zip
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: true
+        prerelease: true
 
     # - name: Upload Release Asset
-    #   id: upload-release-asset
-    #   uses: actions/upload-release-asset@v1
+    #   uses: actions-github/upload-to-release@master
     #   env:
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     #   with:
-    #     upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include an `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-    #     asset_path: ./dvm-${{ runner.os }}.zip
-    #     asset_name: dvm-${{ runner.os }}.zip
-    #     asset_content_type: application/zip
+    #     file: dvm-${{ runner.os }}.zip
+    #     type: application/zip
+
+    - name: Upload Release Asset (linux)
+      # id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include an `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+        asset_path: artifacts/dvm-Linux.zip
+        asset_name: dvm-linux.zip
+        asset_content_type: application/zip
+
+    - name: Upload Release Asset (mac)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/dvm-macOS.zip
+        asset_name: dvm-macos.zip
+        asset_content_type: application/zip
+
+    - name: Upload Release Asset (win)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/dvm-Windows.zip
+        asset_name: dvm-Windows.zip
+        asset_content_type: application/zip
