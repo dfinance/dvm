@@ -58,14 +58,12 @@ jobs:
     - name: Build
       shell: bash
       run: cargo build --all --release
-      # or without Sentry integration:
-      # run: cargo build --all --release --no-default-features
 
-    - name: Archive artifacts (mac, *nix)
+    - name: Archive (mac, *nix)
       if: matrix.os != 'windows-latest'
       run: |
         zip --junk-paths dvm-${{ runner.os }}.zip LICENSE README.md target/release/dvm target/release/compiler target/release/stdlib-builder
-    - name: Archive artifacts (win)
+    - name: Archive (win)
       if: matrix.os == 'windows-latest'
       uses: papeloto/action-zip@v1
       with:
@@ -76,6 +74,7 @@ jobs:
       with:
         name: dvm-${{ runner.os }}
         path: dvm-${{ runner.os }}.zip
+
 
   release:
     needs: build
@@ -105,12 +104,9 @@ jobs:
 
     - name: Extract the version tag
       id: version_tag
-      # ${GITHUB_REF##*/}
+      # or ${GITHUB_REF##*/}
       shell: bash
       run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
-
-    - shell: bash
-      run: echo ${{ steps.version_tag.outputs.value }}
 
     - name: Create Release
       id: create_release
