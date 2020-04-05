@@ -63,52 +63,19 @@ jobs:
 
     - name: Archive artifacts (mac, *nix)
       if: matrix.os != 'windows-latest'
-      # zip --junk-paths dvm-${{ steps.tag.outputs.result }}-${{ runner.os }}.zip ...
       run: |
         zip --junk-paths dvm-${{ runner.os }}.zip LICENSE README.md target/release/dvm target/release/compiler target/release/stdlib-builder
     - name: Archive artifacts (win)
       if: matrix.os == 'windows-latest'
       uses: papeloto/action-zip@v1
       with:
-        # files: LICENSE target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
-        files: LICENSE README.md target/release/*.exe
+        files: LICENSE README.md target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
         dest: dvm-${{ runner.os }}.zip
 
     - uses: actions/upload-artifact@master
       with:
         name: dvm-${{ runner.os }}
         path: dvm-${{ runner.os }}.zip
-
-    # TODO: extract tag for build name
-    - name: Extract tag name
-      id: tag
-      uses: actions/github-script@0.2.0
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          return context.payload.ref.replace(/\/refs\/tags\//, '');
-    # - name: Extract tag, create artifact filename
-    #   id: artifact_name
-    #   uses: frabert/replace-string-action@v1.1
-    #   with:
-    #     pattern: '\\/refs\\/tags\\/v(\\d+(?:\\.\\d+)*)'
-    #     string: ${{ github.ref }}
-    #     replace-with: 'dvm-$1-${{ runner.os }}.zip'
-    # --> steps.artifact_name.outputs.replaced
-
-    - name: check paths
-      shell: bash
-      run: |
-        echo ${{ steps.tag.outputs.result }}
-        echo '${{ github.workspace }}/target/release/*'
-        echo '${{ github.ref }}'
-        echo '${GITHUB_EVENT_PATH}'
-        echo '${GITHUB_REF##*/}'
-        echo ${GITHUB_REF##*/}
-        echo ${{ github.release.id }}
-
-
-
 
   release:
     needs: build
@@ -136,7 +103,14 @@ jobs:
         name: dvm-Windows
         path: artifacts/
 
-    - run: ls artifacts/*
+    - name: Extract the version tag
+      id: version_tag
+      # ${GITHUB_REF##*/}
+      shell: bash
+      run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
+
+    - shell: bash
+      run: echo ${{ steps.version_tag.outputs.value }}
 
     - name: Create Release
       id: create_release
@@ -157,7 +131,7 @@ jobs:
         # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include an `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: artifacts/dvm-Linux.zip
-        asset_name: dvm-linux.zip
+        asset_name: dvm-${{ steps.version_tag.outputs.value }}-linux.zip
         asset_content_type: application/zip
 
     - name: Upload Release Asset (mac)
@@ -167,7 +141,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: artifacts/dvm-macOS.zip
-        asset_name: dvm-macos.zip
+        asset_name: dvm-${{ steps.version_tag.outputs.value }}-macos.zip
         asset_content_type: application/zip
 
     - name: Upload Release Asset (win)
@@ -177,5 +151,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: artifacts/dvm-Windows.zip
-        asset_name: dvm-Windows.zip
+        asset_name: dvm-${{ steps.version_tag.outputs.value }}-windows.zip
         asset_content_type: application/zip
