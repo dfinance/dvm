@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Rust
+    name: Build Release Artifacts
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -108,7 +108,7 @@ jobs:
 
   release:
     needs: build
-    name: Upload artifacts
+    name: Upload Artifacts
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -118,19 +118,19 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: dvm-macOS
-        path: artifacts/dvm-macOS.zip
+        path: artifacts/
 
     - name: Get Linux artifacts from Build Job
       uses: actions/download-artifact@v1
       with:
         name: dvm-Linux
-        path: artifacts/dvm-Linux.zip
+        path: artifacts/
 
     - name: Get Windows artifacts from Build Job
       uses: actions/download-artifact@v1
       with:
         name: dvm-Windows
-        path: artifacts/dvm-Windows.zip
+        path: artifacts/
 
     - run: ls artifacts/*
 
