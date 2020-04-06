@@ -16,7 +16,7 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
-        - windows-latest
+        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -66,11 +66,11 @@ jobs:
 
     - name: Test
       shell: bash
-      run: cargo test --all --tests -- --nocapture
+      run: cargo test --all --tests --no-fail-fast -- --test-threads=4 --nocapture
 
     - name: Test without default features
       shell: bash
-      run: cargo test --all --tests --no-default-features -- --nocapture
+      run: cargo test --all --tests --no-default-features --no-fail-fast -- --test-threads=4 --nocapture
 
     - name: Check formatting
       shell: bash

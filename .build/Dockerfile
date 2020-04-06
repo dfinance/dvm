@@ -30,7 +30,7 @@ RUN cargo build \
             --bin stdlib-builder \
             --release
 # run tests
-RUN cargo test --all && \
+RUN cargo test --all -- --test-threads=4 && \
     cargo +stable fmt --all -- --check && \
     cargo +stable clippy --all --tests --examples -- -Dwarnings
 
