@@ -16,7 +16,7 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
-        - windows-latest
+        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings

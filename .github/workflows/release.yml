@@ -10,12 +10,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os:
         - macos-latest
         - ubuntu-latest
-        - windows-latest
+        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -59,16 +59,16 @@ jobs:
       shell: bash
       run: cargo build --all --release
 
-    - name: Archive (mac, *nix)
-      if: matrix.os != 'windows-latest'
+    - name: Archive
+      # if: matrix.os != 'windows-latest'
       run: |
         zip --junk-paths dvm-${{ runner.os }}.zip LICENSE README.md target/release/dvm target/release/compiler target/release/stdlib-builder
-    - name: Archive (win)
-      if: matrix.os == 'windows-latest'
-      uses: papeloto/action-zip@v1
-      with:
-        files: LICENSE README.md target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
-        dest: dvm-${{ runner.os }}.zip
+    # - name: Archive (win)
+    #   if: matrix.os == 'windows-latest'
+    #   uses: papeloto/action-zip@v1
+    #   with:
+    #     files: LICENSE README.md target/release/dvm.exe target/release/compiler.exe target/release/stdlib-builder.exe
+    #     dest: dvm-${{ runner.os }}.zip
 
     - uses: actions/upload-artifact@master
       with:
@@ -96,11 +96,11 @@ jobs:
         name: dvm-Linux
         path: artifacts/
 
-    - name: Get Windows artifacts from Build Job
-      uses: actions/download-artifact@v1
-      with:
-        name: dvm-Windows
-        path: artifacts/
+    # - name: Get Windows artifacts from Build Job
+    #   uses: actions/download-artifact@v1
+    #   with:
+    #     name: dvm-Windows
+    #     path: artifacts/
 
     - name: Extract the version tag
       id: version_tag
@@ -140,12 +140,12 @@ jobs:
         asset_name: dvm-${{ steps.version_tag.outputs.value }}-macos.zip
         asset_content_type: application/zip
 
-    - name: Upload Release Asset (win)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/dvm-Windows.zip
-        asset_name: dvm-${{ steps.version_tag.outputs.value }}-windows.zip
-        asset_content_type: application/zip
+    # - name: Upload Release Asset (win)
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: artifacts/dvm-Windows.zip
+    #     asset_name: dvm-${{ steps.version_tag.outputs.value }}-windows.zip
+    #     asset_content_type: application/zip
