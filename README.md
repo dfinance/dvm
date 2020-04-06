@@ -2,6 +2,7 @@
 
 <!-- ![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg) -->
 
+![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg)
 ![](https://github.com/dfinance/dvm/workflows/Audit/badge.svg)
 
 
