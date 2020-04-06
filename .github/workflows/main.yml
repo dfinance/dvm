@@ -16,8 +16,8 @@ on: [push, pull_request]
 #       - v[0-9]+.[0-9]+.[0-9]+
 
 jobs:
-  docker-build:
-    name: Docker Build
+  docker-build-own:
+    name: '[OWN] Docker Build'
     runs-on: ubuntu-18.04
 
     steps:
@@ -32,6 +32,13 @@ jobs:
         dockerfile: ./.build/Dockerfile
         registry: registry.wings.toys
         cache: true
+
+  docker-build-dh:
+    name: '[DockerHub] Docker Build'
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
 
     - name: '[DockerHub] Build and push docker image'
       uses: dfinance/gh-actions@master
