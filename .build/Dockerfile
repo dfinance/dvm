@@ -46,3 +46,5 @@ COPY --from=build \
     /opt/app/target/release/dvm \
     /opt/app/target/release/stdlib-builder \
     /opt/app/
+
+STOPSIGNAL SIGTERM
