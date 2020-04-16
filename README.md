@@ -154,6 +154,54 @@ To build your stdlib run:
 stdlib-builder /path-to-your/std-lib -po ./stdlib.json
 ```
 
+
+### Configuration actual for both
+
+#### Positional arguments:
+
+DVM and compiler requires second positional argument described as `<data-source address>`.
+This is URI of a data source server, typically [Dnode][], local or external.
+This argument can be ommited because we'll read the `DVM_DATA_SOURCE` [environment variable][environment variables] as fallback.
+
+[Dnode]: https://github.com/dfinance/dnode
+
+
+Example:
+
+```bash
+export DVM_DATA_SOURCE="http://[::1]:50052"
+compiler "[::1]:50053" &&
+dvm "[::1]:50051"
+```
+
+
+#### Environment variables:
+
+- `DVM_DATA_SOURCE` - Data-source address.
+  Used if relevant positional argument isn't specified.
+- `DVM_LOG` - Log filters. The same as standard `RUST_LOG` environment variable.
+  Possible values in verbosity ordering: `error`, `warn`, `info`, `debug` and `trace`.
+  For complex filters see [documentation](https://docs.rs/env_logger/#filtering-results)
+- `DVM_LOG_STYLE` - Log colors. The same as standard `RUST_LOG_STYLE`.
+  Possible values in verbosity ordering: `auto`, `always`, `never`.
+- `DVM_SENTRY_DSN` - Optional key-uri, enables crash logging service integration.
+  If value ommited, crash logging service will not be initialized.
+  E.g.: `DVM_SENTRY_DSN=https://...@sentry.io/... dvm "[::1]:50051"`
+
+
+### Optional arguments:
+
+Optional arguments have higher priority than [environment variables][], so overrides their if specified.
+
+- `--log` - same as `DVM_LOG`
+- `--log-color` - same as `DVM_LOG_STYLE`
+- `--sentry-dsn` - same as `DVM_SENTRY_DSN`
+
+[environment variables]: #environment-variables
+
+For more info run dvm or compiler with `--help`.
+
+
 - - - - - - - - - -
 
 
