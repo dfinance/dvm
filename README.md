@@ -180,7 +180,7 @@ But env vars used just as fallback, so args are higher prioritised.
 DVM_DATA_SOURCE="http://[::1]:42" dvm "[::1]:50051" "http://[::1]:50052"
 # There DVM will listen port 50051
 # and connect to data source on 50052 port
-# ingnoring evn var.
+# ignoring env variable.
 ```
 
 [Dnode]: https://github.com/dfinance/dnode
