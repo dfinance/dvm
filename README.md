@@ -159,20 +159,31 @@ stdlib-builder /path-to-your/std-lib -po ./stdlib.json
 
 #### Positional arguments:
 
-DVM and compiler requires second positional argument described as `<data-source address>`.
+__DVM__ and __compiler__ requires second positional argument described as `<data-source address>`.
 This is URI of a data source server, typically [Dnode][], local or external.
 This argument can be ommited because we'll read the `DVM_DATA_SOURCE` [environment variable][environment variables] as fallback.
 
-[Dnode]: https://github.com/dfinance/dnode
+Positional arguments have higher priority than [environment variables][], so overrides their if specified.
 
-
-Example:
+For example:
 
 ```bash
-export DVM_DATA_SOURCE="http://[::1]:50052"
-compiler "[::1]:50053" &&
-dvm "[::1]:50051"
+# using env var:
+DVM_DATA_SOURCE="http://[::1]:50052" dvm "[::1]:50051"
+# or using positional arg:
+dvm "[::1]:50051" "http://[::1]:50052"
+# both is same
 ```
+
+But env vars used just as fallback, so args are higher prioritised.
+```bash
+DVM_DATA_SOURCE="http://[::1]:42" dvm "[::1]:50051" "http://[::1]:50052"
+# There DVM will listen port 50051
+# and connect to data source on 50052 port
+# ingnoring evn var.
+```
+
+[Dnode]: https://github.com/dfinance/dnode
 
 
 #### Environment variables:
@@ -186,7 +197,7 @@ dvm "[::1]:50051"
   Possible values in verbosity ordering: `auto`, `always`, `never`.
 - `DVM_SENTRY_DSN` - Optional key-uri, enables crash logging service integration.
   If value ommited, crash logging service will not be initialized.
-  E.g.: `DVM_SENTRY_DSN=https://...@sentry.io/... dvm "[::1]:50051"`
+  E.g.: `DVM_SENTRY_DSN=https://your-dsn@uri dvm "[::1]:50051"`
 
 
 ### Optional arguments:
