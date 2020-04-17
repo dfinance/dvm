@@ -1,7 +1,5 @@
 # DVM - Dfinance Virtual Machine
 
-<!-- ![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg) -->
-
 ![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg)
 ![](https://github.com/dfinance/dvm/workflows/Audit/badge.svg)
 
@@ -11,6 +9,21 @@
 
 <!-- ## Overview -->
 <!-- TODO: describe project structure, architecture principles, etc.. -->
+
+
+## Related Repositories
+
+- [Dnode][] - Dfinance Blockchain node.
+- [PegZone][] - PegZone smart contracts.
+- [OracleApp][] - oracle node, that fetch price feed from exchanges.
+
+[Dnode]: https://github.com/dfinance/dnode
+[PegZone]: https://github.com/dfinance/eth-peg-zone
+[OracleApp]: https://github.com/dfinance/oracle-app
+
+
+<!-- ## Documentation -->
+<!-- - [Usage](https://docs.dfinance.co/move_vm) read how use DVM with Dnode -->
 
 
 ## Installation
