@@ -62,6 +62,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo
 
+    - name: Tests
+      shell: bash
+      run: cargo test --all --release
+
     - name: Build
       shell: bash
       run: cargo build --all --release
@@ -156,3 +160,38 @@ jobs:
     #     asset_path: artifacts/dvm-Windows.zip
     #     asset_name: dvm-${{ steps.version_tag.outputs.value }}-windows.zip
     #     asset_content_type: application/zip
+
+
+  docker-own:
+    needs: build
+    name: 'Docker Build: Own'
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: '[OwnRegistry] Build and push docker image'
+      uses: dfinance/gh-actions@master
+      with:
+        name: registry.wings.toys/dfinance/dvm
+        username: ${{ secrets.OWN_REGISTRY_USR }}
+        password: ${{ secrets.OWN_REGISTRY_PWD }}
+        dockerfile: ./.build/Dockerfile
+        registry: registry.wings.toys
+        cache: true
+
+  docker-own:
+    needs: build
+    name: 'Docker Build: DockerHub'
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: '[DockerHub] Build and push docker image'
+      uses: dfinance/gh-actions@master
+      # if: success() && startsWith(github.ref, 'refs/tags/')
+      with:
+        name: dfinance/dvm
+        username: ${{ secrets.DH_REGISTRY_USR }}
+        password: ${{ secrets.DH_REGISTRY_PWD }}
+        dockerfile: ./.build/Dockerfile
+        cache: true
