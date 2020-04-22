@@ -1,19 +1,11 @@
 name: Build & Push
 
-on: [push]
-# on:
-#   push:
-#     branches:
-#       - master
-#       - feature-*
-#     tags:
-#       - v[0-9]+.[0-9]+.[0-9]+
-#   pull_request:
-#     branches:
-#       - master
-#       - feature-*
-#     tags:
-#       - v[0-9]+.[0-9]+.[0-9]+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+.*
 
 jobs:
   docker-build-own:
