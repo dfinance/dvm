@@ -179,7 +179,7 @@ jobs:
         registry: registry.wings.toys
         cache: true
 
-  docker-own:
+  docker-dh:
     needs: build
     name: 'Docker Build: DockerHub'
     runs-on: ubuntu-18.04
