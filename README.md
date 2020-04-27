@@ -176,7 +176,7 @@ __DVM__ and __compiler__ both require positional argument described as `<data-so
 This is URI of a data source server, typically [Dnode][], local or external.
 This argument can be ommited because we'll read the `DVM_DATA_SOURCE` [environment variable][environment variables] as fallback.
 
-Positional arguments have higher priority than [environment variables][], so overrides their if specified.
+Positional arguments have higher priority than [environment variables][], and override them when specified.
 
 For example:
 
@@ -218,7 +218,7 @@ DVM_DATA_SOURCE="http://[::1]:42" dvm "[::1]:50051" "http://[::1]:50052"
 
 ### Optional arguments:
 
-Optional arguments have higher priority than [environment variables][], so overrides their if specified.
+Optional arguments have higher priority than [environment variables][], and override them when specified.
 
 - `--log` - same as `DVM_LOG`
 - `--log-color` - same as `DVM_LOG_STYLE`
