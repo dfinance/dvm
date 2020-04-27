@@ -1,21 +1,27 @@
 use dvm_lang::banch32::{libra_into_bech32, bech32_into_libra, replace_bech32_addresses};
+use libra::libra_types::account_address::AccountAddress;
+use bech32::{encode, ToBase32};
+
+pub fn make_bach32() -> String {
+    encode("df", rand::random::<[u8; 20]>().to_base32()).unwrap()
+}
 
 #[test]
 fn test_match_valid_import_bech32_lines() {
-    let sources = "import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account; import wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6.Account;";
+    let sources = "import df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute.Account; import df1vaj8palf3xcv7q00gzymeu984d6je9vncqvxlx.Account;";
     let replaced_line = replace_bech32_addresses(sources);
     assert_eq!(
-        r"import 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.Account; import 0x77616c6c65747300000000002eb8d97a078f3ae572b0ea70362080c3e188a7e6.Account;",
+        r"import 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d.Account; import 0x64660000676470f7e989b0cf01ef4089bcf0a7ab752c9593.Account;",
         replaced_line
     );
 }
 
 #[test]
 fn test_match_arbitrary_import_whitespaces() {
-    let line = "import          cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account;";
+    let line = "import          df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute.Account;";
     let replaced_line = replace_bech32_addresses(line);
     assert_eq!(
-        r"import          0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb.Account;",
+        r"import          0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d.Account;",
         replaced_line
     );
 }
@@ -64,11 +70,11 @@ fn test_do_not_replace_invalid_bech32_addresses() {
 
 #[test]
 fn test_match_valid_import_bech32_lines_move() {
-    let line = "use cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e::Account; use wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6::Account;";
+    let line = "use df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute::Account; use df1vaj8palf3xcv7q00gzymeu984d6je9vncqvxlx::Account;";
     let replaced_line = replace_bech32_addresses(line);
     assert_eq!(
         replaced_line,
-        r"use 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb::Account; use 0x77616c6c65747300000000002eb8d97a078f3ae572b0ea70362080c3e188a7e6::Account;",
+        r"use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d::Account; use 0x64660000676470f7e989b0cf01ef4089bcf0a7ab752c9593::Account;",
     );
 }
 
@@ -91,10 +97,10 @@ fn test_leave_libra_addresses_untouched_move() {
 
 #[test]
 fn test_address_as_variable() {
-    let source = r"addr = cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e;";
+    let source = r"addr = df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute;";
     assert_eq!(
         replace_bech32_addresses(source),
-        r"addr = 0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb;",
+        r"addr = 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d;",
     )
 }
 
@@ -116,28 +122,27 @@ fn test_invalid_libra_address_length() {
         libra_into_bech32(invalid_libra_address)
             .unwrap_err()
             .to_string(),
-        "Address should be of length 64",
+        "Address should be of length 50",
     );
 }
 
 #[test]
 fn test_invalid_libra_missing_hrp_part() {
-    let invalid_libra_address =
-        "0x0000000000000000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
+    let invalid_libra_address = "0x000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
     assert_eq!(
         libra_into_bech32(invalid_libra_address)
             .unwrap_err()
             .to_string(),
-        "Malformed bech32: invalid length",
+        "invalid length",
     );
 }
 
 #[test]
 fn test_convert_valid_libra_into_bech32() {
-    let libra_address = "0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb";
+    let libra_address = "0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d";
     assert_eq!(
         libra_into_bech32(libra_address).unwrap(),
-        "cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e",
+        "df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute",
     );
 }
 
@@ -145,8 +150,9 @@ fn test_convert_valid_libra_into_bech32() {
 fn test_roundtrip_conversion() {
     fn roundtrip(bech32_address: &str) {
         let libra_address = format!("0x{}", bech32_into_libra(bech32_address).unwrap());
+        AccountAddress::from_hex_literal(dbg!(&libra_address)).unwrap();
         assert_eq!(libra_into_bech32(&libra_address).unwrap(), bech32_address,);
     }
-    roundtrip("cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e");
-    roundtrip("wallets196udj7s83uaw2u4safcrvgyqc0sc3flxuherp6");
+    roundtrip(dbg!(&make_bach32()));
+    roundtrip(&make_bach32());
 }

@@ -4,12 +4,12 @@ use anyhow::Error;
 use libra::libra_types::language_storage::ModuleId;
 use libra::move_ir_types::ast::ModuleIdent;
 use libra::compiler::Compiler as MvIrCompiler;
-use libra::bytecode_verifier::VerifiedModule;
-use libra::bytecode_verifier::verifier::VerifiedProgram;
+use libra::bytecode_verifier::{VerifiedModule, VerifiedScript};
 use libra::ir_to_bytecode;
 use crate::compiler::module_loader::ModuleLoader;
 use crate::compiler::{ModuleMeta, Builder, replace_u_literal};
 use crate::banch32::replace_bech32_addresses;
+use libra::move_core_types::identifier::Identifier;
 
 #[derive(Clone)]
 pub struct Mvir<S>
@@ -31,10 +31,10 @@ where
 
     fn extract_meta(code: &str, is_module: bool) -> Result<ModuleMeta, Error> {
         let (name, imports) = if is_module {
-            let module = ir_to_bytecode::parser::parse_module(code)?;
+            let module = ir_to_bytecode::parser::parse_module("module", code)?;
             (module.name.to_string(), module.imports)
         } else {
-            let script = ir_to_bytecode::parser::parse_script(code)?;
+            let script = ir_to_bytecode::parser::parse_script("script", code)?;
             ("main".to_owned(), script.imports)
         };
 
@@ -43,7 +43,7 @@ where
             if let ModuleIdent::Qualified(module_ident) = import.ident {
                 imported_modules.push(ModuleId::new(
                     module_ident.address,
-                    module_ident.name.into_inner(),
+                    Identifier::new(module_ident.name.into_inner())?,
                 ));
             }
         }
@@ -62,14 +62,14 @@ where
         let code = pre_processing(code);
         let dep_list = self
             .loader
-            .load_modules(&Self::extract_meta(&code, true)?.dep_list)?;
+            .load_verified_modules(&Self::extract_meta(&code, true)?.dep_list)?;
 
         let mut compiler = MvIrCompiler::default();
         compiler.skip_stdlib_deps = true;
         compiler.extra_deps = dep_list;
         compiler.address = *address;
 
-        let module = compiler.into_compiled_module(&code)?;
+        let module = compiler.into_compiled_module("module", &code)?;
         let module = VerifiedModule::new(module)
             .map_err(|(_, err)| Error::msg(format!("Verification error:{:?}", err)))?;
 
@@ -82,20 +82,20 @@ where
         let code = pre_processing(code);
         let dep_list = self
             .loader
-            .load_modules(&Self::extract_meta(&code, false)?.dep_list)?;
+            .load_verified_modules(&Self::extract_meta(&code, false)?.dep_list)?;
 
         let mut compiler = MvIrCompiler::default();
         compiler.skip_stdlib_deps = true;
         compiler.extra_deps = dep_list;
         compiler.address = *address;
 
-        let (program, _, dependencies) =
-            compiler.into_compiled_program_and_source_maps_deps(&code)?;
-        let program = VerifiedProgram::new(program, &dependencies)
+        let (program, _) = compiler.into_compiled_script_and_source_map("script", &code)?;
+
+        let program = VerifiedScript::new(program)
             .map_err(|err| Error::msg(format!("Verification error:{:?}", err)))?;
 
         let mut buff = Vec::new();
-        program.script().serialize(&mut buff)?;
+        program.serialize(&mut buff)?;
         Ok(buff)
     }
 

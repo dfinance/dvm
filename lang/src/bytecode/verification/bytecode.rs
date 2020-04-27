@@ -1,6 +1,6 @@
 use anyhow::Result;
-use libra::vm::access::ScriptAccess;
-use libra::vm::file_format::{Bytecode, CompiledScript};
+use libra::libra_vm::access::ScriptAccess;
+use libra::libra_vm::file_format::{Bytecode, CompiledScript};
 
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
     let instructions = &script.main().code.code;
@@ -14,14 +14,13 @@ pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
             | Bytecode::LdU128(_)
             | Bytecode::LdTrue
             | Bytecode::LdFalse
-            | Bytecode::LdAddr(_)
-            | Bytecode::LdByteArray(_)
+            | Bytecode::LdConst(_)
             // assignments
             | Bytecode::StLoc(_)
             | Bytecode::CopyLoc(_)
             | Bytecode::MoveLoc(_)
             // misc
-            | Bytecode::Call(_, _) => Ok(()),
+            | Bytecode::Call(_) => Ok(()),
             _ => Err(anyhow!("Unsafe bytecode instruction")),
         }?;
     }
@@ -37,36 +36,39 @@ mod tests {
     #[test]
     fn test_trivial_script_is_accepted() {
         let source = r"
-            main() {return;}
+            fun main() {}
         ";
-        let compiled = compile_script(source, None, &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
     #[test]
     fn test_assignment_is_accepted() {
         let source = r"
-            main() {
-                let a: u64;
-                a = 1;
-                return;
+            fun main() {
+                let _a = 1;
             }
         ";
-        let compiled = compile_script(source, None, &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
     #[test]
     fn test_call_module_is_accepted() {
-        let source = r"
-            import 0x0.Account;
+        let empty = include_str!("../../../tests/resources/empty.move");
 
-            main() {
-               Account.create_account(0x0);
-               return;
+        let source = r"
+            use 0x0::Empty;
+
+            fun main() {
+               Empty::create();
             }
         ";
-        let compiled = compile_script(source, None, &AccountAddress::default());
+        let compiled = compile_script(
+            source,
+            vec![(empty, &AccountAddress::default())],
+            &AccountAddress::default(),
+        );
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
@@ -80,7 +82,7 @@ mod tests {
                 return;
             }
         ";
-        let compiled = compile_script(source, None, &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap_err();
     }
 
@@ -94,7 +96,7 @@ mod tests {
                 return;
             }
         ";
-        let compiled = compile_script(source, None, &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap_err();
     }
 }

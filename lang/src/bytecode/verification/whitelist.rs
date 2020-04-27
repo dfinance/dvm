@@ -4,10 +4,10 @@ use std::fmt::{Display, Error, Formatter};
 use anyhow::Result;
 use maplit::hashmap;
 
-use libra::{libra_types, vm};
+use libra::{libra_types, libra_vm};
 use libra_types::account_address::AccountAddress;
-use vm::access::ScriptAccess;
-use vm::file_format::{CompiledScript, ModuleHandle};
+use libra_vm::access::ScriptAccess;
+use libra_vm::file_format::{CompiledScript, ModuleHandle};
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 struct ImportedModule {
@@ -24,7 +24,7 @@ impl Display for ImportedModule {
 }
 
 fn get_imported_module(script: &CompiledScript, handle: &ModuleHandle) -> ImportedModule {
-    let address = script.address_at(handle.address).to_owned();
+    let address = *script.address_identifier_at(handle.address);
     let name = script.identifier_at(handle.name).to_string();
     ImportedModule { address, name }
 }
@@ -81,7 +81,7 @@ mod tests {
 
     fn verify_source_code(
         source: &str,
-        dep: Option<(&str, &AccountAddress)>,
+        dep: Vec<(&str, &AccountAddress)>,
         verifier: WhitelistVerifier,
         sender_address: AccountAddress,
     ) -> Result<()> {
@@ -91,39 +91,48 @@ mod tests {
 
     #[test]
     fn test_all_modules_are_whitelisted() {
-        let sender_address =
-            make_address("0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee")
-                .unwrap();
-        let source = r"
-            import 0x0.Coins;
-            import 0x0.Account;
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
 
-            main() {
-                return;
+        let empty = include_str!("../../../tests/resources/empty.move");
+        let oracle = include_str!("../../../tests/resources/oracle.move");
+
+        let source = "
+            use 0x0::Empty;
+            use 0x0::Oracle;
+
+            fun main() {
+                Empty::create();
+                Oracle::get_price(#\"USDBTC\");
             }
         ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["Account".to_string(), "Coins".to_string()]
+            AccountAddress::default() => vec!["Empty".to_string(), "Oracle".to_string()]
         };
         let verifier = WhitelistVerifier::new(sender_address, vec![], whitelist);
 
-        verify_source_code(source, None, verifier, sender_address).unwrap()
+        let core = AccountAddress::default();
+        verify_source_code(
+            source,
+            vec![(empty, &core), (oracle, &core)],
+            verifier,
+            sender_address,
+        )
+        .unwrap()
     }
 
     #[test]
     fn test_modules_from_sender_address_not_flagged() {
-        let sender_address =
-            make_address("0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee")
-                .unwrap();
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
 
         let dep = r"
             module Account {
+                public fun foo() {}
             }
         ";
         let source = r"
-            import 0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.Account;
-            main() {
-                return;
+            use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d::Account;
+            fun main() {
+                Account::foo();
             }
         ";
         let verifier =
@@ -131,7 +140,7 @@ mod tests {
 
         verify_source_code(
             source,
-            Some((dep, &sender_address)),
+            vec![(dep, &sender_address)],
             verifier,
             sender_address,
         )
@@ -140,19 +149,18 @@ mod tests {
 
     #[test]
     fn test_module_on_sender_does_not_exist() {
-        let sender_address =
-            make_address("0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee")
-                .unwrap();
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
 
         let dep = r"
             module Unknown {
+                public fun foo(){}
             }
         ";
 
         let source = r"
-            import 0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.Unknown;
-            main() {
-                return;
+            use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d::Unknown;
+            fun main() {
+                Unknown::foo();
             }
         ";
         let verifier =
@@ -160,39 +168,48 @@ mod tests {
 
         let err = verify_source_code(
             source,
-            Some((dep, &sender_address)),
+            vec![(dep, &sender_address)],
             verifier,
             sender_address,
         )
         .unwrap_err();
         assert_eq!(
             err.to_string(),
-            "Module 123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee.Unknown is not whitelisted"
+            "Module 646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d.Unknown is not whitelisted"
         );
     }
 
     #[test]
     fn test_some_module_is_not_whitelisted() {
-        let sender_address =
-            make_address("0x123456789abcdef123456789abcdef123456789abcdef123456789abcdefeeee")
-                .unwrap();
-        let source = r"
-                import 0x0.Coins;
-                import 0x0.Account;
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
+        let empty = include_str!("../../../tests/resources/empty.move");
+        let oracle = include_str!("../../../tests/resources/oracle.move");
 
-                main() {
-                    return;
+        let source = "
+                 use 0x0::Empty;
+                 use 0x0::Oracle;
+
+                fun main() {
+                    Empty::create();
+                    Oracle::get_price(#\"USDBTC\");
                 }
             ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["Coins".to_string()]
+            AccountAddress::default() => vec!["Oracle".to_string()]
         };
+        let core = AccountAddress::default();
         let verifier =
-            WhitelistVerifier::new(sender_address, vec!["Account".to_string()], whitelist);
-        let verified_err = verify_source_code(source, None, verifier, sender_address).unwrap_err();
+            WhitelistVerifier::new(sender_address, vec!["Oracle".to_string()], whitelist);
+        let verified_err = verify_source_code(
+            source,
+            vec![(empty, &core), (oracle, &core)],
+            verifier,
+            sender_address,
+        )
+        .unwrap_err();
         assert_eq!(
             verified_err.to_string(),
-            "Module 0000000000000000000000000000000000000000000000000000000000000000.Account is not whitelisted"
+            "Module 000000000000000000000000000000000000000000000000.Empty is not whitelisted"
         );
     }
 }

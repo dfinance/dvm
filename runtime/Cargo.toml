@@ -1,0 +1,21 @@
+[package]
+name = "dvm-runtime"
+version = "0.2.0"
+authors = [
+    "Alex Koz. <alexanderkozlovskii@wings.ai>",
+    "Dm. Yakushev <dmitryyakushev@wings.ai>",
+    "Maxim Kurnikov <maximkurnikov@wings.ai>"
+    ]
+edition = "2018"
+
+[dependencies]
+libra = { path = "../libra", package = "dvm-libra-deps" }
+ds = { path = "../data-source", package = "dvm-data-source" }
+lang = { path = "../lang", package = "dvm-lang" }
+once_cell = "=1.3.1"
+log = "0.4.8"
+anyhow = "=1.0.27"
+hex = "=0.4.2"
+serde = "=1.0.106"
+serde_derive = "=1.0.106"
+byteorder = "1.3.4"

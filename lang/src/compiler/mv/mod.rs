@@ -1,5 +1,5 @@
-mod dependency;
 mod imports;
+mod name_pull;
 
 use libra::libra_state_view::StateView;
 use libra::libra_types::account_address::AccountAddress;
@@ -14,16 +14,16 @@ use libra::move_lang::{
     compile_program,
 };
 use libra::move_lang::errors::{Errors, report_errors_to_buffer};
-use libra::move_lang::to_bytecode::translate::CompiledUnit;
 use std::iter::FromIterator;
-use libra::vm::CompiledModule;
+use libra::libra_vm::CompiledModule;
 use libra::libra_types::language_storage::ModuleId;
 use crate::compiler::module_loader::ModuleLoader;
 use crate::compiler::{ModuleMeta, Builder, replace_u_literal};
-use crate::compiler::mv::imports::ImportsExtractor;
-use crate::compiler::mv::dependency::Dependency;
 use crate::banch32::replace_bech32_addresses;
-use libra::vm::file_format::CompiledScript;
+use libra::libra_vm::file_format::CompiledScript;
+use libra::move_lang::compiled_unit::CompiledUnit;
+use crate::compiler::mv::imports::ImportsExtractor;
+use crate::compiler::mv::name_pull::NamePull;
 
 #[derive(Clone)]
 pub struct Move<S>
@@ -66,14 +66,20 @@ where
 
     fn compile(&self, source: &str, address: &AccountAddress) -> Result<CompiledUnit, Error> {
         let address = Address::try_from(address.as_ref()).map_err(Error::msg)?;
-        let pprog_res = self.parse_program(&source)?;
-
-        let mut prog =
-            compile_program(pprog_res, Some(address)).map_err(|errs| error_render(errs, source))?;
+        let mut source_map = HashMap::new();
+        let pprog_res = self.parse_program(&source, &mut source_map)?;
+        let mut prog = compile_program(pprog_res, Some(address)).map_err(|errs| {
+            source_map.insert("source", source.to_string());
+            error_render(errs, source_map)
+        })?;
         Ok(prog.remove(0))
     }
 
-    fn parse_program(&self, source: &str) -> Result<Result<parser::ast::Program, Errors>, Error> {
+    fn parse_program(
+        &self,
+        source: &str,
+        source_map: &mut HashMap<&'static str, String>,
+    ) -> Result<Result<parser::ast::Program, Errors>, Error> {
         let mut errors: Errors = Vec::new();
 
         let (def_opt, mut es) = parse_module(source, "source")?;
@@ -82,7 +88,8 @@ where
         let res = if errors.is_empty() {
             let definition = def_opt.ok_or_else(|| Error::msg("Unit not defined"))?;
             let mut modules = HashMap::new();
-            self.load_dependency(&definition, &mut modules)?;
+            let mut name_pull = NamePull::new();
+            self.load_dependency(&definition, source_map, &mut modules, &mut name_pull)?;
             let lib_definitions = modules.into_iter().map(|(_, v)| v).collect();
 
             Ok(parser::ast::Program {
@@ -98,18 +105,38 @@ where
     fn load_dependency(
         &self,
         definition: &FileDefinition,
-        deps: &mut HashMap<ModuleId, FileDefinition>,
+        source_map: &mut HashMap<&'static str, String>,
+        definition_map: &mut HashMap<ModuleId, FileDefinition>,
+        name_pull: &mut NamePull,
     ) -> Result<(), Error> {
         let meta = Self::extract_meta(definition)?;
-        let dep_list = self.loader.load_modules(&meta.dep_list)?;
-        for dep in dep_list {
-            let dep = Dependency::new(dep);
-            let module_id = dep.module_id();
-            let def = dep.into();
-            self.load_dependency(&def, deps)?;
-            deps.insert(module_id, def);
+        let dep_list = self.loader.load_modules_signature(&meta.dep_list)?;
+        for signature in dep_list {
+            let source = signature.to_string();
+            let name = name_pull
+                .next()
+                .ok_or_else(|| Error::msg("name pool depleted"))?;
+
+            let def = self.make_file_definition(&source, name)?;
+            self.load_dependency(&def, source_map, definition_map, name_pull)?;
+
+            source_map.insert(name, source);
+            definition_map.insert(signature.self_id().clone(), def);
         }
         Ok(())
+    }
+
+    fn make_file_definition(
+        &self,
+        source: &str,
+        name: &'static str,
+    ) -> Result<FileDefinition, Error> {
+        let (def, err) = parse_module(source, name)?;
+        if !err.is_empty() {
+            Err(Error::msg(format!("Failed to parse module{:?};", err)))
+        } else {
+            def.ok_or_else(|| Error::msg("Expected module".to_string()))
+        }
     }
 
     fn compile_unit(&self, code: &str, address: &AccountAddress) -> Result<Vec<u8>, Error> {
@@ -175,11 +202,8 @@ pub fn parse_module(
     Ok((def_opt, errors))
 }
 
-pub fn error_render(errors: Errors, source: &str) -> Error {
-    let mut sources = HashMap::new();
-    sources.insert("source", source.to_owned());
-
-    match String::from_utf8(report_errors_to_buffer(sources, errors)) {
+pub fn error_render(errors: Errors, source_map: HashMap<&'static str, String>) -> Error {
+    match String::from_utf8(report_errors_to_buffer(source_map, errors)) {
         Ok(error) => Error::msg(error),
         Err(err) => Error::new(err),
     }
@@ -187,23 +211,23 @@ pub fn error_render(errors: Errors, source: &str) -> Error {
 
 #[cfg(test)]
 mod test {
-    use libra::{vm, libra_types};
+    use libra::{libra_vm, libra_types};
     use libra_types::account_address::AccountAddress;
-    use vm::access::ModuleAccess;
-    use vm::CompiledModule;
+    use libra_vm::access::ModuleAccess;
+    use libra_vm::CompiledModule;
     use crate::compiler::test::{compile, make_address};
-    use vm::file_format::CompiledScript;
+    use libra_vm::file_format::CompiledScript;
 
     #[test]
     pub fn test_build_module_success() {
         let program = "module M {}";
-        compile(program, None, &AccountAddress::random()).unwrap();
+        compile(program, vec![], &AccountAddress::random()).unwrap();
     }
 
     #[test]
     pub fn test_build_module_failed() {
         let program = "module M {";
-        let error = compile(program, None, &AccountAddress::random())
+        let error = compile(program, vec![], &AccountAddress::random())
             .err()
             .unwrap();
         assert!(error.to_string().contains("Unexpected end-of-file"));
@@ -212,7 +236,7 @@ mod test {
     #[test]
     pub fn test_build_script() {
         let program = "fun main() {}";
-        compile(program, None, &AccountAddress::random()).unwrap();
+        compile(program, vec![], &AccountAddress::random()).unwrap();
     }
 
     #[test]
@@ -231,7 +255,7 @@ mod test {
 
         compile(
             program,
-            Some((dep, &make_address("0x1").unwrap())),
+            vec![(dep, &make_address("0x1"))],
             &AccountAddress::random(),
         )
         .unwrap();
@@ -244,7 +268,7 @@ mod test {
         ";
 
         let program = r"
-            import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account;
+            import df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute.Account;
             main() {
                 return;
             }
@@ -252,24 +276,24 @@ mod test {
 
         let script = compile(
             program,
-            Some((
+            vec![(
                 dep,
-                &make_address("0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb")
-                    .unwrap(),
-            )),
+                &make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"),
+            )],
             &AccountAddress::default(),
         )
         .unwrap();
+
         let script = CompiledScript::deserialize(&script).unwrap().into_module();
         let module = script
             .module_handles()
             .iter()
             .find(|h| script.identifier_at(h.name).to_string() == "Account")
             .unwrap();
-        let address = script.address_at(module.address);
+        let address = script.address_identifier_at(module.address);
         assert_eq!(
             address.to_string(),
-            "636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb"
+            "646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"
         );
     }
 
@@ -281,17 +305,16 @@ mod test {
 
         let program = r"
             module M {
-                import cosmos1sxqtxa3m0nh5fu2zkyfvh05tll8fmz8tk2e22e.Account;
+                import df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute.Account;
             }
         ";
 
         let main_module = compile(
             program,
-            Some((
+            vec![(
                 dep,
-                &make_address("0x636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb")
-                    .unwrap(),
-            )),
+                &make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"),
+            )],
             &AccountAddress::default(),
         )
         .unwrap();
@@ -302,10 +325,10 @@ mod test {
             .iter()
             .find(|h| main_module.identifier_at(h.name).to_string() == "Account")
             .unwrap();
-        let address = main_module.address_at(module.address);
+        let address = main_module.address_identifier_at(module.address);
         assert_eq!(
             address.to_string(),
-            "636f736d6f730000000000008180b3763b7cef44f142b112cbbe8bffce9d88eb"
+            "646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"
         );
     }
 }

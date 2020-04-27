@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate anyhow;
 extern crate libra;
+#[macro_use]
+extern crate include_dir;
 
 pub mod banch32;
 pub mod bytecode;

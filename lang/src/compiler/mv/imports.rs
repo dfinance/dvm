@@ -2,8 +2,8 @@ use std::collections::HashSet;
 use libra::libra_types::language_storage::ModuleId;
 use libra::move_lang::parser::ast::*;
 use anyhow::Error;
-use libra::libra_types::identifier::Identifier;
 use libra::libra_types::account_address::AccountAddress;
+use libra::move_core_types::identifier::Identifier;
 
 #[derive(Default)]
 pub struct ImportsExtractor {
@@ -58,7 +58,7 @@ impl ImportsExtractor {
 
     fn internal_usages(&mut self, func: &FunctionBody) -> Result<(), Error> {
         match &func.value {
-            FunctionBody_::Defined((seq, exp)) => {
+            FunctionBody_::Defined((seq, _, exp)) => {
                 self.block_usages(seq)?;
                 if let Some(exp) = exp.as_ref() {
                     self.expresion_usages(&exp.value)?;
@@ -74,10 +74,22 @@ impl ImportsExtractor {
     fn type_usages(&mut self, v_type: &Type_) -> Result<(), Error> {
         match v_type {
             Type_::Unit => { /*No-op*/ }
-            Type_::Single(s_type) => {
+            Type_::Multiple(s_types) => {
+                for s_type in s_types {
+                    self.s_type_usages(&s_type.value)?;
+                }
+            }
+            Type_::Apply(access, s_types) => {
+                for s_type in s_types {
+                    self.s_type_usages(&s_type.value)?;
+                }
+                self.access_usages(&access.value)?;
+            }
+            Type_::Ref(_, s_type) => {
                 self.s_type_usages(&s_type.value)?;
             }
-            Type_::Multiple(s_types) => {
+            Type_::Fun(s_types, s_type) => {
+                self.s_type_usages(&s_type.value)?;
                 for s_type in s_types {
                     self.s_type_usages(&s_type.value)?;
                 }
@@ -146,16 +158,28 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn s_type_usages(&mut self, s_type: &SingleType_) -> Result<(), Error> {
+    fn s_type_usages(&mut self, s_type: &Type_) -> Result<(), Error> {
         match s_type {
-            SingleType_::Apply(module_access, s_types) => {
+            Type_::Apply(module_access, s_types) => {
                 self.access_usages(&module_access.value)?;
                 for s_type in s_types {
                     self.s_type_usages(&s_type.value)?;
                 }
             }
-            SingleType_::Ref(_, s_type) => {
+            Type_::Ref(_, s_type) => {
                 self.s_type_usages(&s_type.value)?;
+            }
+            Type_::Fun(s_types, s_type) => {
+                for s_type in s_types {
+                    self.s_type_usages(&s_type.value)?;
+                }
+                self.s_type_usages(&s_type.value)?;
+            }
+            Type_::Unit => {}
+            Type_::Multiple(s_types) => {
+                for s_type in s_types {
+                    self.s_type_usages(&s_type.value)?;
+                }
             }
         }
         Ok(())
@@ -166,10 +190,13 @@ impl ImportsExtractor {
             Exp_::Value(_)
             | Exp_::Move(_)
             | Exp_::Copy(_)
-            | Exp_::Name(_)
             | Exp_::Unit
             | Exp_::Break
             | Exp_::Continue
+            | Exp_::Lambda(_, _)
+            | Exp_::Spec(_)
+            | Exp_::Index(_, _)
+            | Exp_::InferredNum(_)
             | Exp_::UnresolvedError => { /*no op*/ }
             Exp_::GlobalCall(_, types, exp_list) => {
                 for exp in &exp_list.value {
@@ -218,7 +245,7 @@ impl ImportsExtractor {
                 self.expresion_usages(&eb.value)?;
                 self.expresion_usages(&eloop.value)?;
             }
-            Exp_::Block((seq, exp)) => {
+            Exp_::Block((seq, _, exp)) => {
                 self.block_usages(seq)?;
                 if let Some(exp) = exp.as_ref() {
                     self.expresion_usages(&exp.value)?;
@@ -235,7 +262,6 @@ impl ImportsExtractor {
             }
             Exp_::Abort(e)
             | Exp_::Dereference(e)
-            | Exp_::Return(e)
             | Exp_::Loop(e)
             | Exp_::UnaryExp(_, e)
             | Exp_::Borrow(_, e)
@@ -243,9 +269,26 @@ impl ImportsExtractor {
             | Exp_::Annotate(e, _) => {
                 self.expresion_usages(&e.value)?;
             }
+            Exp_::Return(e) => {
+                if let Some(e) = e {
+                    self.expresion_usages(&e.value)?;
+                }
+            }
             Exp_::BinopExp(e1, _, e2) => {
                 self.expresion_usages(&e1.value)?;
                 self.expresion_usages(&e2.value)?;
+            }
+            Exp_::Name(access, s_types) => {
+                self.access_usages(&access.value)?;
+                if let Some(s_types) = s_types {
+                    for s_type in s_types {
+                        self.s_type_usages(&s_type.value)?;
+                    }
+                }
+            }
+            Exp_::Cast(e1, s_type) => {
+                self.expresion_usages(&e1.value)?;
+                self.s_type_usages(&s_type.value)?;
             }
         }
         Ok(())

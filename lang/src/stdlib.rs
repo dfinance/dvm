@@ -1,20 +1,21 @@
 use libra::libra_types::write_set::{WriteSet, WriteOp};
 use anyhow::Error;
 use libra::libra_types::account_address::AccountAddress;
-use libra::vm::CompiledModule;
-use libra::vm_runtime::data_cache::TransactionDataCache;
+use libra::libra_vm::CompiledModule;
 use libra::libra_types::language_storage::ModuleId;
 use libra::lcs;
 use serde::{Deserialize, Serialize};
-use libra::libra_types::identifier::Identifier;
 use libra::bytecode_verifier::VerifiedModule;
 use libra::libra_state_view::StateView;
 use libra::libra_types::access_path::AccessPath;
 use std::collections::HashMap;
 use crate::compiler::{ModuleMeta, Compiler};
 use ds::MockDataSource;
+use libra::move_core_types::identifier::Identifier;
+use include_dir::Dir;
 
 const STDLIB_META_ID: &str = "std_meta";
+static STDLIB_DIR: Dir = include_dir!("stdlib");
 
 pub struct Stdlib<'a> {
     pub modules: Vec<&'a str>,
@@ -37,10 +38,6 @@ enum Module<'a> {
     Binary((ModuleId, Vec<u8>)),
 }
 
-pub fn build_std() -> WriteSet {
-    build_external_std(Stdlib::default()).unwrap()
-}
-
 pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
     let ds = MockDataSource::new();
     let compiler = Compiler::new(ds.clone());
@@ -55,7 +52,13 @@ pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
         })
         .collect::<Result<HashMap<_, _>, Error>>()?;
 
-    let modules: Vec<String> = std_with_meta.keys().map(|key| key.to_owned()).collect();
+    let mut modules = std_with_meta
+        .keys()
+        .map(|key| key.to_owned())
+        .collect::<Vec<_>>();
+    modules.sort_unstable();
+
+    let mut ids = Vec::with_capacity(modules.len());
     for module in modules {
         build_module_with_dep(
             &module,
@@ -63,31 +66,13 @@ pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
             &AccountAddress::default(),
             &compiler,
             &ds,
+            &mut ids,
         )?;
     }
 
-    let ds = MockDataSource::new();
-    let mut data_view = TransactionDataCache::new(&ds);
-
-    let mut ids = Vec::with_capacity(std_with_meta.len());
-
-    for (_, module) in std_with_meta {
-        match module {
-            Module::Binary((id, binary)) => {
-                data_view.publish_module(id.clone(), binary)?;
-                ids.push(id);
-            }
-            Module::Source(_) => unreachable!(),
-        }
-    }
-
-    ids.sort_unstable();
-
     let meta = lcs::to_bytes(&StdMeta { modules: ids })?;
-    let std_meta_id = meta_module_id()?;
-    data_view.publish_module(std_meta_id, meta)?;
-
-    Ok(data_view.make_write_set()?)
+    ds.publish_module_with_id(meta_module_id()?, meta)?;
+    ds.to_write_set()
 }
 
 fn build_module_with_dep(
@@ -96,6 +81,7 @@ fn build_module_with_dep(
     account: &AccountAddress,
     compiler: &Compiler<MockDataSource>,
     ds: &MockDataSource,
+    ids: &mut Vec<ModuleId>,
 ) -> Result<(), Error> {
     if let Some(module) = std_with_meta.remove(module_name) {
         match module {
@@ -110,11 +96,14 @@ fn build_module_with_dep(
                         account,
                         compiler,
                         ds,
+                        ids,
                     )?;
                 }
-                let module = build_module(&source, &account, compiler)?;
-                ds.publish_module(module.1.clone())?;
-                std_with_meta.insert(meta.module_name, Module::Binary(module));
+
+                let (id, module) = build_module(&source, &account, compiler)?;
+                ds.publish_module(module.clone())?;
+                ids.push(id.clone());
+                std_with_meta.insert(meta.module_name, Module::Binary((id, module)));
             }
         }
     }
@@ -131,7 +120,7 @@ fn build_module(
     })
 }
 
-pub fn load_std(view: &dyn StateView) -> Result<Option<Vec<VerifiedModule>>, Error> {
+pub fn load_std(view: &impl StateView) -> Result<Option<Vec<VerifiedModule>>, Error> {
     let module_id = meta_module_id()?;
     let meta = view.get(&AccessPath::code_access_path(&module_id))?;
 
@@ -209,20 +198,31 @@ impl From<WriteSet> for WS {
 }
 
 fn stdlib() -> Vec<&'static str> {
-    vec![
-        include_str!("../stdlib/address_util.mvir"),
-        include_str!("../stdlib/bytearray_util.mvir"),
-        include_str!("../stdlib/gas_schedule.mvir"),
-        include_str!("../stdlib/hash.mvir"),
-        include_str!("../stdlib/account.mvir"),
-        include_str!("../stdlib/coins.mvir"),
-        include_str!("../stdlib/signature.mvir"),
-        include_str!("../stdlib/u64_util.mvir"),
-        include_str!("../stdlib/validator_config.mvir"),
-        include_str!("../stdlib/vector.mvir"),
-        include_str!("../stdlib/libra_time.mvir"),
-        include_str!("../stdlib/libra_transaction_timeout.mvir"),
-        include_str!("../stdlib/offer.mvir"),
-        include_str!("../stdlib/oracle.mvir"),
-    ]
+    STDLIB_DIR
+        .files()
+        .iter()
+        .map(|f| f.contents_utf8().unwrap())
+        .collect()
+}
+
+pub fn build_std() -> WriteSet {
+    build_external_std(Stdlib::default()).unwrap()
+}
+
+pub fn zero_sdt() -> WriteSet {
+    let ds = MockDataSource::new();
+    let meta = lcs::to_bytes(&StdMeta { modules: vec![] }).unwrap();
+    ds.publish_module_with_id(meta_module_id().unwrap(), meta)
+        .unwrap();
+    ds.to_write_set().unwrap()
+}
+
+#[cfg(test)]
+pub mod tests {
+    use crate::stdlib::build_std;
+
+    #[test]
+    fn test_build_std() {
+        build_std();
+    }
 }
