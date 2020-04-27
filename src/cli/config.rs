@@ -6,8 +6,9 @@ pub const RUST_LOG_STYLE: &str = "RUST_LOG_STYLE";
 // dvm env variables
 pub const DVM_LOG: &str = "DVM_LOG";
 pub const DVM_LOG_STYLE: &str = "DVM_LOG_COLOR";
-pub const DVM_SENTRY_DSN: &str = "DVM_SENTRY_DSN";
 pub const DVM_DATA_SOURCE: &str = "DVM_DATA_SOURCE";
+pub const DVM_SENTRY_DSN: &str = "DVM_SENTRY_DSN";
+pub const DVM_SENTRY_ENV: &str = "DVM_SENTRY_ENVIRONMENT";
 
 #[derive(Debug, StructOpt, Clone)]
 pub struct LoggingOptions {
@@ -46,4 +47,10 @@ pub struct IntegrationsOptions {
     #[structopt(name = "Sentry DSN", long = "sentry-dsn", env = DVM_SENTRY_DSN)]
     #[cfg(feature = "sentry")]
     pub sentry_dsn: Option<sentry::internals::Dsn>,
+
+    /// Sets the environment code to separate events from testnet and production. Optional.
+    /// Works with Sentry integration.
+    #[structopt(name = "Sentry environment", long = "sentry-env", env = DVM_SENTRY_ENV)]
+    #[cfg(feature = "sentry")]
+    pub sentry_env: Option<String>,
 }
