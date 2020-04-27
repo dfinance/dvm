@@ -15,7 +15,7 @@
 
 - [Dnode][] - Dfinance Blockchain node.
 - [PegZone][] - PegZone smart contracts.
-- [OracleApp][] - oracle node, that fetch price feed from exchanges.
+- [OracleApp][] - oracle node, which fetches price feeds from exchanges.
 
 [Dnode]: https://github.com/dfinance/dnode
 [PegZone]: https://github.com/dfinance/eth-peg-zone
@@ -172,7 +172,7 @@ stdlib-builder /path-to-your/std-lib -po ./stdlib.json
 
 #### Positional arguments:
 
-__DVM__ and __compiler__ requires second positional argument described as `<data-source address>`.
+__DVM__ and __compiler__ both require positional argument described as `<data-source address>`.
 This is URI of a data source server, typically [Dnode][], local or external.
 This argument can be ommited because we'll read the `DVM_DATA_SOURCE` [environment variable][environment variables] as fallback.
 
