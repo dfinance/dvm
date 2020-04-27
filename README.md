@@ -1,7 +1,5 @@
 # DVM - Dfinance Virtual Machine
 
-<!-- ![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg) -->
-
 ![](https://github.com/dfinance/dvm/workflows/Tests/badge.svg)
 ![](https://github.com/dfinance/dvm/workflows/Audit/badge.svg)
 
@@ -11,6 +9,21 @@
 
 <!-- ## Overview -->
 <!-- TODO: describe project structure, architecture principles, etc.. -->
+
+
+## Related Repositories
+
+- [Dnode][] - Dfinance Blockchain node.
+- [PegZone][] - PegZone smart contracts.
+- [OracleApp][] - oracle node, which fetches price feeds from exchanges.
+
+[Dnode]: https://github.com/dfinance/dnode
+[PegZone]: https://github.com/dfinance/eth-peg-zone
+[OracleApp]: https://github.com/dfinance/oracle-app
+
+
+<!-- ## Documentation -->
+<!-- - [Usage](https://docs.dfinance.co/move_vm) read how use DVM with Dnode -->
 
 
 ## Installation
@@ -153,6 +166,69 @@ To build your stdlib run:
 ```bash
 stdlib-builder /path-to-your/std-lib -po ./stdlib.json
 ```
+
+
+### Configuration actual for both
+
+#### Positional arguments:
+
+__DVM__ and __compiler__ both require positional argument described as `<data-source address>`.
+This is URI of a data source server, typically [Dnode][], local or external.
+This argument can be ommited because we'll read the `DVM_DATA_SOURCE` [environment variable][environment variables] as fallback.
+
+Positional arguments have higher priority than [environment variables][], and override them when specified.
+
+For example:
+
+```bash
+# using env var:
+DVM_DATA_SOURCE="http://[::1]:50052" dvm "[::1]:50051"
+# or using positional arg:
+dvm "[::1]:50051" "http://[::1]:50052"
+# both is same
+```
+
+But env vars used just as fallback, so args are higher prioritised.
+```bash
+DVM_DATA_SOURCE="http://[::1]:42" dvm "[::1]:50051" "http://[::1]:50052"
+# There DVM will listen port 50051
+# and connect to data source on 50052 port
+# ignoring env variable.
+```
+
+[Dnode]: https://github.com/dfinance/dnode
+
+
+#### Environment variables:
+
+- `DVM_DATA_SOURCE` - Data-source address.
+  Used if relevant positional argument isn't specified.
+- `DVM_LOG` - Log filters. The same as standard `RUST_LOG` environment variable.
+  Possible values in verbosity ordering: `error`, `warn`, `info`, `debug` and `trace`.
+  For complex filters see [documentation](https://docs.rs/env_logger/#filtering-results)
+- `DVM_LOG_STYLE` - Log colors. The same as standard `RUST_LOG_STYLE`.
+  Possible values in verbosity ordering: `auto`, `always`, `never`.
+- `DVM_SENTRY_DSN` - Optional key-uri, enables crash logging service integration.
+  If value ommited, crash logging service will not be initialized.
+  E.g.: `DVM_SENTRY_DSN=https://your-dsn@uri dvm "[::1]:50051"`
+- `DVM_SENTRY_ENVIRONMENT` - Sets the environment code to separate events from testnet and production.
+  Optional. Works with Sentry integration.
+  E.g.: `DVM_SENTRY_ENVIRONMENT="testnet"`
+
+
+### Optional arguments:
+
+Optional arguments have higher priority than [environment variables][], and override them when specified.
+
+- `--log` - same as `DVM_LOG`
+- `--log-color` - same as `DVM_LOG_STYLE`
+- `--sentry-dsn` - same as `DVM_SENTRY_DSN`
+- `--sentry-env` - same as `DVM_SENTRY_ENVIRONMENT`
+
+[environment variables]: #environment-variables
+
+For more info run dvm or compiler with `--help`.
+
 
 - - - - - - - - - -
 
