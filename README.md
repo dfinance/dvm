@@ -211,6 +211,9 @@ DVM_DATA_SOURCE="http://[::1]:42" dvm "[::1]:50051" "http://[::1]:50052"
 - `DVM_SENTRY_DSN` - Optional key-uri, enables crash logging service integration.
   If value ommited, crash logging service will not be initialized.
   E.g.: `DVM_SENTRY_DSN=https://your-dsn@uri dvm "[::1]:50051"`
+- `DVM_SENTRY_ENVIRONMENT` - Sets the environment code to separate events from testnet and production.
+  Optional. Works with Sentry integration.
+  E.g.: `DVM_SENTRY_ENVIRONMENT="testnet"`
 
 
 ### Optional arguments:
@@ -220,6 +223,7 @@ Optional arguments have higher priority than [environment variables][], so overr
 - `--log` - same as `DVM_LOG`
 - `--log-color` - same as `DVM_LOG_STYLE`
 - `--sentry-dsn` - same as `DVM_SENTRY_DSN`
+- `--sentry-env` - same as `DVM_SENTRY_ENVIRONMENT`
 
 [environment variables]: #environment-variables
 
