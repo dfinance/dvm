@@ -20,7 +20,7 @@ use crate::grpc_client::Client;
 use libra_vm::CompiledModule;
 use libra::libra_state_view::StateView;
 use data_source::MockDataSource;
-use lang::{compiler::Compiler, stdlib::zero_sdt};
+use lang::{compiler::Compiler, stdlib::build_std};
 use lang::banch32::libra_into_bech32;
 pub use genesis::genesis_write_set;
 use anyhow::Error;
@@ -51,7 +51,7 @@ impl Default for TestKit {
 
 impl TestKit {
     pub fn new() -> TestKit {
-        let data_source = MockDataSource::with_write_set(zero_sdt());
+        let data_source = MockDataSource::with_write_set(build_std());
         let server = Server::new(data_source.clone());
         let client = Client::new(server.port()).unwrap_or_else(|_| {
             panic!(

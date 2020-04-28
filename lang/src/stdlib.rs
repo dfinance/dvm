@@ -3,19 +3,12 @@ use anyhow::Error;
 use libra::libra_types::account_address::AccountAddress;
 use libra::libra_vm::CompiledModule;
 use libra::libra_types::language_storage::ModuleId;
-use libra::lcs;
-use serde::{Deserialize, Serialize};
-use libra::bytecode_verifier::VerifiedModule;
-use libra::libra_state_view::StateView;
-use libra::libra_types::access_path::AccessPath;
+use serde::Serialize;
 use std::collections::HashMap;
 use crate::compiler::{ModuleMeta, Compiler};
 use ds::MockDataSource;
-use libra::move_core_types::identifier::Identifier;
 use include_dir::Dir;
-use crate::module_checker::ModuleChecker;
 
-const STDLIB_META_ID: &str = "std_meta";
 static STDLIB_DIR: Dir = include_dir!("stdlib");
 
 pub struct Stdlib<'a> {
@@ -26,11 +19,6 @@ impl Default for Stdlib<'static> {
     fn default() -> Self {
         Stdlib { modules: stdlib() }
     }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Hash, Eq, Clone, PartialOrd, Ord)]
-struct StdMeta {
-    modules: Vec<ModuleId>,
 }
 
 #[derive(Debug)]
@@ -59,8 +47,6 @@ pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
         .collect::<Vec<_>>();
     modules.sort_unstable();
 
-    let checker = ModuleChecker::new();
-    let mut ids = Vec::with_capacity(modules.len());
     for module in modules {
         build_module_with_dep(
             &module,
@@ -68,13 +54,9 @@ pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
             &AccountAddress::default(),
             &compiler,
             &ds,
-            &mut ids,
-            &checker,
         )?;
     }
 
-    let meta = lcs::to_bytes(&StdMeta { modules: ids })?;
-    ds.publish_module_with_id(meta_module_id()?, meta)?;
     ds.to_write_set()
 }
 
@@ -84,8 +66,6 @@ fn build_module_with_dep(
     account: &AccountAddress,
     compiler: &Compiler<MockDataSource>,
     ds: &MockDataSource,
-    ids: &mut Vec<ModuleId>,
-    checker: &ModuleChecker,
 ) -> Result<(), Error> {
     if let Some(module) = std_with_meta.remove(module_name) {
         match module {
@@ -100,15 +80,11 @@ fn build_module_with_dep(
                         account,
                         compiler,
                         ds,
-                        ids,
-                        checker,
                     )?;
                 }
 
                 let (id, module) = build_module(&source, &account, compiler)?;
-                checker.check_with_verbal_error(&module)?;
                 ds.publish_module(module.clone())?;
-                ids.push(id.clone());
                 std_with_meta.insert(meta.module_name, Module::Binary((id, module)));
             }
         }
@@ -124,50 +100,6 @@ fn build_module(
     compiler.compile(code, account).and_then(|module| {
         Ok(CompiledModule::deserialize(module.as_ref()).and_then(|m| Ok((m.self_id(), module)))?)
     })
-}
-
-pub fn load_std(view: &impl StateView) -> Result<Option<Vec<VerifiedModule>>, Error> {
-    let module_id = meta_module_id()?;
-    let meta = view.get(&AccessPath::code_access_path(&module_id))?;
-
-    let meta: StdMeta = match meta {
-        Some(meta) => lcs::from_bytes(&meta)?,
-        None => return Ok(None),
-    };
-
-    let modules = meta
-        .modules
-        .iter()
-        .map(|module_id| {
-            view.get(&AccessPath::code_access_path(module_id))
-                .and_then(|val| {
-                    val.ok_or_else(|| {
-                        Error::msg(format!("Std module [{:?}] not found.", module_id))
-                    })
-                })
-                .and_then(|module| {
-                    CompiledModule::deserialize(&module).map_err(|err| {
-                        Error::msg(format!(
-                            "Failed to deserialize Std module [{:?}]. Err:[{:?}]",
-                            module_id, err
-                        ))
-                    })
-                })
-                .and_then(|module| {
-                    VerifiedModule::new(module)
-                        .map_err(|(_, status)| Error::msg(format!("{:?}", status)))
-                })
-        })
-        .collect::<Result<_, _>>()?;
-
-    Ok(Some(modules))
-}
-
-fn meta_module_id() -> Result<ModuleId, Error> {
-    Ok(ModuleId::new(
-        AccountAddress::default(),
-        Identifier::new(STDLIB_META_ID)?,
-    ))
 }
 
 #[derive(Serialize, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -217,24 +149,15 @@ pub fn build_std() -> WriteSet {
 
 pub fn zero_sdt() -> WriteSet {
     let ds = MockDataSource::new();
-    let meta = lcs::to_bytes(&StdMeta { modules: vec![] }).unwrap();
-    ds.publish_module_with_id(meta_module_id().unwrap(), meta)
-        .unwrap();
     ds.to_write_set().unwrap()
 }
 
 #[cfg(test)]
 pub mod tests {
-    use crate::stdlib::{build_external_std, Stdlib};
+    use crate::stdlib::build_std;
 
     #[test]
     fn test_build_std() {
-        let modules = include_dir!("tests/resources/test_stdlib")
-            .files()
-            .iter()
-            .map(|f| f.contents_utf8().unwrap())
-            .collect();
-
-        build_external_std(Stdlib { modules }).unwrap();
+        build_std();
     }
 }

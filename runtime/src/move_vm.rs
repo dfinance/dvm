@@ -9,7 +9,6 @@ use libra_vm::errors::{vm_error, Location, VMResult};
 use libra_types::write_set::WriteSet;
 
 use libra_types::contract_event::ContractEvent;
-use lang::stdlib::load_std;
 use libra::move_vm_state::execution_context::{ExecutionContext, TransactionExecutionContext};
 use libra::move_vm_types::{values::Value, native_functions::oracle};
 use ds::DataSource;
@@ -110,18 +109,6 @@ where
         oracle::init(Box::new(ds.clone()));
 
         let vm = MoveVM::new();
-
-        let mut context = TransactionExecutionContext::new(GasUnits::new(100_000_000), &ds);
-
-        match load_std(&ds)? {
-            Some(std) => {
-                for module in std {
-                    dbg!(module.as_inner().self_id());
-                    vm.cache_module(module, &mut context)?;
-                }
-            }
-            None => return Err(Error::msg("Stdlib not found.")),
-        }
 
         trace!("vm service is ready.");
         Ok(Dvm {
@@ -236,6 +223,11 @@ impl fmt::Debug for Script {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct U64Store {
     pub val: u64,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct AddressStore {
+    pub val: AccountAddress,
 }
 
 #[cfg(test)]
