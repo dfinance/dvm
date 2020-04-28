@@ -13,6 +13,7 @@ use crate::compiler::{ModuleMeta, Compiler};
 use ds::MockDataSource;
 use libra::move_core_types::identifier::Identifier;
 use include_dir::Dir;
+use crate::module_checker::ModuleChecker;
 
 const STDLIB_META_ID: &str = "std_meta";
 static STDLIB_DIR: Dir = include_dir!("stdlib");
@@ -58,6 +59,7 @@ pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
         .collect::<Vec<_>>();
     modules.sort_unstable();
 
+    let checker = ModuleChecker::new();
     let mut ids = Vec::with_capacity(modules.len());
     for module in modules {
         build_module_with_dep(
@@ -67,6 +69,7 @@ pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
             &compiler,
             &ds,
             &mut ids,
+            &checker,
         )?;
     }
 
@@ -82,6 +85,7 @@ fn build_module_with_dep(
     compiler: &Compiler<MockDataSource>,
     ds: &MockDataSource,
     ids: &mut Vec<ModuleId>,
+    checker: &ModuleChecker,
 ) -> Result<(), Error> {
     if let Some(module) = std_with_meta.remove(module_name) {
         match module {
@@ -97,10 +101,12 @@ fn build_module_with_dep(
                         compiler,
                         ds,
                         ids,
+                        checker,
                     )?;
                 }
 
                 let (id, module) = build_module(&source, &account, compiler)?;
+                checker.check_with_verbal_error(&module)?;
                 ds.publish_module(module.clone())?;
                 ids.push(id.clone());
                 std_with_meta.insert(meta.module_name, Module::Binary((id, module)));
@@ -219,10 +225,16 @@ pub fn zero_sdt() -> WriteSet {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::stdlib::build_std;
+    use crate::stdlib::{build_external_std, Stdlib};
 
     #[test]
     fn test_build_std() {
-        build_std();
+        let modules = include_dir!("tests/resources/test_stdlib")
+            .files()
+            .iter()
+            .map(|f| f.contents_utf8().unwrap())
+            .collect();
+
+        build_external_std(Stdlib { modules }).unwrap();
     }
 }

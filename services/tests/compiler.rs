@@ -8,7 +8,7 @@ use libra_vm::file_format::CompiledScript;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
-use lang::{compiler::Compiler, stdlib::build_std};
+use lang::{compiler::Compiler, stdlib::zero_sdt};
 use data_source::MockDataSource;
 use dvm_api::grpc::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use dvm_services::compiler::CompilerService;
@@ -34,7 +34,7 @@ async fn compile_source_file(
 ) -> Result<Response<CompilationResult>, Status> {
     let source_file_request = new_source_file_request(source_text, r#type);
 
-    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let compiler = Compiler::new(MockDataSource::with_write_set(zero_sdt()));
     let compiler_service = CompilerService::new(compiler);
     compiler_service.compile(source_file_request).await
 }
@@ -91,7 +91,13 @@ async fn test_compile_mvir_script_with_dependencies() {
         ";
     let source_file_request = new_source_file_request(source_text, ContractType::Script);
 
-    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let ds = MockDataSource::with_write_set(zero_sdt());
+    let compiler = Compiler::new(ds.clone());
+    let hash = compiler
+        .compile("module Hash {}", &AccountAddress::default())
+        .unwrap();
+    ds.publish_module(hash).unwrap();
+
     let compiler_service = CompilerService::new(compiler);
     let compilation_result = compiler_service
         .compile(source_file_request)
@@ -127,7 +133,7 @@ async fn test_required_libracoin_dependency_is_not_available() {
 
     let source_file_request = new_source_file_request(source_text, ContractType::Script);
 
-    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let compiler = Compiler::new(MockDataSource::with_write_set(zero_sdt()));
     let compiler_service = CompilerService::new(compiler);
     let compilation_result = compiler_service
         .compile(source_file_request)
@@ -159,7 +165,7 @@ async fn test_allows_for_bech32_addresses() {
         AccountAddress::from_hex_literal("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d")
             .unwrap();
 
-    let ds = MockDataSource::with_write_set(build_std());
+    let ds = MockDataSource::with_write_set(zero_sdt());
     let compiler = Compiler::new(ds.clone());
     let hash = compiler
         .compile(
@@ -195,7 +201,7 @@ async fn test_pass_empty_string_as_address() {
     let source_file = new_source_file(source_text, ContractType::Script, "");
     let request = Request::new(source_file);
 
-    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+    let compiler = Compiler::new(MockDataSource::with_write_set(zero_sdt()));
     let compiler_service = CompilerService::new(compiler);
     let error_status = compiler_service.compile(request).await.unwrap_err();
     assert_eq!(error_status.message(), "Address is not a valid bech32");

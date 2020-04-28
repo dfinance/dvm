@@ -7,6 +7,7 @@ extern crate include_dir;
 pub mod banch32;
 pub mod bytecode;
 pub mod compiler;
+pub mod module_checker;
 pub mod stdlib;
 
 #[macro_export]
