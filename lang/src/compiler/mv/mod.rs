@@ -284,7 +284,10 @@ mod test {
         )
         .unwrap();
 
-        let script = CompiledScript::deserialize(&script).unwrap().into_module();
+        let script = CompiledScript::deserialize(&script)
+            .unwrap()
+            .into_module()
+            .1;
         let module = script
             .module_handles()
             .iter()
