@@ -28,7 +28,7 @@ module Event {
     }
 
     public fun grant_event_handle_creation_operation(): EventHandleGeneratorCreationCapability {
-        Transaction::assert(Transaction::sender() == 0xA550C18, 0);
+        Transaction::assert(Transaction::sender() == 0x0, 0);
         EventHandleGeneratorCreationCapability{}
     }
 
