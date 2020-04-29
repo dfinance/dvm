@@ -6,15 +6,13 @@ pub mod disassembler;
 pub mod verification;
 
 pub fn extract_script_params(bytecode: &[u8]) -> Result<Vec<SignatureToken>, Error> {
-    let compiled_script = CompiledScript::deserialize(bytecode).map_err(|err| {
+    let script = CompiledScript::deserialize(bytecode).map_err(|err| {
         anyhow!(
             "Cannot deserialize script from provided bytecode. Error:[{}]",
             err
         )
     })?;
 
-    let main_function =
-        compiled_script.function_handle_at(compiled_script.as_inner().main.function);
-    let signature = compiled_script.signature_at(main_function.parameters);
-    Ok(signature.0.to_vec())
+    let arguments = script.signature_at(script.as_inner().parameters);
+    Ok(arguments.0.to_vec())
 }

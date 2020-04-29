@@ -78,7 +78,7 @@ async fn test_compile_mvir_script() {
         compilation_result.errors
     );
     let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
-    assert_eq!(compiled_script.main().code.code, vec![Bytecode::Ret]);
+    assert_eq!(compiled_script.code().code, vec![Bytecode::Ret]);
 }
 
 #[tokio::test]
@@ -105,7 +105,7 @@ async fn test_compile_mvir_script_with_dependencies() {
     );
 
     let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
-    assert_eq!(compiled_script.main().code.code, vec![Bytecode::Ret]);
+    assert_eq!(compiled_script.code().code, vec![Bytecode::Ret]);
 
     let imported_module_handle = compiled_script.module_handle_at(ModuleHandleIndex::new(1u16));
     assert_eq!(

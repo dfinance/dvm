@@ -3,7 +3,7 @@ use libra::libra_vm::access::ScriptAccess;
 use libra::libra_vm::file_format::{Bytecode, CompiledScript};
 
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
-    let instructions = &script.main().code.code;
+    let instructions = &script.code().code;
     for inst in instructions {
         match inst {
             Bytecode::Pop
