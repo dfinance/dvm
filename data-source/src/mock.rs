@@ -48,6 +48,11 @@ impl MockDataSource {
         self.insert((&id).into(), module);
         Ok(())
     }
+
+    pub fn clear(&self) {
+        let mut data = self.data.lock().unwrap();
+        data.clear();
+    }
 }
 
 impl StateView for MockDataSource {

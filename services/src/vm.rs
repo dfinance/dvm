@@ -13,7 +13,6 @@ use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
 use runtime::move_vm::{ExecutionMeta, VM, Script, ExecutionResult, Dvm};
-use lang::banch32::bech32_into_libra;
 use dvm_api::grpc::vm_grpc::{
     VmContract, VmExecuteResponse, VmExecuteRequest, VmExecuteResponses, VmTypeTag, VmStatus,
     VmValue, VmAccessPath, VmType, VmStructTag, VmEvent, ContractType,
@@ -86,16 +85,10 @@ impl TryFrom<VmContract> for Contract {
     type Error = VMStatus;
 
     fn try_from(contract: VmContract) -> Result<Self, Self::Error> {
-        let address = bech32_into_libra(&contract.address).map_err(|_| {
-            VMStatus::new(StatusCode::INVALID_DATA).with_message(format!(
-                "Invalid AccountAddress: invalid bech32 address {}",
-                &contract.address
-            ))
-        })?;
         let meta = ExecutionMeta::new(
             contract.max_gas_amount,
             contract.gas_unit_price,
-            AccountAddress::try_from(address).map_err(|err| {
+            AccountAddress::from_hex_literal(&contract.address).map_err(|err| {
                 VMStatus::new(StatusCode::INVALID_DATA)
                     .with_message(format!("Invalid AccountAddress: {:?}", err))
             })?,
@@ -112,10 +105,12 @@ impl TryFrom<VmContract> for Contract {
                             Some(VmTypeTag::Bool) => parse_as_bool(&arg.value),
                             Some(VmTypeTag::U64) => parse_as_u64(&arg.value),
                             Some(VmTypeTag::ByteArray) => parse_as_u8_vector(&arg.value),
-                            Some(VmTypeTag::Address) => match bech32_into_libra(&arg.value) {
-                                Ok(address) => parse_as_address(&format!("0x{}", address)),
-                                Err(_) => Err(anyhow!("Invalid args type.")),
-                            },
+                            Some(VmTypeTag::Address) => {
+                                match AccountAddress::from_hex_literal(&arg.value) {
+                                    Ok(address) => Ok(Value::address(address)),
+                                    Err(err) => Err(anyhow!("Invalid args type.{:?}", err)),
+                                }
+                            }
                             Some(VmTypeTag::U128) => parse_as_u128(&arg.value),
                             _ => Err(anyhow!("Invalid args type.")),
                         }

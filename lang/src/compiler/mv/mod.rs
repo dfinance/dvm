@@ -19,7 +19,7 @@ use libra::libra_vm::CompiledModule;
 use libra::libra_types::language_storage::ModuleId;
 use crate::compiler::module_loader::ModuleLoader;
 use crate::compiler::{ModuleMeta, Builder, replace_u_literal};
-use crate::banch32::replace_bech32_addresses;
+use crate::bech32::replace_bech32_addresses;
 use libra::libra_vm::file_format::CompiledScript;
 use libra::move_lang::compiled_unit::CompiledUnit;
 use crate::compiler::mv::imports::ImportsExtractor;
@@ -268,7 +268,7 @@ mod test {
         ";
 
         let program = r"
-            import df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute.Account;
+            import wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Account;
             main() {
                 return;
             }
@@ -278,7 +278,7 @@ mod test {
             program,
             vec![(
                 dep,
-                &make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"),
+                &make_address("0xde5f86ce8ad7944f272d693cb4625a955b61015000000000"),
             )],
             &AccountAddress::default(),
         )
@@ -296,7 +296,7 @@ mod test {
         let address = script.address_identifier_at(module.address);
         assert_eq!(
             address.to_string(),
-            "646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"
+            "de5f86ce8ad7944f272d693cb4625a955b61015000000000"
         );
     }
 
@@ -308,7 +308,7 @@ mod test {
 
         let program = r"
             module M {
-                import df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute.Account;
+                import wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Account;
             }
         ";
 
@@ -316,7 +316,7 @@ mod test {
             program,
             vec![(
                 dep,
-                &make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"),
+                &make_address("0xde5f86ce8ad7944f272d693cb4625a955b61015000000000"),
             )],
             &AccountAddress::default(),
         )
@@ -331,7 +331,7 @@ mod test {
         let address = main_module.address_identifier_at(module.address);
         assert_eq!(
             address.to_string(),
-            "646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d"
+            "de5f86ce8ad7944f272d693cb4625a955b61015000000000"
         );
     }
 }

@@ -4,7 +4,7 @@ extern crate libra;
 #[macro_use]
 extern crate include_dir;
 
-pub mod banch32;
+pub mod bech32;
 pub mod bytecode;
 pub mod compiler;
 pub mod stdlib;

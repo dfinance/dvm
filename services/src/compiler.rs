@@ -4,11 +4,12 @@ use libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
-use lang::{compiler::Compiler, banch32::bech32_into_libra};
+use lang::{compiler::Compiler};
 use libra::libra_state_view::StateView;
 
 use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
 use dvm_api::grpc::vm_grpc::{MvIrSourceFile, CompilationResult};
+use std::convert::TryFrom;
 
 pub struct CompilerService<S>
 where
@@ -27,17 +28,7 @@ where
 }
 
 fn convert_address(addr: &[u8]) -> Result<AccountAddress, Status> {
-    std::str::from_utf8(&addr)
-        .map_err(|_| Status::invalid_argument("Address is not a valid utf8"))
-        .and_then(|address| {
-            bech32_into_libra(address)
-                .map_err(|_| Status::invalid_argument("Address is not a valid bech32"))
-        })
-        .and_then(|address| Ok(format!("0x{}", address)))
-        .and_then(|address| {
-            AccountAddress::from_hex_literal(&address)
-                .map_err(|_| Status::invalid_argument("Address is not valid"))
-        })
+    AccountAddress::try_from(addr).map_err(|err| Status::invalid_argument(err.to_string()))
 }
 
 impl<S> CompilerService<S>

@@ -21,7 +21,6 @@ use libra_vm::CompiledModule;
 use libra::libra_state_view::StateView;
 use data_source::MockDataSource;
 use lang::{compiler::Compiler, stdlib::build_std};
-use lang::banch32::libra_into_bech32;
 pub use genesis::genesis_write_set;
 use anyhow::Error;
 
@@ -70,10 +69,9 @@ impl TestKit {
 
     pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponses {
         let module = self.compiler.compile(code, &meta.sender).unwrap();
-        let sender_as_bech32 = libra_into_bech32(&addr(&meta.sender)).unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: sender_as_bech32,
+                address: addr(&meta.sender),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code: module,
@@ -104,13 +102,9 @@ impl TestKit {
     ) -> VmExecuteResponses {
         let code = self.compiler.compile(code, &meta.sender).unwrap();
 
-        let libra_address = addr(&meta.sender);
-        let bech32_sender_address =
-            libra_into_bech32(&libra_address).expect("Cannot convert to bech32 address");
-
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: bech32_sender_address,
+                address: addr(&meta.sender),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code,

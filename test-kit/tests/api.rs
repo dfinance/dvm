@@ -3,9 +3,10 @@ use libra::libra_types;
 use libra_types::account_address::AccountAddress;
 use libra::move_vm_types::native_functions::oracle;
 use dvm_test_kit::*;
-use lang::{banch32::bech32_into_libra, compiler::str_xxhash};
+use lang::compiler::str_xxhash;
 use runtime::move_vm::{U64Store, AddressStore};
 use libra::lcs;
+use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
 
 fn test_oracle(test_kit: &TestKit) {
     let price = 13;
@@ -26,7 +27,7 @@ fn test_oracle(test_kit: &TestKit) {
         }
     ";
 
-    let account_address = account("df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute");
+    let account_address = account("0x110");
 
     let res = test_kit.execute_script(script, meta(&account_address), vec![]);
     test_kit.assert_success(&res);
@@ -60,9 +61,29 @@ fn test_native_function(test_kit: &TestKit) {
         }
     ";
 
-    let account_address = account("df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute");
+    let account_address = account("0x110");
 
     let res = test_kit.execute_script(script, meta(&account_address), vec![]);
+    test_kit.assert_success(&res);
+    let value: AddressStore = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(value.val, account_address);
+}
+
+fn test_address_as_argument(test_kit: &TestKit) {
+    let script = "
+        use 0x0::Store;
+
+        fun main(addr: address) {
+            Store::store_address(addr);
+        }
+    ";
+
+    let account_address = AccountAddress::random();
+    let args = vec![VmArgs {
+        r#type: VmTypeTag::Address as i32,
+        value: format!("0x{}", account_address),
+    }];
+    let res = test_kit.execute_script(script, meta(&account("0x110")), args);
     test_kit.assert_success(&res);
     let value: AddressStore = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
     assert_eq!(value.val, account_address);
@@ -73,8 +94,9 @@ fn test_kit_pipline() {
     let test_kit = TestKit::new();
     test_oracle(&test_kit);
     test_native_function(&test_kit);
+    test_address_as_argument(&test_kit);
 }
 
-fn account(bech32: &str) -> AccountAddress {
-    AccountAddress::from_hex_literal(&format!("0x{}", bech32_into_libra(bech32).unwrap())).unwrap()
+fn account(addr: &str) -> AccountAddress {
+    AccountAddress::from_hex_literal(addr).unwrap()
 }

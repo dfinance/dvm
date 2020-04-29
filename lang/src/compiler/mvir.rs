@@ -8,7 +8,7 @@ use libra::bytecode_verifier::{VerifiedModule, VerifiedScript};
 use libra::ir_to_bytecode;
 use crate::compiler::module_loader::ModuleLoader;
 use crate::compiler::{ModuleMeta, Builder, replace_u_literal};
-use crate::banch32::replace_bech32_addresses;
+use crate::bech32::replace_bech32_addresses;
 use libra::move_core_types::identifier::Identifier;
 
 #[derive(Clone)]

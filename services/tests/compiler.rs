@@ -1,10 +1,9 @@
-use libra::{libra_types, libra_vm};
-use libra_types::account_address::AccountAddress;
+use libra::libra_vm;
 use libra_vm::access::ScriptAccess;
 use libra_vm::CompiledModule;
 use libra_vm::file_format::{Bytecode, ModuleHandleIndex};
 use libra_vm::file_format::CompiledScript;
-
+use libra::libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
@@ -14,16 +13,16 @@ use dvm_api::grpc::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use dvm_services::compiler::CompilerService;
 use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
 
-fn new_source_file(source: &str, r#type: ContractType, address: &str) -> MvIrSourceFile {
+fn new_source_file(source: &str, r#type: ContractType, address: &AccountAddress) -> MvIrSourceFile {
     MvIrSourceFile {
         text: source.to_string(),
         r#type: r#type as i32,
-        address: address.to_string().into_bytes(),
+        address: address.to_vec(),
     }
 }
 
 fn new_source_file_request(source_text: &str, r#type: ContractType) -> Request<MvIrSourceFile> {
-    let address = "df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute";
+    let address = AccountAddress::random();
     let source_file = new_source_file(source_text, r#type, &address);
     Request::new(source_file)
 }
@@ -84,7 +83,7 @@ async fn test_compile_mvir_script() {
 #[tokio::test]
 async fn test_compile_mvir_script_with_dependencies() {
     let source_text = r"
-            import 0x0.Hash;
+            import 0x0.Oracle;
             main() {
                return;
             }
@@ -112,7 +111,7 @@ async fn test_compile_mvir_script_with_dependencies() {
         compiled_script
             .identifier_at(imported_module_handle.name)
             .to_string(),
-        "Hash"
+        "Oracle"
     );
 }
 
@@ -147,7 +146,7 @@ async fn test_required_libracoin_dependency_is_not_available() {
 #[tokio::test]
 async fn test_allows_for_bech32_addresses() {
     let source_text = r"
-            import df1pfk58n7j62uenmam7f9ncu6qnffc2q5dpwuute.Hash;
+            import wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Hash;
             main() {
                return;
             }
@@ -156,7 +155,7 @@ async fn test_allows_for_bech32_addresses() {
     let source_file_request = new_source_file_request(source_text, ContractType::Script);
 
     let libra_address =
-        AccountAddress::from_hex_literal("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d")
+        AccountAddress::from_hex_literal("0xde5f86ce8ad7944f272d693cb4625a955b61015000000000")
             .unwrap();
 
     let ds = MockDataSource::with_write_set(build_std());
@@ -183,22 +182,6 @@ async fn test_allows_for_bech32_addresses() {
         "{:?}",
         compilation_result.errors
     );
-}
-
-#[tokio::test]
-async fn test_pass_empty_string_as_address() {
-    let source_text = r"
-            main() {
-                return;
-            }
-        ";
-    let source_file = new_source_file(source_text, ContractType::Script, "");
-    let request = Request::new(source_file);
-
-    let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
-    let compiler_service = CompilerService::new(compiler);
-    let error_status = compiler_service.compile(request).await.unwrap_err();
-    assert_eq!(error_status.message(), "Address is not a valid bech32");
 }
 
 #[tokio::test]
