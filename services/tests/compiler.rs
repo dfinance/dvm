@@ -1,13 +1,16 @@
 use libra::libra_vm;
 use libra_vm::access::ScriptAccess;
 use libra_vm::CompiledModule;
-use libra_vm::file_format::{Bytecode, ModuleHandleIndex};
+use libra_vm::file_format::{Bytecode, ModuleHandleIndex, FunctionHandleIndex};
 use libra_vm::file_format::CompiledScript;
 use libra::libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
-use lang::{compiler::Compiler, stdlib::build_std};
+use lang::{
+    compiler::{Compiler, str_xxhash},
+    stdlib::build_std,
+};
 use data_source::MockDataSource;
 use dvm_api::grpc::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
 use dvm_services::compiler::CompilerService;
@@ -39,11 +42,10 @@ async fn compile_source_file(
 }
 
 #[tokio::test]
-async fn test_compile_mvir_module() {
+async fn test_compile_module() {
     let source_text = r"
             module M {
-                public method() {
-                   return;
+                public fun method() {
                 }
             }
         ";
@@ -61,10 +63,9 @@ async fn test_compile_mvir_module() {
 }
 
 #[tokio::test]
-async fn test_compile_mvir_script() {
+async fn test_compile_script() {
     let source_text = r"
-            main() {
-                return;
+            fun main() {
             }
         ";
     let compilation_result = compile_source_file(source_text, ContractType::Script)
@@ -81,11 +82,11 @@ async fn test_compile_mvir_script() {
 }
 
 #[tokio::test]
-async fn test_compile_mvir_script_with_dependencies() {
-    let source_text = r"
-            import 0x0.Oracle;
-            main() {
-               return;
+async fn test_compile_script_with_dependencies() {
+    let source_text = "
+            use 0x0::Oracle;
+            fun main() {
+                Oracle::get_price(#\"USDBTC\");
             }
         ";
     let source_file_request = new_source_file_request(source_text, ContractType::Script);
@@ -104,7 +105,15 @@ async fn test_compile_mvir_script_with_dependencies() {
     );
 
     let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
-    assert_eq!(compiled_script.code().code, vec![Bytecode::Ret]);
+    assert_eq!(
+        compiled_script.code().code,
+        vec![
+            Bytecode::LdU64(str_xxhash("usdbtc")),
+            Bytecode::Call(FunctionHandleIndex(0)),
+            Bytecode::Pop,
+            Bytecode::Ret
+        ]
+    );
 
     let imported_module_handle = compiled_script.module_handle_at(ModuleHandleIndex::new(1u16));
     assert_eq!(
@@ -118,9 +127,8 @@ async fn test_compile_mvir_script_with_dependencies() {
 #[tokio::test]
 async fn test_required_libracoin_dependency_is_not_available() {
     let source_text = r"
-            import 0x0.Coin;
-            main() {
-               return;
+            use 0x0::Coin;
+            fun main() {
             }
         ";
 
@@ -146,9 +154,9 @@ async fn test_required_libracoin_dependency_is_not_available() {
 #[tokio::test]
 async fn test_allows_for_bech32_addresses() {
     let source_text = r"
-            import wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Hash;
-            main() {
-               return;
+            use wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Hash;
+            fun main() {
+                Hash::hash();
             }
         ";
 
@@ -163,7 +171,9 @@ async fn test_allows_for_bech32_addresses() {
     let hash = compiler
         .compile(
             "\
-        module Hash {}
+        module Hash {
+            public fun hash(){}
+        }
     ",
             &libra_address,
         )

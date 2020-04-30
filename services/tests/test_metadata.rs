@@ -10,10 +10,9 @@ use dvm_api::grpc::vm_grpc::{VmScript, VmTypeTag};
 use dvm_api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
 
 #[tokio::test]
-async fn test_no_arguments_for_mvir_script() {
+async fn test_no_arguments_for_script() {
     let source_text = r"
-            main() {
-                return;
+            fun main() {
             }
         ";
     let compiler = Compiler::new(MockDataSource::new());

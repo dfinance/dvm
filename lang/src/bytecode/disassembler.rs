@@ -667,16 +667,16 @@ impl ModuleSignature {}
 mod tests {
     use crate::bytecode::disassembler::*;
     use libra::libra_types::account_address::AccountAddress;
-    use crate::compiler::Lang;
     use ds::MockDataSource;
+    use crate::compiler::Compiler;
 
     #[test]
     pub fn test_module_signature() {
         let ds = MockDataSource::default();
-        let compiler = Lang::Move.compiler(ds.clone());
+        let compiler = Compiler::new(ds.clone());
         ds.publish_module(
             compiler
-                .build_module(
+                .compile(
                     include_str!("../../tests/resources/disassembler/base.move"),
                     &AccountAddress::new([0x1; 24]),
                 )
@@ -685,7 +685,7 @@ mod tests {
         .unwrap();
         ds.publish_module(
             compiler
-                .build_module(
+                .compile(
                     include_str!("../../tests/resources/disassembler/base_1.move"),
                     &AccountAddress::default(),
                 )
@@ -695,14 +695,12 @@ mod tests {
 
         for (source, dis) in test_set() {
             let bytecode = compiler
-                .build_module(source, &AccountAddress::default())
+                .compile(source, &AccountAddress::default())
                 .unwrap();
             let signature = module_signature(&bytecode).unwrap();
             assert_eq!(&signature.to_string(), dis);
 
-            let bytecode = compiler
-                .build_module(dis, &AccountAddress::default())
-                .unwrap();
+            let bytecode = compiler.compile(dis, &AccountAddress::default()).unwrap();
             let signature = module_signature(&bytecode).unwrap();
             assert_eq!(&signature.to_string(), dis);
         }

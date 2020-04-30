@@ -153,7 +153,7 @@ impl ImportsExtractor {
                     Identifier::new(ident.name.0.value.to_owned())?,
                 ));
             }
-            ModuleAccess_::ModuleAccess(_, _) | ModuleAccess_::Name(_) => { /*no-op*/ }
+            ModuleAccess_::ModuleAccess(_, _) | ModuleAccess_::Name(_) | ModuleAccess_::Global(_) => { /*no-op*/ }
         }
         Ok(())
     }
@@ -198,16 +198,6 @@ impl ImportsExtractor {
             | Exp_::Index(_, _)
             | Exp_::InferredNum(_)
             | Exp_::UnresolvedError => { /*no op*/ }
-            Exp_::GlobalCall(_, types, exp_list) => {
-                for exp in &exp_list.value {
-                    self.expresion_usages(&exp.value)?;
-                }
-                if let Some(types) = types {
-                    for s_type in types {
-                        self.s_type_usages(&s_type.value)?;
-                    }
-                }
-            }
             Exp_::Call(access, s_types, exp_list) => {
                 self.access_usages(&access.value)?;
 
