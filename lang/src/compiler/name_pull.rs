@@ -34,8 +34,8 @@ impl NamePull {
 
 #[cfg(test)]
 mod tests {
-    use crate::compiler::mv::name_pull::*;
     use std::collections::HashSet;
+    use crate::compiler::name_pull::NamePull;
 
     #[test]
     pub fn test_single_char() {

@@ -23,7 +23,7 @@ use dvm_cli::logging;
 
 const MODULE_CACHE: usize = 1000;
 
-/// Move & Mvir compiler with grpc interface.
+/// Move compiler with grpc interface.
 ///
 /// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
 #[derive(Debug, StructOpt, Clone)]

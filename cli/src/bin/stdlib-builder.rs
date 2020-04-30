@@ -30,10 +30,7 @@ fn main() {
         .map(|res| res.map(|e| e.path()))
         .filter(|path| {
             if match path {
-                Ok(path) => path
-                    .extension()
-                    .map(|ext| ext == "move" || ext == "mvir")
-                    .unwrap_or(false),
+                Ok(path) => path.extension().map(|ext| ext == "move").unwrap_or(false),
                 Err(_) => true,
             } {
                 true

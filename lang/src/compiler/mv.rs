@@ -1,6 +1,3 @@
-mod imports;
-mod name_pull;
-
 use libra::libra_state_view::StateView;
 use libra::libra_types::account_address::AccountAddress;
 use libra::bytecode_verifier::{VerifiedModule, VerifiedScript};
@@ -22,8 +19,8 @@ use crate::compiler::{ModuleMeta, Builder, replace_u_literal};
 use crate::bech32::replace_bech32_addresses;
 use libra::libra_vm::file_format::CompiledScript;
 use libra::move_lang::compiled_unit::CompiledUnit;
-use crate::compiler::mv::imports::ImportsExtractor;
-use crate::compiler::mv::name_pull::NamePull;
+use crate::compiler::imports::ImportsExtractor;
+use crate::compiler::name_pull::NamePull;
 
 #[derive(Clone)]
 pub struct Move<S>
@@ -262,15 +259,17 @@ mod test {
     }
 
     #[test]
-    fn test_parse_mvir_script_with_bech32_addresses() {
+    fn test_parse_script_with_bech32_addresses() {
         let dep = r"
-            module Account {}
+            module Account {
+                public fun foo() {}
+            }
         ";
 
-        let program = r"
-            import wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Account;
-            main() {
-                return;
+        let program = "
+            use wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Account;
+            fun main() {
+               Account::foo();
             }
         ";
 
@@ -301,14 +300,19 @@ mod test {
     }
 
     #[test]
-    fn test_parse_mvir_module_with_bech32_addresses() {
+    fn test_parse_module_with_bech32_addresses() {
         let dep = r"
-            module Account {}
+            module Account {
+                public fun foo() {}
+            }
         ";
 
-        let program = r"
+        let program = "
             module M {
-                import wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Account;
+                use wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Account;
+                fun foo() {
+                    Account::foo();
+                }
             }
         ";
 

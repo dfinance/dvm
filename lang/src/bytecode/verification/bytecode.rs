@@ -75,11 +75,9 @@ mod tests {
     #[test]
     fn test_if_is_forbidden() {
         let source = r"
-            main() {
+            fun main() {
                 if (true) {
-                    return;
                 }
-                return;
             }
         ";
         let compiled = compile_script(source, vec![], &AccountAddress::default());
@@ -89,11 +87,9 @@ mod tests {
     #[test]
     fn test_loop_is_forbidden() {
         let source = r"
-            main() {
+            fun main() {
                 loop {
-                    break;
                 }
-                return;
             }
         ";
         let compiled = compile_script(source, vec![], &AccountAddress::default());

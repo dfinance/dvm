@@ -1,9 +1,9 @@
 mod module_loader;
 mod mv;
-mod mvir;
 
 pub use mv::Move;
-pub use mvir::Mvir;
+mod imports;
+mod name_pull;
 
 use libra::libra_state_view::StateView;
 use libra::libra_types::account_address::AccountAddress;
@@ -14,30 +14,11 @@ use crate::pattern;
 use twox_hash::XxHash64;
 use std::hash::Hasher;
 
-pub enum Lang {
-    Move,
-    MvIr,
-}
-
-impl Lang {
-    pub fn compiler<S>(&self, view: S) -> Box<dyn Builder>
-    where
-        S: StateView + Clone + 'static,
-    {
-        let loader = ModuleLoader::new(view);
-        match self {
-            Lang::Move => Box::new(mv(loader)),
-            Lang::MvIr => Box::new(mvir(loader)),
-        }
-    }
-}
-
 #[derive(Clone)]
 pub struct Compiler<S>
 where
     S: StateView + Clone,
 {
-    mvir: Mvir<S>,
     mv: Move<S>,
 }
 
@@ -48,78 +29,25 @@ where
     pub fn new(view: S) -> Compiler<S> {
         let loader = ModuleLoader::new(view);
         Compiler {
-            mvir: mvir(loader.clone()),
-            mv: mv(loader),
+            mv: Move::new(loader),
         }
     }
 
     pub fn compile(&self, code: &str, address: &AccountAddress) -> Result<Vec<u8>, Error> {
-        if self.is_move(code) {
-            self.build_with_compiler(code, address, &self.mv)
-        } else if self.is_mvir(code) {
-            self.build_with_compiler(code, address, &self.mvir)
+        if self.may_be_script(code) {
+            self.mv.build_script(code, address)
         } else {
-            self.build_with_compiler(code, address, &self.mv)
-                .or_else(|err| {
-                    self.build_with_compiler(code, address, &self.mvir)
-                        .map_err(|_| err)
-                })
+            self.mv.build_module(code, address)
         }
     }
 
     pub fn code_meta(&self, code: &str) -> Result<ModuleMeta, Error> {
-        if self.is_move(code) {
-            self.mv.module_meta(code)
-        } else if self.is_mvir(code) {
-            self.mvir.module_meta(code)
-        } else {
-            self.mv
-                .module_meta(code)
-                .or_else(|err| self.mvir.module_meta(code).map_err(|_| err))
-        }
-    }
-
-    fn is_move(&self, code: &str) -> bool {
-        code.contains("fun") || code.contains("use") || code.contains("resource struct")
-    }
-
-    fn is_mvir(&self, code: &str) -> bool {
-        code.contains("import") || code.contains("move(") || code.contains("copy(")
+        self.mv.module_meta(code)
     }
 
     fn may_be_script(&self, code: &str) -> bool {
         code.contains("main") && !code.contains("module")
     }
-
-    fn build_with_compiler<B>(
-        &self,
-        code: &str,
-        address: &AccountAddress,
-        compiler: &B,
-    ) -> Result<Vec<u8>, Error>
-    where
-        B: Builder,
-    {
-        if self.may_be_script(code) {
-            compiler.build_script(code, address)
-        } else {
-            compiler.build_module(code, address)
-        }
-    }
-}
-
-pub fn mv<S>(module_loader: ModuleLoader<S>) -> Move<S>
-where
-    S: StateView + Clone,
-{
-    Move::new(module_loader)
-}
-
-pub fn mvir<S>(module_loader: ModuleLoader<S>) -> Mvir<S>
-where
-    S: StateView + Clone,
-{
-    Mvir::new(module_loader)
 }
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
@@ -170,7 +98,7 @@ pub fn replace_u_literal(code: &str) -> String {
 #[cfg(test)]
 pub mod test {
     use std::collections::HashSet;
-    use crate::compiler::{Lang, ModuleMeta, Compiler, replace_u_literal, str_xxhash};
+    use crate::compiler::{ModuleMeta, Compiler, replace_u_literal, str_xxhash};
     use libra::libra_types::language_storage::ModuleId;
     use libra::libra_types::account_address::AccountAddress;
     use ds::MockDataSource;
@@ -208,16 +136,15 @@ pub mod test {
     #[test]
     fn test_create_compiler() {
         let view = MockDataSource::new();
-        let _compiler = Lang::Move.compiler(view.clone());
-        let _compiler = Lang::MvIr.compiler(view);
+        let _compiler = Compiler::new(view);
     }
 
     #[test]
     fn test_move_meta() {
         let view = MockDataSource::new();
-        let compiler = Lang::Move.compiler(view);
+        let compiler = Compiler::new(view);
         let meta = compiler
-            .module_meta(&include_str!(
+            .code_meta(&include_str!(
                 "../../tests/resources/transaction_fee_distribution.move"
             ))
             .unwrap();
@@ -260,47 +187,15 @@ pub mod test {
     }
 
     #[test]
-    fn test_mvir_meta() {
+    fn test_script_meta() {
         let view = MockDataSource::new();
-        let compiler = Lang::MvIr.compiler(view);
+        let compiler = Compiler::new(view);
         let meta = compiler
-            .module_meta(&include_str!("../../tests/resources/account.mvir"))
-            .unwrap();
-        assert_eq!(
-            meta,
-            ModuleMeta {
-                module_name: "Account".to_string(),
-                dep_list: vec![
-                    ModuleId::new(AccountAddress::default(), Identifier::new("Coins").unwrap()),
-                    ModuleId::new(
-                        AccountAddress::default(),
-                        Identifier::new("AddressUtil").unwrap(),
-                    ),
-                    ModuleId::new(
-                        AccountAddress::default(),
-                        Identifier::new("U64Util").unwrap(),
-                    ),
-                    ModuleId::new(
-                        AccountAddress::default(),
-                        Identifier::new("BytearrayUtil").unwrap(),
-                    ),
-                ],
-            }
-        )
-    }
-
-    #[test]
-    fn test_mvir_script_meta() {
-        let view = MockDataSource::new();
-        let compiler = Lang::MvIr.compiler(view);
-        let meta = compiler
-            .module_meta(
+            .code_meta(
                 "
-                import 0x0.Account;
-                import 0x0.Coin;
-                main(payee: address, amount: u64) {
-                  Account.mint_to_address(move(payee), move(amount));
-                  return;
+                use 0x0::Oracle;
+                fun main(payee: address, amount: u64) {
+                    Oracle::get_price(#\"\");
                 }
             ",
             )
@@ -309,13 +204,10 @@ pub mod test {
             meta,
             ModuleMeta {
                 module_name: "main".to_string(),
-                dep_list: vec![
-                    ModuleId::new(
-                        AccountAddress::default(),
-                        Identifier::new("Account").unwrap(),
-                    ),
-                    ModuleId::new(AccountAddress::default(), Identifier::new("Coin").unwrap()),
-                ],
+                dep_list: vec![ModuleId::new(
+                    AccountAddress::default(),
+                    Identifier::new("Oracle").unwrap(),
+                ),],
             }
         )
     }
@@ -323,11 +215,10 @@ pub mod test {
     #[test]
     fn test_move_script_meta() {
         let view = MockDataSource::new();
-        let compiler = Lang::Move.compiler(view);
+        let compiler = Compiler::new(view);
         let meta = compiler
-            .module_meta(
+            .code_meta(
                 "\
-
             use 0x0::Coins;
 
             fun main(payee: address, amount: u64) {
@@ -364,61 +255,5 @@ pub mod test {
                 &AccountAddress::default(),
             )
             .unwrap();
-    }
-
-    #[test]
-    fn test_combine_compilation() {
-        let view = MockDataSource::new();
-        let compiler = Compiler::new(view.clone());
-
-        let addr = AccountAddress::default();
-
-        let module = compiler
-            .compile(
-                include_str!("../../tests/resources/move_to_mvir/r.move"),
-                &addr,
-            )
-            .unwrap();
-        view.publish_module(module).unwrap();
-
-        let module = compiler
-            .compile(
-                include_str!("../../tests/resources/move_to_mvir/s.mvir"),
-                &addr,
-            )
-            .unwrap();
-        view.publish_module(module).unwrap();
-
-        let module = compiler
-            .compile(
-                include_str!("../../tests/resources/move_to_mvir/c.mvir"),
-                &addr,
-            )
-            .unwrap();
-        view.publish_module(module).unwrap();
-
-        let module = compiler
-            .compile(
-                include_str!("../../tests/resources/move_to_mvir/c_wrapper.move"),
-                &addr,
-            )
-            .unwrap();
-        view.publish_module(module).unwrap();
-
-        let module = compiler
-            .compile(
-                include_str!("../../tests/resources/move_to_mvir/r_wrapper.move"),
-                &addr,
-            )
-            .unwrap();
-        view.publish_module(module).unwrap();
-
-        let module = compiler
-            .compile(
-                include_str!("../../tests/resources/move_to_mvir/s_wrapper.move"),
-                &addr,
-            )
-            .unwrap();
-        view.publish_module(module).unwrap();
     }
 }
