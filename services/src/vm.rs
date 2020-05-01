@@ -158,7 +158,7 @@ pub fn parse_as_address(s: &str) -> Result<Value, Error> {
 
 /// Parses the given string as bytearray.
 pub fn parse_as_u8_vector(s: &str) -> Result<Value, Error> {
-    if s.starts_with("b\"") && s.ends_with('"') && s.len() >= 3 {
+    if s.starts_with("x\"") && s.ends_with('"') && s.len() >= 3 {
         let s = &s[2..s.len() - 1];
 
         ensure!(!s.is_empty(), "vector<u8> cannot be empty");

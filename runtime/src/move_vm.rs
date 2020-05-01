@@ -230,6 +230,11 @@ pub struct AddressStore {
     pub val: AccountAddress,
 }
 
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct VectorU8Store {
+    pub val: Vec<u8>,
+}
+
 #[cfg(test)]
 pub mod tests {
     use lang::{compiler::Compiler, stdlib::zero_sdt};

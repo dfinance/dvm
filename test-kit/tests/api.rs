@@ -4,7 +4,7 @@ use libra_types::account_address::AccountAddress;
 use libra::move_vm_types::native_functions::oracle;
 use dvm_test_kit::*;
 use lang::compiler::str_xxhash;
-use runtime::move_vm::{U64Store, AddressStore};
+use runtime::move_vm::{U64Store, AddressStore, VectorU8Store};
 use libra::lcs;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
 
@@ -89,12 +89,33 @@ fn test_address_as_argument(test_kit: &TestKit) {
     assert_eq!(value.val, account_address);
 }
 
+fn test_vector_as_argument(test_kit: &TestKit) {
+    let script = "
+        use 0x0::Store;
+
+        fun main(vec: vector<u8>) {
+            Store::store_vector_u8(vec);
+        }
+    ";
+
+    let vec = AccountAddress::random().to_vec();
+    let args = vec![VmArgs {
+        r#type: VmTypeTag::ByteArray as i32,
+        value: format!("x\"{}\"", hex::encode(vec.clone())),
+    }];
+    let res = test_kit.execute_script(script, meta(&account("0x110")), args);
+    test_kit.assert_success(&res);
+    let value: VectorU8Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(value.val, vec);
+}
+
 #[test]
-fn test_kit_pipline() {
+fn test_kit_pipeline() {
     let test_kit = TestKit::new();
     test_oracle(&test_kit);
     test_native_function(&test_kit);
     test_address_as_argument(&test_kit);
+    test_vector_as_argument(&test_kit);
 }
 
 fn account(addr: &str) -> AccountAddress {
