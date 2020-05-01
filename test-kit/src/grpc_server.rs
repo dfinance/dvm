@@ -10,7 +10,7 @@ use tokio::runtime::Runtime;
 use std::io::{ErrorKind, Error as IoError};
 use std::mem;
 use crate::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
-use dvm::services::vm::VmService;
+use services::vm::VmService;
 use data_source::MockDataSource;
 
 pub struct Server {
@@ -33,7 +33,7 @@ impl Server {
                     service_port.store(port, Ordering::SeqCst);
                     let service_res = TService::builder()
                         .add_service(VmServiceServer::new(
-                            VmService::new(Box::new(data_source.clone())).unwrap(),
+                            VmService::new(data_source.clone()).unwrap(),
                         ))
                         .serve_with_shutdown(
                             format!("0.0.0.0:{}", port).parse().unwrap(),

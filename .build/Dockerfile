@@ -4,8 +4,8 @@ ENV RUSTUP_TOOLCHAIN="stable-x86_64-unknown-linux-gnu"
 ENV RUST_BACKTRACE=full
 
 RUN rustup install stable && \
-rustup component add rustfmt
-# rustup component add clippy
+    rustup component add rustfmt
+    # rustup component add clippy
 
 WORKDIR /opt/app
 

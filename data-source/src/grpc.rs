@@ -12,8 +12,11 @@ use std::time::Duration;
 use dvm_api::grpc::ds_grpc::{
     ds_service_client::DsServiceClient, DsAccessPath, ds_raw_response::ErrorCode,
 };
-
+use libra::move_vm_state::data_cache::RemoteCache;
+use libra::libra_vm::errors::VMResult;
 use dvm_api::tonic;
+use libra_types::vm_error::{VMStatus, StatusCode};
+use crate::DataSource;
 
 #[derive(Clone)]
 pub struct GrpcDataSource {
@@ -91,7 +94,10 @@ impl StateView for GrpcDataSource {
     }
 
     fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
-        access_paths.iter().map(|path| self.get(path)).collect()
+        access_paths
+            .iter()
+            .map(|path| StateView::get(self, path))
+            .collect()
     }
 
     fn is_genesis(&self) -> bool {
@@ -107,3 +113,11 @@ struct Request {
     path: AccessPath,
     sender: Sender<Result<Option<Vec<u8>>, Error>>,
 }
+
+impl RemoteCache for GrpcDataSource {
+    fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
+        StateView::get(self, access_path).map_err(|_| VMStatus::new(StatusCode::STORAGE_ERROR))
+    }
+}
+
+impl DataSource for GrpcDataSource {}

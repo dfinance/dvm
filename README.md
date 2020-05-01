@@ -132,7 +132,7 @@ dvm "[::1]:50051" "http://[::1]:50052"
 
 ### Compilation server
 
-`compiler` is a Move/Mvir compilation gRPC server.
+`compiler` is a Move compilation gRPC server.
 API described in [protobuf schemas][].
 
 To launch the compilation server run:
@@ -142,7 +142,7 @@ To launch the compilation server run:
 compiler "[::1]:50053" "http://[::1]:50052"
 ```
 
-> Compiler supports Move lang as well as Mvir.
+> Compiler supports Move lang.
 
 [protobuf schemas]: https://github.com/dfinance/dvm-proto/tree/master/protos
 

@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, Arc};
 use anyhow::Error;
-use libra::{libra_types, libra_state_view, vm, vm_runtime};
+use libra::{libra_types, libra_state_view, libra_vm, move_vm_state};
+use move_vm_state::data_cache::RemoteCache;
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
-use libra_types::write_set::{WriteSet, WriteOp};
-use vm_runtime::data_cache::RemoteCache;
-use vm::errors::VMResult;
-use crate::MergeWriteSet;
-use vm::CompiledModule;
+use libra_types::write_set::{WriteSet, WriteOp, WriteSetMut};
+use libra_vm::errors::VMResult;
+use crate::{MergeWriteSet, DataSource};
+use libra_vm::CompiledModule;
+use libra_types::language_storage::ModuleId;
 
 #[derive(Debug, Clone, Default)]
 pub struct MockDataSource {
@@ -28,10 +29,29 @@ impl MockDataSource {
         ds
     }
 
-    pub fn publish_module(&self, module: Vec<u8>) -> Result<(), Error> {
+    pub fn to_write_set(&self) -> Result<WriteSet, Error> {
+        let data = self.data.lock().unwrap();
+        let ws = data
+            .iter()
+            .map(|(path, blob)| (path.clone(), WriteOp::Value(blob.clone())))
+            .collect();
+        WriteSetMut::new(ws).freeze()
+    }
+
+    pub fn publish_module(&self, module: Vec<u8>) -> Result<ModuleId, Error> {
         let id = CompiledModule::deserialize(&module)?.self_id();
+        self.publish_module_with_id(id.clone(), module)?;
+        Ok(id)
+    }
+
+    pub fn publish_module_with_id(&self, id: ModuleId, module: Vec<u8>) -> Result<(), Error> {
         self.insert((&id).into(), module);
         Ok(())
+    }
+
+    pub fn clear(&self) {
+        let mut data = self.data.lock().unwrap();
+        data.clear();
     }
 }
 
@@ -89,3 +109,5 @@ impl RemoteCache for MockDataSource {
         Ok(StateView::get(self, access_path).unwrap())
     }
 }
+
+impl DataSource for MockDataSource {}

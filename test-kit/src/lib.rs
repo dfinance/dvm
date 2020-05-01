@@ -5,10 +5,10 @@ mod grpc_server;
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
-use dvm::vm::ExecutionMeta;
+use runtime::move_vm::ExecutionMeta;
 use dvm_api::tonic::Request;
 
-use libra::{libra_types, vm};
+use libra::{libra_types, libra_vm};
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
@@ -17,14 +17,12 @@ use crate::compiled_protos::vm_grpc::{
     VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue, ContractType,
 };
 use crate::grpc_client::Client;
-use vm::CompiledModule;
+use libra_vm::CompiledModule;
+use libra::libra_state_view::StateView;
 use data_source::MockDataSource;
 use lang::{compiler::Compiler, stdlib::build_std};
-use lang::banch32::libra_into_bech32;
 pub use genesis::genesis_write_set;
-use data_source::MergeWriteSet;
-
-extern crate dvm;
+use anyhow::Error;
 
 // TODO: [REF] rename to api_grpc
 pub mod compiled_protos {
@@ -53,7 +51,6 @@ impl Default for TestKit {
 impl TestKit {
     pub fn new() -> TestKit {
         let data_source = MockDataSource::with_write_set(build_std());
-        data_source.merge_write_set(genesis_write_set());
         let server = Server::new(data_source.clone());
         let client = Client::new(server.port()).unwrap_or_else(|_| {
             panic!(
@@ -72,10 +69,9 @@ impl TestKit {
 
     pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponses {
         let module = self.compiler.compile(code, &meta.sender).unwrap();
-        let sender_as_bech32 = libra_into_bech32(&addr(&meta.sender)).unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: sender_as_bech32,
+                address: addr(&meta.sender),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code: module,
@@ -106,13 +102,9 @@ impl TestKit {
     ) -> VmExecuteResponses {
         let code = self.compiler.compile(code, &meta.sender).unwrap();
 
-        let libra_address = addr(&meta.sender);
-        let bech32_sender_address =
-            libra_into_bech32(&libra_address).expect("Cannot convert to bech32 address");
-
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
-                address: bech32_sender_address,
+                address: addr(&meta.sender),
                 max_gas_amount: meta.max_gas_amount,
                 gas_unit_price: meta.gas_unit_price,
                 code,
@@ -146,6 +138,10 @@ impl TestKit {
             .for_each(|exec| self.merge_write_set(&exec.write_set));
     }
 
+    pub fn data_source(&self) -> &MockDataSource {
+        &self.data_source
+    }
+
     fn merge_write_set(&self, ws: &[VmValue]) {
         ws.iter().for_each(|value| {
             let path = value.path.as_ref().unwrap();
@@ -163,6 +159,20 @@ impl TestKit {
                 _ => unreachable!(),
             }
         });
+    }
+}
+
+impl StateView for TestKit {
+    fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
+        self.data_source.get(access_path)
+    }
+
+    fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
+        self.data_source.multi_get(access_paths)
+    }
+
+    fn is_genesis(&self) -> bool {
+        self.data_source.is_genesis()
     }
 }
 
