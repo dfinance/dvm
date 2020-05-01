@@ -153,7 +153,9 @@ impl ImportsExtractor {
                     Identifier::new(ident.name.0.value.to_owned())?,
                 ));
             }
-            ModuleAccess_::ModuleAccess(_, _) | ModuleAccess_::Name(_) | ModuleAccess_::Global(_) => { /*no-op*/ }
+            ModuleAccess_::ModuleAccess(_, _)
+            | ModuleAccess_::Name(_)
+            | ModuleAccess_::Global(_) => { /*no-op*/ }
         }
         Ok(())
     }
