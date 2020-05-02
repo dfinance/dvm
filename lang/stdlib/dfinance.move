@@ -6,7 +6,7 @@ module Dfinance {
     use 0x0::Transaction;
 
     resource struct T<Coin> {
-        value: u64
+        value: u128
     }
 
     resource struct Info<Coin> {
@@ -14,7 +14,7 @@ module Dfinance {
         decimals: u8
     }
 
-    public fun value<Coin>(coin: &T<Coin>): u64 {
+    public fun value<Coin>(coin: &T<Coin>): u128 {
         coin.value
     }
 
@@ -22,7 +22,7 @@ module Dfinance {
         T<Coin> { value: 0 }
     }
 
-    public fun split<Coin>(coin: T<Coin>, amount: u64): (T<Coin>, T<Coin>) {
+    public fun split<Coin>(coin: T<Coin>, amount: u128): (T<Coin>, T<Coin>) {
         let other = withdraw(&mut coin, amount);
         (coin, other)
     }
@@ -37,7 +37,7 @@ module Dfinance {
         coin.value = coin.value + value;
     }
 
-    public fun withdraw<Coin>(coin: &mut T<Coin>, amount: u64): T<Coin> {
+    public fun withdraw<Coin>(coin: &mut T<Coin>, amount: u128): T<Coin> {
         Transaction::assert(coin.value >= amount, 10);
         coin.value = coin.value - amount;
         T { value: amount }
