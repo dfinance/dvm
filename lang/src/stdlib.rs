@@ -5,9 +5,10 @@ use libra::libra_vm::CompiledModule;
 use libra::libra_types::language_storage::ModuleId;
 use serde::Serialize;
 use std::collections::HashMap;
-use crate::compiler::{ModuleMeta, Compiler};
 use ds::MockDataSource;
 use include_dir::Dir;
+use crate::compiler::meta::ModuleMeta;
+use crate::compiler::Compiler;
 
 static STDLIB_DIR: Dir = include_dir!("stdlib");
 

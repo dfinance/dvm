@@ -77,7 +77,7 @@ impl WhitelistVerifier {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiler::test::{compile_script, make_address};
+    use crate::compiler::{compile_script, make_address};
 
     fn verify_source_code(
         source: &str,

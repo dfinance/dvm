@@ -1,51 +1,50 @@
-const PULL: &str =
-    "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM/|{}[]():;*&^$#@=-+";
 
-/// Pull of unique names.
-/// Contains 3321 unique values.
-pub struct NamePull {
-    index: usize,
-    offset: usize,
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+struct Container<'a>(&'a str);
+
+impl Container<'static> {
+    fn as_static(&self) -> &'static str {
+        self.0
+    }
 }
 
-impl NamePull {
+unsafe fn extend_lifetime<'b>(r: Container<'b>) -> Container<'static> {
+    std::mem::transmute::<Container<'b>, Container<'static>>(r)
+}
+
+unsafe fn shorten_invariant_lifetime<'b, 'c>(
+    r: &'b mut Container<'static>,
+) -> &'b mut Container<'c> {
+    std::mem::transmute::<&'b mut Container<'static>, &'b mut Container<'c>>(r)
+}
+
+// Static string auto release pool.
+pub struct StaticHolder {
+    pull: Vec<Container<'static>>,
+}
+
+impl StaticHolder {
     /// Create new name pull.
     pub fn new() -> Self {
-        NamePull {
-            index: 0,
-            offset: 0,
+        StaticHolder {
+            pull: Default::default(),
         }
     }
 
-    /// Gets next value.
-    pub fn next(&mut self) -> Option<&'static str> {
-        if self.index + self.offset + 1 > PULL.len() {
-            None
-        } else {
-            let val = &PULL[self.index..self.index + self.offset + 1];
-            self.index = (self.index + 1) % (PULL.len() - self.offset);
-            if self.index == 0 {
-                self.offset += 1;
-            }
-            Some(val)
-        }
+    // Put string to pull.
+    pub fn pull(&mut self, val: &str) -> &'static str {
+        let container = Container(val);
+        let static_container: Container<'static> = unsafe { extend_lifetime(container) };
+        let static_name = static_container.as_static();
+        self.pull.push(static_container);
+        static_name
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use std::collections::HashSet;
-    use crate::compiler::name_pull::NamePull;
-
-    #[test]
-    pub fn test_single_char() {
-        let mut pull = NamePull::new();
-        let mut values = HashSet::new();
-
-        while let Some(val) = pull.next() {
-            assert!(values.insert(val));
+impl Drop for StaticHolder {
+    fn drop(&mut self) {
+        for container in &mut self.pull {
+            unsafe { shorten_invariant_lifetime(container) };
         }
-
-        assert_eq!(values.len(), 3321);
     }
 }

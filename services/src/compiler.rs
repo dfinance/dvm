@@ -4,9 +4,8 @@ use libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
-use lang::{compiler::Compiler};
+use lang::compiler::Compiler;
 use libra::libra_state_view::StateView;
-
 use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
 use dvm_api::grpc::vm_grpc::{MvIrSourceFile, CompilationResult};
 use std::convert::TryFrom;
