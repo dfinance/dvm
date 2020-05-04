@@ -5,6 +5,16 @@ module Account {
     use 0x0::Event;
     use 0x0::Transaction;
 
+    native fun save_balance<Token>(balance: Balance<Token>, addr: address);
+
+    native fun save_account<Token, AT: copyable>(
+            account_type: AccountType::T<AT>,
+            balance: Balance<Token>,
+            account: Self::T,
+            event_generator: Event::EventHandleGenerator,
+            addr: address,
+    );
+
     // Resource storing account information.
     resource struct T {
         // Store balances.
