@@ -1,5 +1,5 @@
 {
     "defaultAccount": "0x000000000000000000000000000000000000000000000000",
-    "stdlibPath": "lang/stdlib",
+    "stdlibPath": "null",
     "modulesPath": "lang/stdlib"
 }
