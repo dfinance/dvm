@@ -1,3 +1,5 @@
+address 0x0:
+
 /// Dfinance is a governance module which handles balances merging. It's basically
 /// a mediator or wrapper around money-related operations. It holds knowledge about
 /// registered coins and rules of their usage. Also it lessens load from 0x0::Account
