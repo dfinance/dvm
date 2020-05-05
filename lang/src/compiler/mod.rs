@@ -13,23 +13,21 @@ use std::collections::HashMap;
 use crate::compiler::preprocessor::pre_processing;
 use crate::compiler::mv::Move;
 use crate::compiler::meta::{ModuleMeta, extract_meta};
-use libra::move_lang::shared::Address;
-use std::convert::TryFrom;
 use crate::stdlib::zero_sdt;
 use libra::libra_vm::file_format::CompiledScript;
 use ds::MockDataSource;
 
 #[derive(Clone)]
 pub struct Compiler<S>
-    where
-        S: StateView + Clone,
+where
+    S: StateView + Clone,
 {
     loader: ModuleLoader<S>,
 }
 
 impl<S> Compiler<S>
-    where
-        S: StateView + Clone,
+where
+    S: StateView + Clone,
 {
     pub fn new(view: S) -> Compiler<S> {
         Compiler {
@@ -39,17 +37,16 @@ impl<S> Compiler<S>
 
     pub fn compile_source_map(
         &self,
-        source_map: HashMap<&str, &str>,
+        source_map: HashMap<String, String>,
         address: &AccountAddress,
     ) -> Result<HashMap<String, Vec<u8>>, Error> {
-        let address = Address::try_from(address.as_ref()).map_err(Error::msg)?;
         let mut lang = Move::new(&self.loader);
-        lang.compile_source_map(source_map, address)
+        lang.compile_source_map(source_map, *address)
     }
 
     pub fn compile(&self, code: &str, address: &AccountAddress) -> Result<Vec<u8>, Error> {
         let mut source_map = HashMap::new();
-        source_map.insert("source", code);
+        source_map.insert("source".to_string(), code.to_string());
         let bytecode_map = self.compile_source_map(source_map, address)?;
         bytecode_map
             .into_iter()

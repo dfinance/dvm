@@ -3,7 +3,7 @@ use libra::libra_types;
 use libra_types::account_address::AccountAddress;
 use libra::move_vm_types::native_functions::oracle;
 use dvm_test_kit::*;
-use lang::compiler::str_xxhash;
+use lang::compiler::preprocessor::str_xxhash;
 use runtime::move_vm::{U64Store, AddressStore, VectorU8Store};
 use libra::lcs;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};

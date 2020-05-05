@@ -1,7 +1,4 @@
-use libra::libra_types::{
-    account_address::AccountAddress,
-    language_storage::ModuleId,
-};
+use libra::libra_types::{account_address::AccountAddress, language_storage::ModuleId};
 use libra::move_core_types::identifier::Identifier;
 use ds::MockDataSource;
 use dvm_lang::stdlib::zero_sdt;
@@ -20,9 +17,7 @@ use dvm_lang::compiler::{
 #[test]
 fn test_u_literal() {
     assert_eq!(
-        replace_u_literal(
-            "Oracle.get_price(#\"USD\") + Oracle.get_price(#\"BTC\") = #\"USDBTC\"",
-        ),
+        replace_u_literal("Oracle.get_price(#\"USD\") + Oracle.get_price(#\"BTC\") = #\"USDBTC\"",),
         format!(
             "Oracle.get_price({}) + Oracle.get_price({}) = {}",
             str_xxhash("usd"),
@@ -85,7 +80,7 @@ pub fn test_build_script_with_dependence() {
         vec![(dep, &make_address("0x1"))],
         &AccountAddress::random(),
     )
-        .unwrap();
+    .unwrap();
 }
 
 #[test]
@@ -111,7 +106,7 @@ fn test_parse_script_with_bech32_addresses() {
         )],
         &AccountAddress::default(),
     )
-        .unwrap();
+    .unwrap();
 
     let script = CompiledScript::deserialize(&script)
         .unwrap()
@@ -154,7 +149,7 @@ fn test_parse_module_with_bech32_addresses() {
         )],
         &AccountAddress::default(),
     )
-        .unwrap();
+    .unwrap();
     let main_module = CompiledModule::deserialize(&main_module).unwrap();
 
     let module = main_module
@@ -180,9 +175,7 @@ fn test_move_meta() {
     let view = MockDataSource::new();
     let compiler = Compiler::new(view);
     let meta = compiler
-        .code_meta(&include_str!(
-            "resources/transaction_fee_distribution.move"
-        ))
+        .code_meta(&include_str!("resources/transaction_fee_distribution.move"))
         .unwrap();
     assert_eq!(&meta.module_name, "TransactionFeeDistribution");
     assert_eq!(
@@ -202,8 +195,8 @@ fn test_move_meta() {
                 Identifier::new("Transaction").unwrap(),
             ),
         ]
-            .into_iter()
-            .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<HashSet<_>>()
     );
 }
 
@@ -228,7 +221,7 @@ fn test_script_meta() {
             dep_list: vec![ModuleId::new(
                 AccountAddress::default(),
                 Identifier::new("Oracle").unwrap(),
-            ), ],
+            ),],
         }
     )
 }
@@ -258,8 +251,8 @@ fn test_move_script_meta() {
                 Identifier::new("Account").unwrap(),
             ),
         ]
-            .into_iter()
-            .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<HashSet<_>>()
     );
 }
 

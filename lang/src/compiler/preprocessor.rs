@@ -45,4 +45,3 @@ pub fn pre_processing(code: &str) -> String {
     let code = replace_bech32_addresses(code);
     replace_u_literal(&code)
 }
-

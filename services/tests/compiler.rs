@@ -8,7 +8,7 @@ use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
 use lang::{
-    compiler::{Compiler, str_xxhash},
+    compiler::{Compiler, preprocessor::str_xxhash},
     stdlib::build_std,
 };
 use data_source::MockDataSource;
