@@ -23,7 +23,7 @@ module Account {
 
     /// Message for sent events
     struct SentPaymentEvent {
-        amount: u64,
+        amount: u128,
         denom: vector<u8>,
         payee: address,
         metadata: vector<u8>,
@@ -31,7 +31,7 @@ module Account {
 
     /// Message for received events
     struct ReceivedPaymentEvent {
-        amount: u64,
+        amount: u128,
         denom: vector<u8>,
         payer: address,
         metadata: vector<u8>,
@@ -46,11 +46,11 @@ module Account {
         ::exists<Balance<Token>>(payee)
     }
 
-    public fun balance<Token>(): u64 acquires Balance {
+    public fun balance<Token>(): u128 acquires Balance {
         balance_for<Token>(Transaction::sender())
     }
 
-    public fun balance_for<Token>(addr: address): u64 acquires Balance {
+    public fun balance_for<Token>(addr: address): u128 acquires Balance {
         Dfinance::value(&borrow_global<Balance<Token>>(addr).coin)
     }
 
@@ -81,14 +81,14 @@ module Account {
         )
     }
 
-    public fun pay_from_sender<Token>(payee: address, amount: u64)
+    public fun pay_from_sender<Token>(payee: address, amount: u128)
     acquires T, Balance {
         pay_from_sender_with_metadata<Token>(
             payee, amount, x""
         )
     }
 
-    public fun pay_from_sender_with_metadata<Token>(payee: address, amount: u64, metadata: vector<u8>)
+    public fun pay_from_sender_with_metadata<Token>(payee: address, amount: u128, metadata: vector<u8>)
     acquires T, Balance {
         deposit_with_metadata<Token>(
             payee,
@@ -142,7 +142,7 @@ module Account {
         )
     }
 
-    public fun withdraw_from_sender<Token>(amount: u64): Dfinance::T<Token>
+    public fun withdraw_from_sender<Token>(amount: u128): Dfinance::T<Token>
     acquires Balance {
         let sender  = Transaction::sender();
         let balance = borrow_global_mut<Balance<Token>>(sender);
@@ -150,7 +150,7 @@ module Account {
         withdraw_from_balance<Token>(balance, amount)
     }
 
-    fun withdraw_from_balance<Token>(balance: &mut Balance<Token>, amount: u64): Dfinance::T<Token> {
+    fun withdraw_from_balance<Token>(balance: &mut Balance<Token>, amount: u128): Dfinance::T<Token> {
         Dfinance::withdraw(&mut balance.coin, amount)
     }
 
