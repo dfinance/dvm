@@ -45,10 +45,7 @@ async fn test_compile_module() {
                 }
             }
         ";
-    let compilation_result = compile_source_file(source_text)
-        .await
-        .unwrap()
-        .into_inner();
+    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
     assert!(
         compilation_result.errors.is_empty(),
         "{:?}",
@@ -64,10 +61,7 @@ async fn test_compile_script() {
             fun main() {
             }
         ";
-    let compilation_result = compile_source_file(source_text)
-        .await
-        .unwrap()
-        .into_inner();
+    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
     assert!(
         compilation_result.errors.is_empty(),
         "{:?}",
@@ -198,9 +192,6 @@ async fn test_compilation_error_on_expected_an_expression_term() {
                 return;
             }
         "#;
-    let compilation_result = compile_source_file(source_text)
-        .await
-        .unwrap()
-        .into_inner();
+    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
     assert!(compilation_result.errors[0].contains("Unused local 'a'"));
 }
