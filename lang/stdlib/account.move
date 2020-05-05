@@ -5,6 +5,15 @@ module Account {
     use 0x0::Event;
     use 0x0::Transaction;
 
+    resource struct T1<CoinType> { value: u64 }
+
+    // A resource that holds the coins stored in this account
+    resource struct Balance<Token> {
+        coin: T1<Token>,
+    }
+
+    native fun save_balance<Token>(balance: Balance<Token>, addr: address);
+
     // Resource storing account information.
     resource struct T {
         // Store balances.

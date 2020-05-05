@@ -10,7 +10,7 @@ use libra_types::write_set::WriteSet;
 
 use libra_types::contract_event::ContractEvent;
 use libra::move_vm_state::execution_context::{ExecutionContext, TransactionExecutionContext};
-use libra::move_vm_types::{values::Value, native_functions::oracle};
+use libra::move_vm_types::values::Value;
 use ds::DataSource;
 use libra::move_vm_state::data_cache::BlockDataCache;
 use libra::move_vm_types::interpreter_context::InterpreterContext;
@@ -106,8 +106,6 @@ where
     D: DataSource,
 {
     pub fn new(ds: D) -> Result<Dvm<D>, Error> {
-        oracle::init(Box::new(ds.clone()));
-
         let vm = MoveVM::new();
 
         trace!("vm service is ready.");

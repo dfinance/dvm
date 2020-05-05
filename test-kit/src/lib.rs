@@ -20,9 +20,13 @@ use crate::grpc_client::Client;
 use libra_vm::CompiledModule;
 use libra::libra_state_view::StateView;
 use data_source::MockDataSource;
-use lang::{compiler::Compiler, stdlib::build_std};
+use lang::{
+    compiler::Compiler,
+    stdlib::{build_std, zero_sdt},
+};
 pub use genesis::genesis_write_set;
 use anyhow::Error;
+use libra_types::write_set::WriteSet;
 
 // TODO: [REF] rename to api_grpc
 pub mod compiled_protos {
@@ -50,7 +54,15 @@ impl Default for TestKit {
 
 impl TestKit {
     pub fn new() -> TestKit {
-        let data_source = MockDataSource::with_write_set(build_std());
+        Self::with_genesis(build_std())
+    }
+
+    pub fn empty() -> Self {
+        Self::with_genesis(zero_sdt())
+    }
+
+    pub fn with_genesis(ws: WriteSet) -> TestKit {
+        let data_source = MockDataSource::with_write_set(ws);
         let server = Server::new(data_source.clone());
         let client = Client::new(server.port()).unwrap_or_else(|_| {
             panic!(
