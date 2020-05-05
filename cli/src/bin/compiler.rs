@@ -17,6 +17,7 @@ use lang::compiler::Compiler;
 use services::compiler::CompilerService;
 use services::metadata::MetadataService;
 use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
+use dvm_api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
 use dvm_api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 use dvm_cli::config::{LoggingOptions, IntegrationsOptions, DVM_DATA_SOURCE};
 use dvm_cli::logging;
@@ -68,7 +69,8 @@ async fn main_internal(options: Options) -> Result<()> {
 
     info!("Compilation server listening on {}", options.address);
     Server::builder()
-        .add_service(VmCompilerServer::new(compiler_service))
+        .add_service(VmCompilerServer::new(compiler_service.clone()))
+        .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
         .add_service(VmScriptMetadataServer::new(metadata_service))
         .serve(options.address)
         .await?;

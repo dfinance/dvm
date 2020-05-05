@@ -10,7 +10,7 @@ use libra::move_lang::{
 use libra::move_lang::errors::{Errors, report_errors_to_buffer};
 use libra::libra_types::language_storage::ModuleId;
 use crate::compiler::module_loader::ModuleLoader;
-use crate::compiler::name_pull::StaticHolder;
+use crate::compiler::name_pull::StrTable;
 use crate::compiler::meta::{extract_meta, ModuleMeta};
 use crate::compiler::preprocessor::pre_processing;
 use libra::libra_types::account_address::AccountAddress;
@@ -22,7 +22,7 @@ where
     S: StateView + Clone,
 {
     loader: &'a ModuleLoader<S>,
-    static_holder: StaticHolder,
+    static_holder: StrTable,
 }
 
 impl<'a, S> Move<'a, S>
@@ -32,7 +32,7 @@ where
     pub fn new(loader: &'a ModuleLoader<S>) -> Move<'a, S> {
         Move {
             loader,
-            static_holder: StaticHolder::new(),
+            static_holder: StrTable::new(),
         }
     }
 
@@ -136,7 +136,7 @@ where
     lib_definition: HashMap<ModuleId, FileDefinition>,
     loader: &'a ModuleLoader<S>,
     source_ids: HashSet<ModuleId>,
-    static_holder: &'a mut StaticHolder,
+    static_holder: &'a mut StrTable,
 }
 
 impl<'a, S> DepLoader<'a, S>
@@ -146,7 +146,7 @@ where
     pub fn new(
         loader: &'a ModuleLoader<S>,
         source_ids: HashSet<ModuleId>,
-        static_holder: &'a mut StaticHolder,
+        static_holder: &'a mut StrTable,
     ) -> DepLoader<'a, S> {
         DepLoader {
             lib_source_map: Default::default(),

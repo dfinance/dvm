@@ -4,14 +4,14 @@ unsafe fn extend_lifetime(r: &str) -> &'static str {
 
 // Static string auto release pool.
 #[derive(Default)]
-pub struct StaticHolder {
+pub struct StrTable {
     pull: Vec<String>,
 }
 
-impl StaticHolder {
+impl StrTable {
     /// Create new name pull.
     pub fn new() -> Self {
-        StaticHolder {
+        StrTable {
             pull: Default::default(),
         }
     }
@@ -24,10 +24,25 @@ impl StaticHolder {
     }
 }
 
-impl Drop for StaticHolder {
-    fn drop(&mut self) {
-        for container in &mut self.pull {
-            unsafe { shorten_invariant_lifetime(container) };
-        }
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use crate::compiler::name_pull::StaticHolder;
+//     use rand::{thread_rng, Rng};
+//     use std::time::Duration;
+//     use std::thread;
+//
+//     fn test_d() {
+//         loop {
+//             {
+//                 let mut pull = StaticHolder::new();
+//                 let mut rng = thread_rng();
+//                 for _ in 0..100000 {
+//                     let name: [f32; 32] = rng.gen();
+//                     pull.pull(format!("{:?}", name));
+//                 }
+//                 //thread::sleep(Duration::from_secs(1));
+//             }
+//            // thread::sleep(Duration::from_secs(10));
+//         }
+//     }
+// }
