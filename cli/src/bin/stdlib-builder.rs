@@ -2,6 +2,9 @@ use std::{fs, io, path::PathBuf};
 use structopt::StructOpt;
 use serde_json::{to_string, to_string_pretty};
 use lang::stdlib::{build_external_std, Stdlib, WS};
+use std::path::Path;
+use anyhow::Error;
+use std::collections::HashMap;
 
 #[derive(StructOpt)]
 struct Opts {
@@ -57,11 +60,9 @@ fn main() {
 
     let modules = entries
         .iter()
-        .map(fs::read_to_string)
-        .collect::<Result<Vec<_>, _>>()
+        .map(|e| load_module(e))
+        .collect::<Result<HashMap<String, String>, _>>()
         .unwrap();
-
-    let modules = modules.iter().map(|m| m.as_str()).collect();
 
     let vm_value = build_external_std(Stdlib { modules }).unwrap();
 
@@ -79,4 +80,14 @@ fn main() {
     } else {
         println!("{}", ws);
     }
+}
+
+fn load_module(path: &Path) -> Result<(String, String), Error> {
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| name.to_owned())
+        .ok_or_else(|| Error::msg("Expected file name"))?;
+    let content = fs::read_to_string(&path)?;
+    Ok((name, content))
 }

@@ -1,105 +1,35 @@
 use libra::libra_types::write_set::{WriteSet, WriteOp};
 use anyhow::Error;
 use libra::libra_types::account_address::AccountAddress;
-use libra::libra_vm::CompiledModule;
-use libra::libra_types::language_storage::ModuleId;
 use serde::Serialize;
 use std::collections::HashMap;
-use crate::compiler::{ModuleMeta, Compiler};
 use ds::MockDataSource;
 use include_dir::Dir;
+use crate::compiler::Compiler;
 
 static STDLIB_DIR: Dir = include_dir!("stdlib");
 
-pub struct Stdlib<'a> {
-    pub modules: Vec<&'a str>,
+#[derive(Debug, Clone)]
+pub struct Stdlib {
+    pub modules: HashMap<String, String>,
 }
 
-impl Default for Stdlib<'static> {
+impl Default for Stdlib {
     fn default() -> Self {
         Stdlib { modules: stdlib() }
     }
 }
 
-#[derive(Debug)]
-enum Module<'a> {
-    Source((ModuleMeta, &'a str)),
-    Binary((ModuleId, Vec<u8>)),
-}
-
 pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
     let ds = MockDataSource::new();
     let compiler = Compiler::new(ds.clone());
-
-    let mut std_with_meta: HashMap<String, Module> = stdlib
-        .modules
-        .into_iter()
-        .map(|code| {
-            compiler
-                .code_meta(code)
-                .and_then(|meta| Ok((meta.module_name.clone(), Module::Source((meta, code)))))
-        })
-        .collect::<Result<HashMap<_, _>, Error>>()?;
-
-    let mut modules = std_with_meta
-        .keys()
-        .map(|key| key.to_owned())
-        .collect::<Vec<_>>();
-    modules.sort_unstable();
+    let modules = compiler.compile_source_map(stdlib.modules, &AccountAddress::default())?;
 
     for module in modules {
-        build_module_with_dep(
-            &module,
-            &mut std_with_meta,
-            &AccountAddress::default(),
-            &compiler,
-            &ds,
-        )?;
+        ds.publish_module(module.1)?;
     }
 
     ds.to_write_set()
-}
-
-fn build_module_with_dep(
-    module_name: &str,
-    std_with_meta: &mut HashMap<String, Module>,
-    account: &AccountAddress,
-    compiler: &Compiler<MockDataSource>,
-    ds: &MockDataSource,
-) -> Result<(), Error> {
-    if let Some(module) = std_with_meta.remove(module_name) {
-        match module {
-            Module::Binary(binary) => {
-                std_with_meta.insert(module_name.to_owned(), Module::Binary(binary));
-            }
-            Module::Source((meta, source)) => {
-                for dep in &meta.dep_list {
-                    build_module_with_dep(
-                        dep.name().as_str(),
-                        std_with_meta,
-                        account,
-                        compiler,
-                        ds,
-                    )?;
-                }
-
-                let (id, module) = build_module(&source, &account, compiler)?;
-                ds.publish_module(module.clone())?;
-                std_with_meta.insert(meta.module_name, Module::Binary((id, module)));
-            }
-        }
-    }
-    Ok(())
-}
-
-fn build_module(
-    code: &str,
-    account: &AccountAddress,
-    compiler: &Compiler<MockDataSource>,
-) -> Result<(ModuleId, Vec<u8>), Error> {
-    compiler.compile(code, account).and_then(|module| {
-        Ok(CompiledModule::deserialize(module.as_ref()).and_then(|m| Ok((m.self_id(), module)))?)
-    })
 }
 
 #[derive(Serialize, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -135,11 +65,16 @@ impl From<WriteSet> for WS {
     }
 }
 
-fn stdlib() -> Vec<&'static str> {
+fn stdlib() -> HashMap<String, String> {
     STDLIB_DIR
         .files()
         .iter()
-        .map(|f| f.contents_utf8().unwrap())
+        .map(|f| {
+            (
+                f.path().file_name().unwrap().to_str().unwrap().to_owned(),
+                f.contents_utf8().unwrap().to_owned(),
+            )
+        })
         .collect()
 }
 

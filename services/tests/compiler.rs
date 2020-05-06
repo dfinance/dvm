@@ -8,33 +8,29 @@ use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
 use lang::{
-    compiler::{Compiler, str_xxhash},
+    compiler::{Compiler, preprocessor::str_xxhash},
     stdlib::build_std,
 };
 use data_source::MockDataSource;
-use dvm_api::grpc::vm_grpc::{CompilationResult, ContractType, MvIrSourceFile};
+use dvm_api::grpc::vm_grpc::{CompilationResult, SourceFile};
 use dvm_services::compiler::CompilerService;
 use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
 
-fn new_source_file(source: &str, r#type: ContractType, address: &AccountAddress) -> MvIrSourceFile {
-    MvIrSourceFile {
+fn new_source_file(source: &str, address: &AccountAddress) -> SourceFile {
+    SourceFile {
         text: source.to_string(),
-        r#type: r#type as i32,
         address: address.to_vec(),
     }
 }
 
-fn new_source_file_request(source_text: &str, r#type: ContractType) -> Request<MvIrSourceFile> {
+fn new_source_file_request(source_text: &str) -> Request<SourceFile> {
     let address = AccountAddress::random();
-    let source_file = new_source_file(source_text, r#type, &address);
+    let source_file = new_source_file(source_text, &address);
     Request::new(source_file)
 }
 
-async fn compile_source_file(
-    source_text: &str,
-    r#type: ContractType,
-) -> Result<Response<CompilationResult>, Status> {
-    let source_file_request = new_source_file_request(source_text, r#type);
+async fn compile_source_file(source_text: &str) -> Result<Response<CompilationResult>, Status> {
+    let source_file_request = new_source_file_request(source_text);
 
     let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
     let compiler_service = CompilerService::new(compiler);
@@ -49,10 +45,7 @@ async fn test_compile_module() {
                 }
             }
         ";
-    let compilation_result = compile_source_file(source_text, ContractType::Module)
-        .await
-        .unwrap()
-        .into_inner();
+    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
     assert!(
         compilation_result.errors.is_empty(),
         "{:?}",
@@ -68,10 +61,7 @@ async fn test_compile_script() {
             fun main() {
             }
         ";
-    let compilation_result = compile_source_file(source_text, ContractType::Script)
-        .await
-        .unwrap()
-        .into_inner();
+    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
     assert!(
         compilation_result.errors.is_empty(),
         "{:?}",
@@ -89,7 +79,7 @@ async fn test_compile_script_with_dependencies() {
                 Oracle::get_price(#\"USDBTC\");
             }
         ";
-    let source_file_request = new_source_file_request(source_text, ContractType::Script);
+    let source_file_request = new_source_file_request(source_text);
 
     let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
     let compiler_service = CompilerService::new(compiler);
@@ -132,7 +122,7 @@ async fn test_required_libracoin_dependency_is_not_available() {
             }
         ";
 
-    let source_file_request = new_source_file_request(source_text, ContractType::Script);
+    let source_file_request = new_source_file_request(source_text);
 
     let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
     let compiler_service = CompilerService::new(compiler);
@@ -160,7 +150,7 @@ async fn test_allows_for_bech32_addresses() {
             }
         ";
 
-    let source_file_request = new_source_file_request(source_text, ContractType::Script);
+    let source_file_request = new_source_file_request(source_text);
 
     let libra_address =
         AccountAddress::from_hex_literal("0xde5f86ce8ad7944f272d693cb4625a955b61015000000000")
@@ -202,9 +192,6 @@ async fn test_compilation_error_on_expected_an_expression_term() {
                 return;
             }
         "#;
-    let compilation_result = compile_source_file(source_text, ContractType::Script)
-        .await
-        .unwrap()
-        .into_inner();
+    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
     assert!(compilation_result.errors[0].contains("Unused local 'a'"));
 }

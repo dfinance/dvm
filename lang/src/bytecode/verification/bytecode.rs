@@ -31,7 +31,7 @@ pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
 mod tests {
     use super::*;
     use libra::libra_types::account_address::AccountAddress;
-    use crate::compiler::test::compile_script;
+    use crate::compiler::compile_script;
 
     #[test]
     fn test_trivial_script_is_accepted() {

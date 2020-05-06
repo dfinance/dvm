@@ -1,51 +1,48 @@
-const PULL: &str =
-    "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM/|{}[]():;*&^$#@=-+";
-
-/// Pull of unique names.
-/// Contains 3321 unique values.
-pub struct NamePull {
-    index: usize,
-    offset: usize,
+unsafe fn extend_lifetime(r: &str) -> &'static str {
+    std::mem::transmute::<&str, &'static str>(r)
 }
 
-impl NamePull {
+// Static string auto release pool.
+#[derive(Default)]
+pub struct StrTable {
+    pull: Vec<String>,
+}
+
+impl StrTable {
     /// Create new name pull.
     pub fn new() -> Self {
-        NamePull {
-            index: 0,
-            offset: 0,
+        StrTable {
+            pull: Default::default(),
         }
     }
 
-    /// Gets next value.
-    pub fn next(&mut self) -> Option<&'static str> {
-        if self.index + self.offset + 1 > PULL.len() {
-            None
-        } else {
-            let val = &PULL[self.index..self.index + self.offset + 1];
-            self.index = (self.index + 1) % (PULL.len() - self.offset);
-            if self.index == 0 {
-                self.offset += 1;
-            }
-            Some(val)
-        }
+    // Put string to pull.
+    pub fn pull(&mut self, val: String) -> &'static str {
+        let static_val = unsafe { extend_lifetime(&val) };
+        self.pull.push(val);
+        static_val
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use std::collections::HashSet;
-    use crate::compiler::name_pull::NamePull;
-
-    #[test]
-    pub fn test_single_char() {
-        let mut pull = NamePull::new();
-        let mut values = HashSet::new();
-
-        while let Some(val) = pull.next() {
-            assert!(values.insert(val));
-        }
-
-        assert_eq!(values.len(), 3321);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use crate::compiler::name_pull::StaticHolder;
+//     use rand::{thread_rng, Rng};
+//     use std::time::Duration;
+//     use std::thread;
+//
+//     fn test_d() {
+//         loop {
+//             {
+//                 let mut pull = StaticHolder::new();
+//                 let mut rng = thread_rng();
+//                 for _ in 0..100000 {
+//                     let name: [f32; 32] = rng.gen();
+//                     pull.pull(format!("{:?}", name));
+//                 }
+//                 //thread::sleep(Duration::from_secs(1));
+//             }
+//            // thread::sleep(Duration::from_secs(10));
+//         }
+//     }
+// }
