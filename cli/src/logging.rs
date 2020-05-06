@@ -163,19 +163,6 @@ mod tests {
     #[cfg(feature = "integrity-tests")]
     mod integrity {
         use super::*;
-        use structopt::StructOpt;
-
-        #[derive(Debug, StructOpt, Clone)]
-        struct Options {
-            #[structopt(name = "SENTRY_CROSS_RANDOM_TAG", env = "SENTRY_CROSS_RANDOM_TAG")]
-            text: Option<String>,
-
-            #[structopt(flatten)]
-            logging: LoggingOptions,
-
-            #[structopt(flatten)]
-            integrations: IntegrationsOptions,
-        }
 
         /**
             Test integration with Sentry.
@@ -206,7 +193,7 @@ mod tests {
 
             static DSN: &str = env!("DVM_SENTRY_DSN");
             static TEXT: &str = env!("SENTRY_CROSS_RANDOM_TAG");
-            let env = env::var("DVM_SENTRY_ENV").unwrap_or("testing".to_owned());
+            let env = env::var(DVM_SENTRY_ENV).unwrap_or("testing".to_owned());
 
             let logging = LoggingOptions {
                 log_filters: "trace".to_owned(),
