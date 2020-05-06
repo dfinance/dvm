@@ -10,6 +10,10 @@ jobs:
     name: Rust
     runs-on: ${{ matrix.os }}
 
+    defaults:
+      run:
+        shell: bash
+
     strategy:
       fail-fast: false
       matrix:
@@ -65,13 +69,24 @@ jobs:
           ${{ runner.os }}-target-debug
 
     - name: Test
-      shell: bash
       run: cargo test --all --tests --no-fail-fast -- --test-threads=4 --nocapture
 
     - name: Check formatting
-      shell: bash
       run: cargo fmt -- --check
 
     - name: Run clippy
-      shell: bash
       run: cargo clippy --tests --examples -- -Dwarnings
+
+    - name: Prepare ENV
+      run: echo "::set-env name=SENTRY_CROSS_RANDOM_TAG::$GITHUB_SHA-${{ runner.os }}"
+
+    - name: Panic & Check report
+      env:
+        SENTRY_HOST_URI: ${{ secrets.SENTRY_HOST }}
+        SENTRY_COMPANY_PROJECT: ${{ secrets.SENTRY_COMPANY_PROJECT }}
+        SENTRY_API_TOKEN: ${{ secrets.SENTRY_API_TOKEN }}
+        DVM_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        DVM_SENTRY_ENV: testing
+      run: |
+        cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests panic_sentry_integrity -- --nocapture
+        curl -H "Authorization: Bearer ${SENTRY_API_TOKEN}" https://$SENTRY_HOST_URI/api/0/projects/$SENTRY_COMPANY_PROJECT/events/ 2>&1 | grep "$SENTRY_CROSS_RANDOM_TAG" 1>/dev/null

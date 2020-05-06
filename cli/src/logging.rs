@@ -194,7 +194,7 @@ mod tests {
             SENTRY_API_TOKEN="foobartoken"
             export SENTRY_CROSS_RANDOM_TAG=`git rev-parse HEAD`
             DVM_SENTRY_DSN="https://$DSN_PUB_KEY@$SENTRY_HOST_URI/$PROJECT_ID"
-            cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests -- --nocapture && \
+            cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests panic_sentry_integrity -- --nocapture && \
             curl -H "Authorization: Bearer ${SENTRY_API_TOKEN}" https://$SENTRY_HOST_URI/api/0/projects/$SENTRY_COMPANY_PROJECT/events/ 2>&1 | grep "$SENTRY_CROSS_RANDOM_TAG" 1>/dev/null
             ```
         */
@@ -206,6 +206,7 @@ mod tests {
 
             static DSN: &str = env!("DVM_SENTRY_DSN");
             static TEXT: &str = env!("SENTRY_CROSS_RANDOM_TAG");
+            let env = env::var("DVM_SENTRY_ENV").unwrap_or("testing".to_owned());
 
             let logging = LoggingOptions {
                 log_filters: "trace".to_owned(),
@@ -213,7 +214,7 @@ mod tests {
             };
             let integrations = IntegrationsOptions {
                 sentry_dsn: Some(DSN.parse().expect("invalid DVM_SENTRY_DSN")),
-                sentry_env: Some("testing".to_owned()),
+                sentry_env: env.into(),
             };
 
             let _guard = super::init(&logging, &integrations);
