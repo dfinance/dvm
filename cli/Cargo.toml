@@ -36,3 +36,4 @@ features = [
 
 [features]
 default = [ "sentry" ]
+integrity-tests = [ "sentry", "sentry/with_test_support" ]

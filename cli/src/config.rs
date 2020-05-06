@@ -10,7 +10,7 @@ pub const DVM_DATA_SOURCE: &str = "DVM_DATA_SOURCE";
 pub const DVM_SENTRY_DSN: &str = "DVM_SENTRY_DSN";
 pub const DVM_SENTRY_ENV: &str = "DVM_SENTRY_ENVIRONMENT";
 
-#[derive(Debug, StructOpt, Clone)]
+#[derive(Debug, Default, StructOpt, Clone)]
 pub struct LoggingOptions {
     /// Enables maximum verbosity logging mode.
     #[structopt(long = "verbose", short = "v")]
@@ -40,7 +40,7 @@ pub struct LoggingOptions {
     pub log_style: String,
 }
 
-#[derive(Debug, StructOpt, Clone)]
+#[derive(Debug, Default, StructOpt, Clone)]
 pub struct IntegrationsOptions {
     /// Optional key-uri, enables crash logging service integration.
     /// If value ommited, crash logging service will not be initialized.
