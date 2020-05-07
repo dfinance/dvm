@@ -12,7 +12,7 @@ module Account {
     /// holds account data, currently, only events
     resource struct T {
         sent_events: Event::EventHandle<SentPaymentEvent>,
-        received_events: Event::EventHandle<ReceivedPaymentEvent>
+        received_events: Event::EventHandle<ReceivedPaymentEvent>,
     }
 
     resource struct Balance<Token> {
@@ -42,6 +42,10 @@ module Account {
 
     public fun can_accept<Token>(payee: address): bool {
         ::exists<Balance<Token>>(payee)
+    }
+
+    public fun exists(payee: address): bool {
+        ::exists<T>(payee)
     }
 
     public fun balance<Token>(): u128 acquires Balance {
@@ -123,6 +127,10 @@ module Account {
             save_balance<Token>(Balance { coin: Dfinance::zero<Token>() }, payee);
         };
 
+        if (!exists(payee)) {
+            new_account(payee);
+        };
+
         let payee_acc     = borrow_global_mut<T>(payee);
         let payee_balance = borrow_global_mut<Balance<Token>>(payee);
 
@@ -156,19 +164,16 @@ module Account {
         ::exists<Balance<T>>(addr)
     }
 
-    native fun save_balance<Token>(balance: Balance<Token>, addr: address);
+    fun new_account(addr: address) {
+        let evt = Event::new_event_generator(addr);
+        let acc = T {
+            sent_events: Event::new_event_handle_from_generator(&mut evt),
+            received_events: Event::new_event_handle_from_generator(&mut evt),
+         };
 
-    // fun new_account(addr: address) {
+        save_account(acc, evt, addr);
+    }
 
-    //     let evt = Event::new_event_generator(addr);
-    //     let acc = T {
-    //         sent_events: Event::new_event_handle_from_generator(&mut evt),
-    //         received_events: Event::new_event_handle_from_generator(&mut evt)
-    //     };
-
-    //     save_account(acc, addr);
-    // }
-
-    // native fun save_account(account: T, addr: address);
-    // !!! native fun save_account_resource<Token>(addr: address);
+     native fun save_balance<Token>(balance: Balance<Token>, addr: address);
+     native fun save_account(account: T, event_generator: Event::EventHandleGenerator, addr: address);
 }

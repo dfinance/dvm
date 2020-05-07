@@ -188,6 +188,51 @@ fn test_native_save_balance() {
     assert_eq!(coin_2, value.val);
 }
 
+#[test]
+fn test_native_save_account() {
+    let test_kit = TestKit::new();
+    test_kit.add_std_module(include_str!("resources/transaction.move"));
+    test_kit.add_std_module(include_str!("resources/store.move"));
+    test_kit.add_std_module(include_str!("resources/account.move"));
+    let create_account_script = "\
+        use 0x0::Account;
+
+        fun main(t_value: u64, addr: address) {
+            Account::create_account(t_value, addr);
+        }
+    ";
+
+    let account = AccountAddress::random();
+
+    let t_value = 13;
+    let args = vec![
+        VmArgs {
+            r#type: VmTypeTag::U64 as i32,
+            value: t_value.to_string(),
+        },
+        VmArgs {
+            r#type: VmTypeTag::Address as i32,
+            value: format!("0x{}", account),
+        },
+    ];
+    let res = test_kit.execute_script(create_account_script, meta(&account), args);
+    test_kit.assert_success(&res);
+    test_kit.merge_result(&res);
+
+    let load_t = "\
+        use 0x0::Account;
+        use 0x0::Store;
+
+        fun main() {
+            Store::store_u64(Account::get_t_value());
+        }
+    ";
+    let res = test_kit.execute_script(load_t, meta(&account), vec![]);
+    test_kit.assert_success(&res);
+    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(t_value, value.val);
+}
+
 fn account(addr: &str) -> AccountAddress {
     AccountAddress::from_hex_literal(addr).unwrap()
 }
