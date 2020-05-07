@@ -126,6 +126,7 @@ fn test_native_save_balance() {
     let test_kit = TestKit::new();
     test_kit.add_std_module(include_str!("resources/transaction.move"));
     test_kit.add_std_module(include_str!("resources/store.move"));
+    test_kit.add_std_module(include_str!("resources/event.move"));
     test_kit.add_std_module(include_str!("resources/account.move"));
 
     let sender = AccountAddress::random();
@@ -190,10 +191,12 @@ fn test_native_save_balance() {
 
 #[test]
 fn test_native_save_account() {
-    let test_kit = TestKit::new();
+    let test_kit = TestKit::empty();
     test_kit.add_std_module(include_str!("resources/transaction.move"));
-    test_kit.add_std_module(include_str!("resources/store.move"));
+    test_kit.add_std_module(include_str!("resources/event.move"));
     test_kit.add_std_module(include_str!("resources/account.move"));
+    test_kit.add_std_module(include_str!("resources/store.move"));
+
     let create_account_script = "\
         use 0x0::Account;
 

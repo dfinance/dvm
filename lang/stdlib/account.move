@@ -14,7 +14,11 @@ module Account {
 
     native fun save_balance<Token>(balance: Balance<Token>, addr: address);
 
-    native fun save_account(account: T, addr: address);
+    native fun save_account(
+        account: Self::T,
+        event_generator: Event::EventHandleGenerator,
+        addr: address,
+    );
 
     // Resource storing account information.
     resource struct T {
