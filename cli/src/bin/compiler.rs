@@ -9,6 +9,7 @@ use anyhow::Result;
 use structopt::StructOpt;
 
 use dvm_api::tonic;
+// use dvm_api::endpoint::Endpoint;
 use tonic::transport::{Server, Uri};
 
 use data_source::{GrpcDataSource, ModuleCache};
@@ -38,6 +39,7 @@ struct Options {
         verbatim_doc_comment
     )]
     address: SocketAddr,
+    // address: Endpoint,
 
     /// DataSource Server internet address.
     #[structopt(

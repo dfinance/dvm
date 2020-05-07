@@ -1,0 +1,31 @@
+[package]
+name = "dvm-net"
+version = "0.2.0"
+authors = [
+    "Alex Koz. <alexanderkozlovskii@wings.ai>",
+    "Dm. Yakushev <dmitryyakushev@wings.ai>",
+    "Maxim Kurnikov <maximkurnikov@wings.ai>"
+    ]
+edition = "2018"
+
+
+[dependencies]
+grpc = { package = "dvm-api", git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
+tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
+futures = { version = "0.3", default-features = false, features = ["alloc"] }
+tower = "0.3"
+http = "0.2"
+hyper = "0.13"
+log = "0.4.8"
+
+[dependencies.async-trait]
+version = "0.1.30"
+optional = true
+
+
+[features]
+default = [ "async-trait" ]
+
+
+
+[target.'cfg(windows)'.dependencies]

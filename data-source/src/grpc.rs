@@ -1,15 +1,17 @@
+use std::convert::TryInto;
+use std::thread::{self, JoinHandle};
+use std::sync::Arc;
+use std::time::Duration;
 use libra::{libra_types, libra_state_view};
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use anyhow::Error;
 use http::Uri;
-use std::thread::JoinHandle;
-use std::sync::Arc;
 use tokio::runtime::Runtime;
-use std::thread;
 use crossbeam::channel::{Sender, Receiver, bounded};
-use std::time::Duration;
-use dvm_api::grpc::ds_grpc::{
+use dvm_api::grpc;
+use dvm_api::prelude::*;
+use grpc::grpc::ds_grpc::{
     ds_service_client::DsServiceClient, DsAccessPath, ds_raw_response::ErrorCode,
 };
 use libra::move_vm_state::data_cache::RemoteCache;
@@ -40,9 +42,16 @@ impl GrpcDataSource {
         info!("Connecting to data-source: {}", ds_addr);
         let mut client: DsServiceClient<_> = rt.block_on(async {
             loop {
-                match DsServiceClient::connect(ds_addr.clone()).await {
-                    Ok(client) => return client,
-                    Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
+                match ds_addr.clone().try_into() {
+                    Err(err) => {
+                        error!("Invalid DS address: {:?}", err);
+                        std::thread::sleep(Duration::from_millis(500));
+                        std::process::exit(-1);
+                    }
+                    Ok::<Endpoint, _>(endpoint) => match endpoint.connect().await {
+                        Ok(channel) => return DsServiceClient::new(channel),
+                        Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
+                    },
                 }
             }
         });

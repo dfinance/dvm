@@ -659,8 +659,8 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "crossbeam",
- "dvm-api",
  "dvm-libra-deps",
+ "dvm-net",
  "http",
  "log",
  "lru",
@@ -712,6 +712,20 @@ dependencies = [
  "move-vm-types",
  "stdlib",
  "vm",
+]
+
+[[package]]
+name = "dvm-net"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "dvm-api",
+ "futures",
+ "http",
+ "hyper",
+ "log",
+ "tokio",
+ "tower",
 ]
 
 [[package]]
