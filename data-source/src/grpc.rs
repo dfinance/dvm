@@ -16,7 +16,7 @@ use libra::move_vm_state::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
 use dvm_api::tonic;
 use libra_types::vm_error::{VMStatus, StatusCode};
-use crate::DataSource;
+use crate::{DataSource, Clear};
 
 #[derive(Clone)]
 pub struct GrpcDataSource {
@@ -119,5 +119,7 @@ impl RemoteCache for GrpcDataSource {
         StateView::get(self, access_path).map_err(|_| VMStatus::new(StatusCode::STORAGE_ERROR))
     }
 }
+
+impl Clear for GrpcDataSource {}
 
 impl DataSource for GrpcDataSource {}
