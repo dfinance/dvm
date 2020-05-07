@@ -1,13 +1,12 @@
-name: Tests
+name: Integration Tests
 on:
-  pull_request:
   push:
     branches:
     - master
 
 jobs:
-  rust:
-    name: Rust
+  tests:
+    name: Integration Tests
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -20,7 +19,6 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
-        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -33,21 +31,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    # We need to disable the existing toolchain to avoid updating rust-docs
-    # which takes a long time. The fastest way to do this is to rename the
-    # existing folder, as deleting it takes about as much time as not doing
-    # anything and just updating rust-docs.
-    - name: Rename existing rust toolchain (Windows)
-      if: matrix.os == 'windows-latest'
-      run: Rename-Item C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc.old
-
     - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
         profile: minimal
         override: true
-        components: rustfmt, clippy
+        components: rustfmt
 
     - if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
@@ -68,11 +58,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-target-debug
 
-    - name: Test
-      run: cargo test --all --tests --no-fail-fast -- --test-threads=4 --nocapture
+    - name: Prepare ENV
+      run: echo "::set-env name=SENTRY_CROSS_RANDOM_TAG::$GITHUB_SHA-${{ runner.os }}"
 
-    - name: Check formatting
-      run: cargo fmt -- --check
-
-    - name: Run clippy
-      run: cargo clippy --tests --examples -- -Dwarnings
+    - name: Panic & Check report
+      env:
+        SENTRY_HOST_URI: ${{ secrets.SENTRY_HOST }}
+        SENTRY_COMPANY_PROJECT: ${{ secrets.SENTRY_COMPANY_PROJECT }}
+        SENTRY_API_TOKEN: ${{ secrets.SENTRY_API_TOKEN }}
+        DVM_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        DVM_SENTRY_ENVIRONMENT: testing
+      run: |
+        cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests panic_sentry_integrity
+        curl -H "Authorization: Bearer ${SENTRY_API_TOKEN}" https://$SENTRY_HOST_URI/api/0/projects/$SENTRY_COMPANY_PROJECT/events/ 2>&1 | grep "$SENTRY_CROSS_RANDOM_TAG" 1>/dev/null

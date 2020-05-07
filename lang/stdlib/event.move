@@ -34,8 +34,7 @@ module Event {
     }
 
     public fun new_event_generator(
-        addr: address,
-        _cap: &EventHandleGeneratorCreationCapability
+        addr: address
     ): EventHandleGenerator {
         EventHandleGenerator{ counter: 0, addr }
     }

@@ -9,12 +9,10 @@ module Account {
     use 0x0::Dfinance;
     use 0x0::Event;
 
-    /// holds account data, no matter what the data is;
+    /// holds account data, currently, only events
     resource struct T {
         sent_events: Event::EventHandle<SentPaymentEvent>,
         received_events: Event::EventHandle<ReceivedPaymentEvent>
-
-        // maybe we should add something like `is_frozen` in libra
     }
 
     resource struct Balance<Token> {
@@ -121,8 +119,8 @@ module Account {
         );
 
         // there's no way to improve this place as payee is not sender :(
-        if (!has_acc_and_balance<Token>(payee)) {
-            // !!! save_account_resource<Token>(addr: address)
+        if (!has_balance<Token>(payee)) {
+            save_balance<Token>(Balance { coin: Dfinance::zero<Token>() }, payee);
         };
 
         let payee_acc     = borrow_global_mut<T>(payee);
@@ -154,9 +152,23 @@ module Account {
         Dfinance::withdraw(&mut balance.coin, amount)
     }
 
-    public fun has_acc_and_balance<Token>(addr: address): bool {
-        ::exists<T>(addr) && ::exists<Balance<T>>(addr)
+    public fun has_balance<Token>(addr: address): bool {
+        ::exists<Balance<T>>(addr)
     }
 
+    native fun save_balance<Token>(balance: Balance<Token>, addr: address);
+
+    // fun new_account(addr: address) {
+
+    //     let evt = Event::new_event_generator(addr);
+    //     let acc = T {
+    //         sent_events: Event::new_event_handle_from_generator(&mut evt),
+    //         received_events: Event::new_event_handle_from_generator(&mut evt)
+    //     };
+
+    //     save_account(acc, addr);
+    // }
+
+    // native fun save_account(account: T, addr: address);
     // !!! native fun save_account_resource<Token>(addr: address);
 }

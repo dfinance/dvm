@@ -3,12 +3,14 @@ use libra::libra_types;
 use libra_types::account_address::AccountAddress;
 use libra::move_vm_types::native_functions::oracle;
 use dvm_test_kit::*;
-use lang::compiler::str_xxhash;
+use lang::compiler::preprocessor::str_xxhash;
 use runtime::move_vm::{U64Store, AddressStore, VectorU8Store};
 use libra::lcs;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
 
-fn test_oracle(test_kit: &TestKit) {
+#[test]
+fn test_oracle() {
+    let test_kit = TestKit::new();
     let price = 13;
     let mut price_buff = vec![0; 8];
     LittleEndian::write_u64(&mut price_buff, price);
@@ -49,7 +51,9 @@ fn test_oracle(test_kit: &TestKit) {
     );
 }
 
-fn test_native_function(test_kit: &TestKit) {
+#[test]
+fn test_native_function() {
+    let test_kit = TestKit::new();
     test_kit.add_std_module(include_str!("resources/store.move"));
 
     let script = "
@@ -69,7 +73,11 @@ fn test_native_function(test_kit: &TestKit) {
     assert_eq!(value.val, account_address);
 }
 
-fn test_address_as_argument(test_kit: &TestKit) {
+#[test]
+fn test_address_as_argument() {
+    let test_kit = TestKit::new();
+    test_kit.add_std_module(include_str!("resources/store.move"));
+
     let script = "
         use 0x0::Store;
 
@@ -89,7 +97,11 @@ fn test_address_as_argument(test_kit: &TestKit) {
     assert_eq!(value.val, account_address);
 }
 
-fn test_vector_as_argument(test_kit: &TestKit) {
+#[test]
+fn test_vector_as_argument() {
+    let test_kit = TestKit::new();
+    test_kit.add_std_module(include_str!("resources/store.move"));
+
     let script = "
         use 0x0::Store;
 
@@ -110,12 +122,70 @@ fn test_vector_as_argument(test_kit: &TestKit) {
 }
 
 #[test]
-fn test_kit_pipeline() {
+fn test_native_save_balance() {
     let test_kit = TestKit::new();
-    test_oracle(&test_kit);
-    test_native_function(&test_kit);
-    test_address_as_argument(&test_kit);
-    test_vector_as_argument(&test_kit);
+    test_kit.add_std_module(include_str!("resources/transaction.move"));
+    test_kit.add_std_module(include_str!("resources/store.move"));
+    test_kit.add_std_module(include_str!("resources/account.move"));
+
+    let sender = AccountAddress::random();
+    let recipient = AccountAddress::random();
+
+    let send_script = "\
+        use 0x0::Account;
+
+        fun main(coin_1_balance: u64, coin_2_balance: u64, addr: address) {
+            Account::save_coin<Account::Coin1>(coin_1_balance, addr);
+            Account::save_coin<Account::Coin2>(coin_2_balance, addr);
+        }
+    ";
+
+    let coin_1 = 13;
+    let coin_2 = 90;
+
+    let args = vec![
+        VmArgs {
+            r#type: VmTypeTag::U64 as i32,
+            value: coin_1.to_string(),
+        },
+        VmArgs {
+            r#type: VmTypeTag::U64 as i32,
+            value: coin_2.to_string(),
+        },
+        VmArgs {
+            r#type: VmTypeTag::Address as i32,
+            value: format!("0x{}", recipient),
+        },
+    ];
+    let res = test_kit.execute_script(send_script, meta(&sender), args);
+    test_kit.assert_success(&res);
+    test_kit.merge_result(&res);
+
+    let recipient_coin_1_script = "\
+        use 0x0::Account;
+        use 0x0::Store;
+
+        fun main() {
+            Store::store_u64(Account::balance<Account::Coin1>());
+        }
+    ";
+    let res = test_kit.execute_script(recipient_coin_1_script, meta(&recipient), vec![]);
+    test_kit.assert_success(&res);
+    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(coin_1, value.val);
+
+    let recipient_coin_2_script = "\
+        use 0x0::Account;
+        use 0x0::Store;
+
+        fun main() {
+            Store::store_u64(Account::balance<Account::Coin2>());
+        }
+    ";
+    let res = test_kit.execute_script(recipient_coin_2_script, meta(&recipient), vec![]);
+    test_kit.assert_success(&res);
+    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(coin_2, value.val);
 }
 
 fn account(addr: &str) -> AccountAddress {
