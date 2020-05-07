@@ -233,6 +233,11 @@ fn test_native_save_account() {
     assert_eq!(t_value, value.val);
 }
 
+#[test]
+fn test_update_std_module() {
+
+}
+
 fn account(addr: &str) -> AccountAddress {
     AccountAddress::from_hex_literal(addr).unwrap()
 }
