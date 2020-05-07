@@ -1,6 +1,7 @@
 use byteorder::{LittleEndian, ByteOrder};
 use libra::libra_types;
 use libra_types::account_address::AccountAddress;
+use libra_types::vm_error::StatusCode;
 use libra::move_vm_types::native_functions::oracle;
 use dvm_test_kit::*;
 use lang::compiler::preprocessor::str_xxhash;
@@ -235,7 +236,40 @@ fn test_native_save_account() {
 
 #[test]
 fn test_update_std_module() {
+    let test_kit = TestKit::new();
+    test_kit.add_std_module(include_str!("resources/store.move"));
+    test_kit.add_std_module("module Foo{ public fun foo(): u64 {1}}");
 
+    let load_foo = "\
+        use 0x0::Foo;
+        use 0x0::Store;
+
+        fun main() {
+            Store::store_u64(Foo::foo());
+        }
+    ";
+    let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![]);
+    test_kit.assert_success(&res);
+    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(value.val, 1);
+
+    let res = test_kit.publish_module("module Foo{ public fun foo(): u64 {2}}", meta(&AccountAddress::default()));
+    test_kit.assert_success(&res);
+    test_kit.merge_result(&res);
+    test_kit.add_std_module(include_str!("resources/store.move"));
+
+    let load_foo = "\
+        use 0x0::Foo;
+        use 0x0::Store;
+
+        fun main() {
+            Store::store_u64(Foo::foo());
+        }
+    ";
+    let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![]);
+    test_kit.assert_success(&res);
+    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(value.val, 2);
 }
 
 fn account(addr: &str) -> AccountAddress {

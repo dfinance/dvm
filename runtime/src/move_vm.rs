@@ -152,7 +152,14 @@ where
         let module = module.into_inner();
         let res = CompiledModule::deserialize(&module).and_then(|compiled_module| {
             let module_id = compiled_module.self_id();
-            if meta.sender == CORE_CODE_ADDRESS && *module_id.address() == CORE_CODE_ADDRESS {
+            if meta.sender != *module_id.address() {
+                return Err(vm_error(
+                    Location::default(),
+                    StatusCode::MODULE_ADDRESS_DOES_NOT_MATCH_SENDER,
+                ));
+            }
+
+            if meta.sender == CORE_CODE_ADDRESS {
                 self.ds.clear();
                 let loader = &self.vm.runtime.loader;
                 *loader.libra_cache.lock().unwrap() = HashMap::new();
