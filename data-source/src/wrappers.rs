@@ -5,22 +5,22 @@ use libra::libra_types::access_path::AccessPath;
 use anyhow::Error;
 use libra::move_vm_state::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
-use crate::DataSource;
+use crate::{DataSource, Clear};
 
 const CODE_TAG: u8 = 0;
 
 #[derive(Debug, Clone)]
 pub struct ModuleCache<D>
-where
-    D: DataSource,
+    where
+        D: DataSource,
 {
     inner: D,
     cache: Arc<Mutex<LruCache<AccessPath, Vec<u8>>>>,
 }
 
 impl<D> ModuleCache<D>
-where
-    D: DataSource,
+    where
+        D: DataSource,
 {
     pub fn new(inner: D, cache_size: usize) -> ModuleCache<D> {
         ModuleCache {
@@ -31,8 +31,8 @@ where
 }
 
 impl<D> StateView for ModuleCache<D>
-where
-    D: DataSource,
+    where
+        D: DataSource,
 {
     fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
         if access_path.path[0] == CODE_TAG {
@@ -70,9 +70,17 @@ where
     }
 }
 
+impl<D> Clear for ModuleCache<D> where D: DataSource {
+    fn clear(&self) {
+        let mut cache = self.cache.lock().unwrap();
+        cache.clear();
+        self.inner.clear();
+    }
+}
+
 impl<D> RemoteCache for ModuleCache<D>
-where
-    D: DataSource,
+    where
+        D: DataSource,
 {
     fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
         RemoteCache::get(&self.inner, access_path)
