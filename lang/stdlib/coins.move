@@ -5,5 +5,6 @@ address 0x0:
 /// Ideally this module should be auto-generated and rarely updated via consensus
 module Coins {
     struct ETH {}
-    struct WINGS {}
+    struct BTC {}
+    struct USDT {}
 }
