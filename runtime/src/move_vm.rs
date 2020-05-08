@@ -305,7 +305,7 @@ pub mod tests {
         let module = include_str!("../../test-kit/tests/resources/store.move");
         let module = Module::new(compiler.compile(module, &account).unwrap());
         ds.merge_write_set(
-            vm.publish_module(ExecutionMeta::test(), module)
+            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
                 .unwrap()
                 .write_set,
         );
