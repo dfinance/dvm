@@ -164,13 +164,11 @@ where
                 let loader = &self.vm.runtime.loader;
                 *loader.libra_cache.lock().unwrap() = HashMap::new();
                 *loader.module_cache.lock().unwrap() = ModuleCache::new();
-            } else {
-                if InterpreterContext::exists_module(&context, &module_id) {
-                    return Err(vm_error(
-                        Location::default(),
-                        StatusCode::DUPLICATE_MODULE_NAME,
-                    ));
-                }
+            } else if InterpreterContext::exists_module(&context, &module_id) {
+                return Err(vm_error(
+                    Location::default(),
+                    StatusCode::DUPLICATE_MODULE_NAME,
+                ));
             }
             InterpreterContext::publish_module(&mut context, module_id, module)
         });
@@ -273,7 +271,7 @@ pub mod tests {
         let program = "module M {}";
         let module = Module::new(compiler.compile(program, &account).unwrap());
         let output = vm
-            .publish_module(ExecutionMeta::test(), module.clone())
+            .publish_module(ExecutionMeta::new(1_000_000, 1, account), module.clone())
             .unwrap();
 
         let compiled_module = CompiledModule::deserialize(&module.code()).unwrap();
@@ -289,7 +287,7 @@ pub mod tests {
         //try public module duplicate;
         assert_eq!(
             StatusCode::DUPLICATE_MODULE_NAME,
-            vm.publish_module(ExecutionMeta::test(), module)
+            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
                 .unwrap()
                 .status
                 .vm_status()

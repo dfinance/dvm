@@ -11,16 +11,16 @@ const CODE_TAG: u8 = 0;
 
 #[derive(Debug, Clone)]
 pub struct ModuleCache<D>
-    where
-        D: DataSource,
+where
+    D: DataSource,
 {
     inner: D,
     cache: Arc<Mutex<LruCache<AccessPath, Vec<u8>>>>,
 }
 
 impl<D> ModuleCache<D>
-    where
-        D: DataSource,
+where
+    D: DataSource,
 {
     pub fn new(inner: D, cache_size: usize) -> ModuleCache<D> {
         ModuleCache {
@@ -31,8 +31,8 @@ impl<D> ModuleCache<D>
 }
 
 impl<D> StateView for ModuleCache<D>
-    where
-        D: DataSource,
+where
+    D: DataSource,
 {
     fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
         if access_path.path[0] == CODE_TAG {
@@ -70,7 +70,10 @@ impl<D> StateView for ModuleCache<D>
     }
 }
 
-impl<D> Clear for ModuleCache<D> where D: DataSource {
+impl<D> Clear for ModuleCache<D>
+where
+    D: DataSource,
+{
     fn clear(&self) {
         let mut cache = self.cache.lock().unwrap();
         cache.clear();
@@ -79,8 +82,8 @@ impl<D> Clear for ModuleCache<D> where D: DataSource {
 }
 
 impl<D> RemoteCache for ModuleCache<D>
-    where
-        D: DataSource,
+where
+    D: DataSource,
 {
     fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
         RemoteCache::get(&self.inner, access_path)

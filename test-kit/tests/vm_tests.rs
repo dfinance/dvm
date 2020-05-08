@@ -1,7 +1,6 @@
 use byteorder::{LittleEndian, ByteOrder};
 use libra::libra_types;
 use libra_types::account_address::AccountAddress;
-use libra_types::vm_error::StatusCode;
 use libra::move_vm_types::native_functions::oracle;
 use dvm_test_kit::*;
 use lang::compiler::preprocessor::str_xxhash;
@@ -253,7 +252,10 @@ fn test_update_std_module() {
     let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
     assert_eq!(value.val, 1);
 
-    let res = test_kit.publish_module("module Foo{ public fun foo(): u64 {2}}", meta(&AccountAddress::default()));
+    let res = test_kit.publish_module(
+        "module Foo{ public fun foo(): u64 {2}}",
+        meta(&AccountAddress::default()),
+    );
     test_kit.assert_success(&res);
     test_kit.merge_result(&res);
     test_kit.add_std_module(include_str!("resources/store.move"));
