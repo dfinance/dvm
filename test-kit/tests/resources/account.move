@@ -16,11 +16,11 @@ module Account {
     }
 
     resource struct Coin2 {
-            value: u64,
+        value: u64,
     }
 
     resource struct T {
-            value: u64,
+        value: u64,
     }
 
     native fun save_balance<Token>(balance: Balance<Token>, addr: address);

@@ -6,7 +6,9 @@
 // const GREATER_THAN = 2u8
 
 address 0x0:
+
 module Compare {
+
     use 0x0::Vector;
 
     // Compare `v1` and `v2` using

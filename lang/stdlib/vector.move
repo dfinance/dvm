@@ -2,6 +2,7 @@ address 0x0:
 
 // A variable-sized container that can hold both unrestricted types and resources.
 module Vector {
+
     native public fun empty<Element>(): vector<Element>;
 
     // Return the length of the vector.
@@ -82,5 +83,4 @@ module Vector {
         swap(v, i, last_idx);
         pop_back(v)
     }
-
 }
