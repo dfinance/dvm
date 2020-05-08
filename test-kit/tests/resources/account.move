@@ -2,6 +2,7 @@ address 0x0:
 
 module Account {
     use 0x0::Transaction;
+    use 0x0::Event;
 
     resource struct T1<CoinType> { value: u64 }
 
@@ -24,7 +25,11 @@ module Account {
 
     native fun save_balance<Token>(balance: Balance<Token>, addr: address);
 
-    native public fun save_account(account: T, addr: address);
+    native fun save_account(
+        account: Self::T,
+        event_generator: Event::EventHandleGenerator,
+        addr: address,
+    );
 
     public fun save_coin<Coin>(balance: u64, addr: address) {
         let balance = Balance<Coin> {
@@ -39,7 +44,7 @@ module Account {
     }
 
     public fun create_account(t_value: u64, addr: address) {
-        save_account(T {value: t_value}, addr);
+        save_account(T {value: t_value}, Event::new_event_generator(Transaction::sender()), addr);
     }
 
     public fun get_t_value(): u64 acquires T {
