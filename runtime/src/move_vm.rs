@@ -14,11 +14,13 @@ use libra::move_vm_types::values::Value;
 use ds::DataSource;
 use libra::move_vm_state::data_cache::BlockDataCache;
 use libra::move_vm_types::interpreter_context::InterpreterContext;
-use move_vm_runtime::MoveVM;
+use move_vm_runtime::{MoveVM, loader::ModuleCache};
 use anyhow::Error;
 use crate::gas_schedule;
 use libra_types::language_storage::TypeTag;
 use serde_derive::Deserialize;
+use libra_types::account_config::CORE_CODE_ADDRESS;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ExecutionMeta {
@@ -150,13 +152,24 @@ where
         let module = module.into_inner();
         let res = CompiledModule::deserialize(&module).and_then(|compiled_module| {
             let module_id = compiled_module.self_id();
-            if InterpreterContext::exists_module(&context, &module_id) {
+            if meta.sender != *module_id.address() {
+                return Err(vm_error(
+                    Location::default(),
+                    StatusCode::MODULE_ADDRESS_DOES_NOT_MATCH_SENDER,
+                ));
+            }
+
+            if meta.sender == CORE_CODE_ADDRESS {
+                self.ds.clear();
+                let loader = &self.vm.runtime.loader;
+                *loader.libra_cache.lock().unwrap() = HashMap::new();
+                *loader.module_cache.lock().unwrap() = ModuleCache::new();
+            } else if InterpreterContext::exists_module(&context, &module_id) {
                 return Err(vm_error(
                     Location::default(),
                     StatusCode::DUPLICATE_MODULE_NAME,
                 ));
             }
-
             InterpreterContext::publish_module(&mut context, module_id, module)
         });
 
@@ -258,7 +271,7 @@ pub mod tests {
         let program = "module M {}";
         let module = Module::new(compiler.compile(program, &account).unwrap());
         let output = vm
-            .publish_module(ExecutionMeta::test(), module.clone())
+            .publish_module(ExecutionMeta::new(1_000_000, 1, account), module.clone())
             .unwrap();
 
         let compiled_module = CompiledModule::deserialize(&module.code()).unwrap();
@@ -274,7 +287,7 @@ pub mod tests {
         //try public module duplicate;
         assert_eq!(
             StatusCode::DUPLICATE_MODULE_NAME,
-            vm.publish_module(ExecutionMeta::test(), module)
+            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
                 .unwrap()
                 .status
                 .vm_status()
@@ -292,7 +305,7 @@ pub mod tests {
         let module = include_str!("../../test-kit/tests/resources/store.move");
         let module = Module::new(compiler.compile(module, &account).unwrap());
         ds.merge_write_set(
-            vm.publish_module(ExecutionMeta::test(), module)
+            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
                 .unwrap()
                 .write_set,
         );
