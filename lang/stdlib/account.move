@@ -123,7 +123,7 @@ module Account {
         );
 
         // there's no way to improve this place as payee is not sender :(
-        if (!has_balance<Token>(payee)) {
+        if (!can_accept<Token>(payee)) {
             save_balance<Token>(Balance { coin: Dfinance::zero<Token>() }, payee);
         };
 
@@ -158,10 +158,6 @@ module Account {
 
     fun withdraw_from_balance<Token>(balance: &mut Balance<Token>, amount: u128): Dfinance::T<Token> {
         Dfinance::withdraw(&mut balance.coin, amount)
-    }
-
-    public fun has_balance<Token>(addr: address): bool {
-        ::exists<Balance<T>>(addr)
     }
 
     fun new_account(addr: address) {

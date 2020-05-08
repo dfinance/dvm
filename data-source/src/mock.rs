@@ -7,7 +7,7 @@ use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use libra_types::write_set::{WriteSet, WriteOp, WriteSetMut};
 use libra_vm::errors::VMResult;
-use crate::{MergeWriteSet, DataSource};
+use crate::{MergeWriteSet, DataSource, Clear};
 use libra_vm::CompiledModule;
 use libra_types::language_storage::ModuleId;
 
@@ -107,6 +107,13 @@ impl MergeWriteSet for MockDataSource {
 impl RemoteCache for MockDataSource {
     fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
         Ok(StateView::get(self, access_path).unwrap())
+    }
+}
+
+impl Clear for MockDataSource {
+    fn clear(&self) {
+        let data = &mut self.data.lock().unwrap();
+        data.clear();
     }
 }
 

@@ -5,7 +5,7 @@ use libra::libra_types::access_path::AccessPath;
 use anyhow::Error;
 use libra::move_vm_state::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
-use crate::DataSource;
+use crate::{DataSource, Clear};
 
 const CODE_TAG: u8 = 0;
 
@@ -67,6 +67,17 @@ where
 
     fn is_genesis(&self) -> bool {
         self.inner.is_genesis()
+    }
+}
+
+impl<D> Clear for ModuleCache<D>
+where
+    D: DataSource,
+{
+    fn clear(&self) {
+        let mut cache = self.cache.lock().unwrap();
+        cache.clear();
+        self.inner.clear();
     }
 }
 

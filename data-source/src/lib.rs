@@ -20,7 +20,7 @@ pub use mock::MockDataSource;
 pub use wrappers::ModuleCache;
 pub use grpc::GrpcDataSource;
 
-pub trait DataSource: StateView + RemoteCache + Clone + Send + Sync + 'static {}
+pub trait DataSource: StateView + RemoteCache + Clear + Clone + Send + Sync + 'static {}
 
 pub trait MergeWriteSet {
     fn merge_write_set(&self, write_set: WriteSet);
@@ -28,6 +28,12 @@ pub trait MergeWriteSet {
 
 pub trait DataAccess {
     fn get_module(&self, module_id: &ModuleId) -> Result<Option<Module>, Error>;
+}
+
+pub trait Clear {
+    fn clear(&self) {
+        //no-op
+    }
 }
 
 // auto-impl for all StateView impls
