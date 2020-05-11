@@ -5,9 +5,9 @@ use std::thread::JoinHandle;
 use std::convert::TryInto;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use dvm_net::grpc;
+use dvm_net::api;
 use dvm_net::prelude::*;
-use grpc::grpc::ds_grpc::{
+use api::grpc::ds_grpc::{
     ds_service_client::DsServiceClient,
     ds_service_server::{DsServiceServer, DsService},
     DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses,

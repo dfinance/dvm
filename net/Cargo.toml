@@ -18,9 +18,14 @@ http = "0.2"
 hyper = "0.13"
 log = "0.4.8"
 
+[dependencies.async-trait]
+version = "0.1.30"
+optional = true
+
+
+[features]
+default = [ "async-trait" ]
+
+
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winbase", "winnt", "accctrl", "aclapi", "securitybaseapi", "minwinbase", "winbase"] }
-mio-named-pipes = "0.1"
-miow = "0.3.3"
-libc = "0.2"

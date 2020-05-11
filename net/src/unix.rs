@@ -5,10 +5,8 @@ use std::task::{Context, Poll};
 use tokio::net::UnixStream;
 use tokio::net::UnixListener;
 use tokio::io::{AsyncRead, AsyncWrite};
-use futures::stream::TryStreamExt;
-use crate::tonic::transport::server::Connected;
-
-pub type Guard = FdGuard;
+use crate::tonic;
+use tonic::transport::server::Connected;
 
 #[derive(Debug)]
 pub struct Stream(UnixStream);
@@ -69,6 +67,11 @@ pub struct Listener {
 }
 
 impl Listener {
+    // pub fn should_close_on_drop(mut self, value: bool) -> Self {
+    //     self.should_close_on_drop = value;
+    //     self
+    // }
+
     pub fn bind<P: AsRef<Path>>(path: P) -> Result<Self, std::io::Error> {
         let listener = UnixListener::bind(path)?;
         let guard = FdGuard {
@@ -84,6 +87,7 @@ impl Listener {
     pub fn incoming(
         &mut self,
     ) -> impl futures::stream::Stream<Item = Result<Stream, std::io::Error>> + '_ {
+        use futures::stream::TryStreamExt;
         self.inner.incoming().map_ok(Stream::new)
     }
 
@@ -115,12 +119,6 @@ pub struct FdGuard {
     path: std::os::unix::net::SocketAddr,
 }
 
-impl FdGuard {
-    pub fn disable(&mut self) {
-        self.enabled = false;
-    }
-}
-
 impl Drop for FdGuard {
     fn drop(&mut self) {
         debug!("UDS fd-guard dropping");
@@ -133,7 +131,7 @@ impl Drop for FdGuard {
         }
 
         if let Some(path) = self.path.as_pathname() {
-            match close_uds(path) {
+            match unlink_uds(path) {
                 Ok(_) => debug!("UDS fd closed"),
                 Err(err) => error!("{}", err),
             }
@@ -143,9 +141,25 @@ impl Drop for FdGuard {
     }
 }
 
-pub fn close_uds<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
-    std::fs::remove_file(&path).or_else(|_| unlink_uds(path))
-}
+// impl Drop for Listener {
+//     fn drop(&mut self) {
+//         debug!("UDS listener dropping");
+
+//         match self.inner.local_addr() {
+//             Ok(addr) => {
+//                 if let Some(path) = addr.as_pathname() {
+//                     match unlink_uds(path) {
+//                         Ok(_) => debug!("UDS fd closed"),
+//                         Err(err) => error!("{}", err),
+//                     }
+//                 } else {
+//                     error!("Failed to close UDS fd: No local pathname.");
+//                 }
+//             }
+//             Err(err) => error!("Failed to close UDS fd: {}", err),
+//         }
+//     }
+// }
 
 pub fn unlink_uds<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
     use std::io::{Error, ErrorKind};

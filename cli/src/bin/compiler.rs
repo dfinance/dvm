@@ -7,8 +7,7 @@ extern crate log;
 use anyhow::Result;
 use structopt::StructOpt;
 
-use dvm_api::tonic;
-// use dvm_api::endpoint::Endpoint;
+use dvm_net::tonic;
 use tonic::transport::{Server, Uri};
 
 use data_source::{GrpcDataSource, ModuleCache};
