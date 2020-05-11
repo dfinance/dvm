@@ -638,7 +638,6 @@ name = "dvm-cli"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "dvm-api",
  "dvm-data-source",
  "dvm-lang",
  "dvm-libra-deps",
@@ -765,10 +764,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "byteorder",
- "dvm-api",
  "dvm-data-source",
  "dvm-lang",
  "dvm-libra-deps",
+ "dvm-net",
  "dvm-runtime",
  "dvm-services",
  "futures",

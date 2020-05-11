@@ -6,7 +6,7 @@ pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
 use runtime::move_vm::ExecutionMeta;
-use dvm_api::tonic::Request;
+use dvm_net::tonic::Request;
 
 use libra::{libra_types, libra_vm};
 use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
@@ -30,9 +30,9 @@ use libra_types::write_set::WriteSet;
 
 // TODO: [REF] rename to api_grpc
 pub mod compiled_protos {
-    extern crate dvm_api;
+    extern crate dvm_net;
 
-    pub use dvm_api::grpc::*;
+    pub use dvm_net::api::grpc::*;
 }
 
 pub const PORT_RANGE: Range<u32> = 3000..5000;

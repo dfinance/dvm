@@ -7,8 +7,7 @@ extern crate log;
 use anyhow::Result;
 use structopt::StructOpt;
 
-use dvm_api::tonic;
-// use dvm_api::endpoint::Endpoint;
+use dvm_net::tonic;
 use tonic::transport::{Server, Uri};
 
 use data_source::{GrpcDataSource, ModuleCache};
@@ -17,9 +16,10 @@ use lang::compiler::Compiler;
 use services::compiler::CompilerService;
 use services::metadata::MetadataService;
 use dvm_net::prelude::*;
-use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
-use dvm_api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
-use dvm_api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
+use dvm_net::api;
+use api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
+use api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
+use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 use dvm_cli::config::{LoggingOptions, IntegrationsOptions, DVM_DATA_SOURCE};
 use dvm_cli::logging;
 

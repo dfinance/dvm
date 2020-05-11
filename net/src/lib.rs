@@ -2,8 +2,8 @@
 #[macro_use]
 pub extern crate log;
 extern crate tokio;
-pub extern crate grpc;
-pub use grpc::tonic;
+pub extern crate dvm_api as api;
+pub use api::tonic;
 
 pub type StdError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -25,6 +25,8 @@ pub mod transport {
 }
 
 pub mod prelude {
+    // pub use dvm_api as api;
+
     pub use crate::serve::*;
     pub use crate::endpoint::*;
     pub use crate::transport::*;

@@ -1,5 +1,5 @@
 use std::sync::mpsc::{Sender, Receiver, channel};
-use dvm_api::tonic::{transport::Server as TService, codegen::Pin};
+use dvm_net::tonic::{transport::Server as TService, codegen::Pin};
 use futures::Future;
 use futures::task::{Context, Poll};
 use std::sync::{Arc, Mutex};

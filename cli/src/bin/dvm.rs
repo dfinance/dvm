@@ -12,8 +12,8 @@ use structopt::StructOpt;
 use tonic::transport::Server;
 
 use dvm_net::prelude::*;
-use dvm_api::tonic;
-use dvm_api::grpc::vm_grpc::vm_service_server::VmServiceServer;
+use dvm_net::tonic;
+use dvm_net::api::grpc::vm_grpc::vm_service_server::VmServiceServer;
 use data_source::{GrpcDataSource, ModuleCache};
 use anyhow::Result;
 use services::vm::VmService;

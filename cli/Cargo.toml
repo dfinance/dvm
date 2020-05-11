@@ -13,8 +13,7 @@ lang = { path = "../lang", package = "dvm-lang" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
 services = { path = "../services", package = "dvm-services" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
-dvm-net = { path = "../api", package = "dvm-net" }
-dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
+dvm-net = { path = "../net" }
 
 anyhow = "=1.0.27"
 log = "0.4.8"

@@ -9,14 +9,12 @@ use anyhow::Error;
 use http::Uri;
 use tokio::runtime::Runtime;
 use crossbeam::channel::{Sender, Receiver, bounded};
-use dvm_api::grpc;
-use dvm_api::prelude::*;
-use grpc::grpc::ds_grpc::{
-    ds_service_client::DsServiceClient, DsAccessPath, ds_raw_response::ErrorCode,
-};
+use dvm_net::api;
+use dvm_net::tonic;
+use dvm_net::prelude::*;
+use api::grpc::ds_grpc::{ds_service_client::DsServiceClient, DsAccessPath, ds_raw_response::ErrorCode};
 use libra::move_vm_state::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
-use dvm_api::tonic;
 use libra_types::vm_error::{VMStatus, StatusCode};
 use crate::{DataSource, Clear};
 
