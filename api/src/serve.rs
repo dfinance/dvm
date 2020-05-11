@@ -12,7 +12,7 @@ pub async fn serve_with<A, B>(
     router: tonic::transport::server::Router<A, B>,
     endpoint: Endpoint,
     should_close_on_drop: bool,
-) -> Result<(), StdError>
+) -> Result<Option<impl Drop>, StdError>
 where
     A: Service<Request<Body>, Response = Response<BoxBody>> + Clone + Send + 'static,
     A::Future: Send + 'static,
@@ -21,10 +21,8 @@ where
     B::Future: Send + 'static,
     B::Error: Into<StdError> + Send,
 {
-    match endpoint {
-        Endpoint::Http(http) => {
-            router.serve(http.0).await?;
-        }
+    Ok(match endpoint {
+        Endpoint::Http(http) => router.serve(http.0).await.map(|_| None)?,
 
         Endpoint::Ipc(ipc) => {
             use crate::transport::*;
@@ -32,11 +30,14 @@ where
             Ipc::create_dir_all(&ipc.0).await?;
 
             // TODO: are we should close on drop really?
-            let mut uds = Listener::bind(&ipc.0)?.should_close_on_drop(should_close_on_drop);
-            router.serve_with_incoming(uds.incoming()).await?;
+            let mut uds = Listener::bind(&ipc.0)?.guarded(should_close_on_drop);
+            let guard = uds.guard();
+            router
+                .serve_with_incoming(uds.incoming())
+                .await
+                .map(move |_| guard)?
         }
-    }
-    Ok(())
+    })
 }
 
 #[cfg(feature = "async-trait")]
@@ -48,12 +49,12 @@ mod router_impl {
 
     extern crate async_trait;
     use async_trait::async_trait;
-    use futures::TryFutureExt;
+    // use std::convert::TryInto;
 
     #[async_trait]
     pub trait ServeWith {
         async fn serve_with(self, endpoint: Endpoint) -> Result<(), StdError>;
-        async fn serve_with_anyway(self, endpoint: Endpoint) -> Result<(), StdError>;
+        // async fn serve_with_anyway(self, endpoint: Endpoint) -> Result<(), StdError>;
     }
     #[async_trait]
     impl<A, B> ServeWith for tonic::transport::server::Router<A, B>
@@ -67,34 +68,44 @@ mod router_impl {
     {
         #[inline]
         async fn serve_with(self, endpoint: Endpoint) -> Result<(), StdError> {
-            serve_with(self, endpoint, false).await
+            serve_with(self, endpoint, false).await.map(|_| {})
         }
 
-        #[inline]
-        async fn serve_with_anyway(self, endpoint: Endpoint) -> Result<(), StdError> {
-            use std::io::{Error as IoError, ErrorKind};
-            let is_ipc = endpoint.is_ipc();
-            let endpoint_clone = if is_ipc { Some(endpoint.clone()) } else { None };
+        // #[inline]
+        // async fn serve_with_anyway(self, endpoint: Endpoint) -> Result<(), StdError> {
+        //     use std::io::{Error as IoError, ErrorKind};
+        //     use std::path::Path;
+        //     use futures::TryFutureExt;
 
-            let result = serve_with(self, endpoint, false).await;
+        //     let is_ipc = endpoint.is_ipc();
+        //     let endpoint_clone = if is_ipc { Some(endpoint.clone()) } else { None };
 
-            match (is_ipc, result) {
-                /* (true, Err(err)) if err.is::<IoError>() => {
-                    match err.downcast_ref::<IoError>().map(|e| e.kind()) {
-                        Some(ErrorKind::AddrInUse) | Some(ErrorKind::AlreadyExists) => {
-                            use crate::transport::*;
-                            let endpoint = endpoint_clone.unwrap();
+        //     // let result = serve_with(self, endpoint, false).await;
 
-                            let stream = Stream::connect(endpoint.to_string().parse().unwrap()).await.unwrap();
-                            let mut channel = endpoint.connect().await.unwrap();
-                            self.serve_with_incoming(stream......).await;
-                            Err(err)
-                        }
-                        _ => Err(err),
-                    }
-                }, */
-                (_, result) => result,
-            }
-        }
+        //     // match (is_ipc, result) {
+        //     match (is_ipc, serve_with(self, endpoint, false).await) {
+        //         (true, Err(err)) if err.is::<IoError>() => {
+        //             match err.downcast_ref::<IoError>().map(|e| e.kind()) {
+        //                 Some(ErrorKind::AddrInUse) | Some(ErrorKind::AlreadyExists) => {
+        //                     use crate::transport::*;
+        //                     let endpoint = endpoint_clone.unwrap();
+
+        //                     // let endpoint:Path = endpoint.to_string().parse().unwrap();
+        //                     let endpoint: &Path = (&endpoint).try_into().unwrap();
+        //                     let stream = Stream::connect(endpoint).await.unwrap();
+        //                     // let mut channel = endpoint.connect().await.unwrap();
+        //                     // {
+        //                     //     futures::stream::Stream::
+        //                     // }
+
+        //                     self.serve_with_incoming(stream.into_incoming()).await;
+        //                     Err(err)
+        //                 }
+        //                 _ => Err(err),
+        //             }
+        //         }
+        //         (_, result) => result,
+        //     }
+        // }
     }
 }

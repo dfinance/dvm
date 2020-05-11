@@ -19,6 +19,15 @@ impl Stream {
     pub async fn connect<P: AsRef<Path>>(path: P) -> Result<Self, std::io::Error> {
         Ok(Self(UnixStream::connect(path).await?))
     }
+
+    pub fn into_incoming(
+        self,
+    ) -> impl futures::stream::Stream<Item = Result<Stream, std::io::Error>> {
+        futures::stream::iter(vec![Ok(self)].into_iter().map(|v| {
+            debug!("iter: get new uds-stream");
+            v
+        }))
+    }
 }
 
 impl Connected for Stream {}
@@ -54,19 +63,24 @@ impl AsyncWrite for Stream {
 #[derive(Debug)]
 pub struct Listener {
     inner: UnixListener,
-    should_close_on_drop: bool,
+    guard: Option<FdGuard>,
 }
 
 impl Listener {
-    pub fn should_close_on_drop(mut self, value: bool) -> Self {
-        self.should_close_on_drop = value;
-        self
-    }
+    // pub fn should_close_on_drop(mut self, value: bool) -> Self {
+    //     self.should_close_on_drop = value;
+    //     self
+    // }
 
     pub fn bind<P: AsRef<Path>>(path: P) -> Result<Self, std::io::Error> {
+        let listener = UnixListener::bind(path)?;
+        let guard = FdGuard {
+            enabled: true,
+            path: listener.local_addr()?,
+        };
         Ok(Self {
-            inner: UnixListener::bind(path)?,
-            should_close_on_drop: false,
+            inner: listener,
+            guard: Some(guard),
         })
     }
 
@@ -76,30 +90,81 @@ impl Listener {
         use futures::stream::TryStreamExt;
         self.inner.incoming().map_ok(Stream::new)
     }
+
+    /// Builder-pattern-like enable or disable inner fd-guard.
+    /// If disable prevent unlink (kill, close) the socket on drop.
+    pub fn guarded(mut self, enabled: bool) -> Self {
+        if let Some(guard) = &mut self.guard {
+            guard.enabled = enabled;
+        }
+        self
+    }
+
+    /// Enable or disable inner fd-guard. If disable prevent unlink (kill, close) the socket on drop.
+    pub fn set_guard(&mut self, enabled: bool) {
+        if let Some(guard) = &mut self.guard {
+            guard.enabled = enabled;
+        }
+    }
+
+    /// Take and return the guard. Return `None` if already taken.
+    pub fn guard(&mut self) -> Option<FdGuard> {
+        self.guard.take()
+    }
 }
 
-impl Drop for Listener {
-    fn drop(&mut self) {
-        // TODO: debug
-        println!("Listener DROPPING");
+#[derive(Debug)]
+pub struct FdGuard {
+    enabled: bool,
+    path: std::os::unix::net::SocketAddr,
+}
 
-        if let Ok(addr) = self.inner.local_addr() {
-            if let Some(path) = addr.as_pathname() {
-                match unlink_uds(path) {
-                    // TODO: debug, warn
-                    Ok(_) => println!("UDS channel closed"),
-                    Err(err) => eprintln!("{}", err),
-                }
+impl Drop for FdGuard {
+    fn drop(&mut self) {
+        debug!("UDS fd-guard dropping");
+        println!("UDS fd-guard dropping");
+
+        if !self.enabled {
+            debug!("UDS fd-guard dropping skipped.");
+            println!("UDS fd-guard dropping skipped.");
+            return;
+        }
+
+        if let Some(path) = self.path.as_pathname() {
+            match unlink_uds(path) {
+                Ok(_) => debug!("UDS fd closed"),
+                Err(err) => error!("{}", err),
             }
         } else {
-            eprint!("Failed to close UDS channel");
+            error!("Failed to close UDS fd: No local pathname.");
         }
     }
 }
 
+// impl Drop for Listener {
+//     fn drop(&mut self) {
+//         debug!("UDS listener dropping");
+
+//         match self.inner.local_addr() {
+//             Ok(addr) => {
+//                 if let Some(path) = addr.as_pathname() {
+//                     match unlink_uds(path) {
+//                         Ok(_) => debug!("UDS fd closed"),
+//                         Err(err) => error!("{}", err),
+//                     }
+//                 } else {
+//                     error!("Failed to close UDS fd: No local pathname.");
+//                 }
+//             }
+//             Err(err) => error!("Failed to close UDS fd: {}", err),
+//         }
+//     }
+// }
+
 pub fn unlink_uds<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
     use std::io::{Error, ErrorKind};
     use std::process::Command;
+    use std::str::from_utf8;
 
     if let Some(path) = path.as_ref().to_str() {
         match Command::new("unlink").arg(path).output() {
@@ -107,9 +172,7 @@ pub fn unlink_uds<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
                 if output.status.success() {
                     Ok(())
                 } else {
-                    let err = std::str::from_utf8(&output.stderr)
-                        .ok()
-                        .unwrap_or("unknown error");
+                    let err = from_utf8(&output.stderr).ok().unwrap_or("unknown error");
                     Err(Error::new(
                         ErrorKind::Other,
                         format!(
@@ -128,7 +191,7 @@ pub fn unlink_uds<P: AsRef<Path>>(path: P) -> Result<(), std::io::Error> {
     } else {
         Err(Error::new(
             ErrorKind::Other,
-            format!("Failed to close UDS channel: invalid path"),
+            "Failed to close UDS channel: invalid path",
         ))
     }
 }
