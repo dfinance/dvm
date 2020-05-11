@@ -1,6 +1,10 @@
 extern crate http;
 
-use std::{convert::TryFrom, path::Path};
+use std::{
+    convert::{TryInto, TryFrom},
+    path::Path,
+};
+use std::io::{Error as IoError, ErrorKind};
 use http::Uri;
 use crate::tonic;
 use tonic::transport::Channel;
@@ -18,13 +22,6 @@ impl Endpoint {
             Endpoint::Ipc(inner) => futures::future::Either::Right(inner.connect()),
         }
         .await
-    }
-
-    pub fn to_string(&self) -> String {
-        match self {
-            Endpoint::Http(inner) => inner.0.to_string(),
-            Endpoint::Ipc(inner) => inner.0.to_str().expect("invalid path").to_owned(),
-        }
     }
 
     pub fn is_ipc(&self) -> bool {
@@ -60,6 +57,7 @@ impl Http {
         Ok(conn)
     }
 
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         self.0.to_string()
     }
@@ -88,7 +86,7 @@ impl Ipc {
         Ok(channel)
     }
 
-    pub fn as_str<'a>(&'a self) -> Option<&'a str> {
+    pub fn as_str(&self) -> Option<&str> {
         self.0.to_str()
     }
 }
@@ -118,9 +116,22 @@ impl TryFrom<Uri> for Endpoint {
     }
 }
 
-pub fn from_uri(uri: Uri) -> Result<Endpoint, crate::StdError> {
-    use std::io::{Error, ErrorKind};
+impl<'a> TryInto<&'a Path> for &'a Endpoint {
+    // type Error = crate::StdError;
+    type Error = std::io::Error;
 
+    fn try_into(self) -> Result<&'a Path, Self::Error> {
+        match self {
+            Endpoint::Ipc(Ipc(pb)) => Ok(pb.as_path()),
+            _ => Err(IoError::new(
+                ErrorKind::Other,
+                "Only IPC can `into` `Path`.",
+            )),
+        }
+    }
+}
+
+pub fn from_uri(uri: Uri) -> Result<Endpoint, crate::StdError> {
     let parts = uri.into_parts();
 
     if let Some(scheme) = parts.scheme {
@@ -140,20 +151,30 @@ pub fn from_uri(uri: Uri) -> Result<Endpoint, crate::StdError> {
         match scheme.as_str() {
             "http" => Ok(Endpoint::Http(Http(addr.parse()?))),
             "ipc" | "uds" => {
-                match addr.chars().nth(0) {
+                match addr.chars().next() {
                     Some('.') | Some('~') => { /* relative path */ }
                     Some('/') => { /* absolute path */ }
                     _ => addr = "/".to_owned() + &addr,
                 }
                 Ok(Endpoint::Ipc(Ipc(addr.parse()?)))
             }
-            _ => Err(Error::new(
+            _ => Err(IoError::new(
                 ErrorKind::Other,
                 format!("Protocol {} not supported", scheme.as_str()),
-            ))?,
+            )
+            .into()),
         }
     } else {
-        Err(Error::new(ErrorKind::Other, format!("Protocol is missed")))?
+        Err(IoError::new(ErrorKind::Other, "Protocol is missed").into())
+    }
+}
+
+impl std::fmt::Display for Endpoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Endpoint::Http(Http(endpoint)) => write!(f, "{}", endpoint.to_string()),
+            Endpoint::Ipc(Ipc(endpoint)) => write!(f, "{}", endpoint.to_string_lossy()),
+        }
     }
 }
 
