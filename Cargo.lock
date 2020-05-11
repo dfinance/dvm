@@ -642,6 +642,7 @@ dependencies = [
  "dvm-data-source",
  "dvm-lang",
  "dvm-libra-deps",
+ "dvm-net",
  "dvm-services",
  "env_logger",
  "http",
