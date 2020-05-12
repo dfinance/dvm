@@ -718,14 +718,17 @@ dependencies = [
 name = "dvm-net"
 version = "0.2.0"
 dependencies = [
- "async-trait",
  "dvm-api",
  "futures",
  "http",
  "hyper",
+ "libc",
  "log",
+ "mio-named-pipes",
+ "miow 0.3.3",
  "tokio",
  "tower",
+ "winapi 0.3.8",
 ]
 
 [[package]]

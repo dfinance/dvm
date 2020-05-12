@@ -75,7 +75,7 @@ async fn main_internal(options: Options) -> Result<()> {
         .add_service(VmCompilerServer::new(compiler_service.clone()))
         .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
         .add_service(VmScriptMetadataServer::new(metadata_service))
-        .serve_with(options.address)
+        .serve_ext(options.address)
         .await
         .expect("internal fail");
     Ok(())

@@ -69,7 +69,7 @@ async fn main_internal(options: Options) -> Result<()> {
     info!("DVM server listening on {}", options.address);
     Server::builder()
         .add_service(VmServiceServer::new(service))
-        .serve_with(options.address)
+        .serve_ext(options.address)
         .await
         .expect("internal fail");
     Ok(())

@@ -13,19 +13,27 @@ pub mod serve;
 #[cfg(any(unix, macos))]
 mod unix;
 
-#[cfg(windows)]
-mod win;
-
 pub mod transport {
     #[cfg(any(unix, macos))]
     pub use super::unix::*;
 
     #[cfg(windows)]
-    pub use super::win::*;
+    compile_error!("windows platform is not supported");
 }
 
 pub mod prelude {
-    // pub use dvm_api as api;
+    //! The DVM-NET Prelude
+    //!
+    //! The purpose of this module is to give imports-set for many common cases
+    //! by adding a glob import to the top:
+    //!
+    //! ```
+    //! # #![allow(unused_imports)]
+    //! use dvm_net::prelude::*;
+    //! ```
+    //!
+    //! Also contains reshared `TryInto` and `TryFrom` std traits.
+
 
     pub use crate::serve::*;
     pub use crate::endpoint::*;
