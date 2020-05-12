@@ -6,7 +6,7 @@ on:
     - master
 
 jobs:
-  rust:
+  build:
     name: Rust
     runs-on: ${{ matrix.os }}
 
