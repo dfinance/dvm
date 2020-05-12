@@ -34,7 +34,6 @@ pub mod prelude {
     //!
     //! Also contains reshared `TryInto` and `TryFrom` std traits.
 
-
     pub use crate::serve::*;
     pub use crate::endpoint::*;
     pub use crate::transport::*;
