@@ -9,7 +9,6 @@ use http::request::Request;
 use http::response::Response;
 use hyper::body::Body;
 
-#[inline]
 pub async fn serve_with_drop<A, B>(
     router: tonic::transport::server::Router<A, B>,
     endpoint: Endpoint,
@@ -42,7 +41,6 @@ where
     })
 }
 
-#[inline]
 pub async fn serve_with_shutdown<A, B, F>(
     router: tonic::transport::server::Router<A, B>,
     endpoint: Endpoint,
