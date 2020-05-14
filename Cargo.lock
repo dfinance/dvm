@@ -638,10 +638,10 @@ name = "dvm-cli"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "dvm-api",
  "dvm-data-source",
  "dvm-lang",
  "dvm-libra-deps",
+ "dvm-net",
  "dvm-services",
  "env_logger",
  "http",
@@ -659,8 +659,8 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "crossbeam",
- "dvm-api",
  "dvm-libra-deps",
+ "dvm-net",
  "http",
  "log",
  "lru",
@@ -715,6 +715,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "dvm-net"
+version = "0.2.0"
+dependencies = [
+ "dvm-api",
+ "futures",
+ "http",
+ "hyper",
+ "libc",
+ "log",
+ "mio-named-pipes",
+ "miow 0.3.3",
+ "tokio",
+ "tower",
+ "winapi 0.3.8",
+]
+
+[[package]]
 name = "dvm-runtime"
 version = "0.2.0"
 dependencies = [
@@ -750,10 +767,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "byteorder",
- "dvm-api",
  "dvm-data-source",
  "dvm-lang",
  "dvm-libra-deps",
+ "dvm-net",
  "dvm-runtime",
  "dvm-services",
  "futures",

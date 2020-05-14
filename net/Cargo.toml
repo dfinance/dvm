@@ -1,0 +1,26 @@
+[package]
+name = "dvm-net"
+version = "0.2.0"
+authors = [
+    "Alex Koz. <alexanderkozlovskii@wings.ai>",
+    "Dm. Yakushev <dmitryyakushev@wings.ai>",
+    "Maxim Kurnikov <maximkurnikov@wings.ai>"
+    ]
+edition = "2018"
+
+
+[dependencies]
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
+tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
+futures = { version = "0.3", default-features = false, features = ["alloc"] }
+tower = "0.3"
+http = "0.2"
+hyper = "0.13"
+log = "0.4.8"
+
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winbase", "winnt", "accctrl", "aclapi", "securitybaseapi", "minwinbase", "winbase"] }
+mio-named-pipes = "0.1"
+miow = "0.3.3"
+libc = "0.2"

@@ -1,14 +1,13 @@
 //! Compilation server implementation on tonic & tokio.
-//! Run with `cargo run --bin compiler "[::1]:50053" "http://[::1]:50052"`
+//! Run with `cargo run --bin compiler "http://[::1]:50053" "http://[::1]:50052"`
 
 #[macro_use]
 extern crate log;
 
-use std::net::SocketAddr;
 use anyhow::Result;
 use structopt::StructOpt;
 
-use dvm_api::tonic;
+use dvm_net::tonic;
 use tonic::transport::{Server, Uri};
 
 use data_source::{GrpcDataSource, ModuleCache};
@@ -16,9 +15,11 @@ use data_source::{GrpcDataSource, ModuleCache};
 use lang::compiler::Compiler;
 use services::compiler::CompilerService;
 use services::metadata::MetadataService;
-use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
-use dvm_api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
-use dvm_api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
+use dvm_net::prelude::*;
+use dvm_net::api;
+use api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
+use api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
+use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 use dvm_cli::config::{LoggingOptions, IntegrationsOptions, DVM_DATA_SOURCE};
 use dvm_cli::logging;
 
@@ -32,13 +33,15 @@ struct Options {
     /// Address in the form of HOST_ADDRESS:PORT.
     /// The address will be listen to by this compilation server.
     /// Listening localhost by default.
+    /// Supports schemes: http, ipc.
     #[structopt(
         name = "listen address",
-        default_value = "[::1]:50053",
+        default_value = "http://[::1]:50053",
         verbatim_doc_comment
     )]
-    address: SocketAddr,
+    address: Endpoint,
 
+    // address: Endpoint,
     /// DataSource Server internet address.
     #[structopt(
         name = "Data-Source URI",
@@ -72,7 +75,8 @@ async fn main_internal(options: Options) -> Result<()> {
         .add_service(VmCompilerServer::new(compiler_service.clone()))
         .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
         .add_service(VmScriptMetadataServer::new(metadata_service))
-        .serve(options.address)
-        .await?;
+        .serve_ext(options.address)
+        .await
+        .expect("internal fail");
     Ok(())
 }
