@@ -1,10 +1,10 @@
 use std::thread;
 use tokio::runtime::Runtime;
-use dvm_net::tonic::{self, transport::Server};
-use dvm_net::tonic::{Request, Response, Status};
-use dvm_net::api::grpc;
-use grpc::ds_grpc::ds_service_server::{DsServiceServer, DsService};
-use grpc::ds_grpc::{DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses};
+use dvm_api::tonic::{self, transport::Server};
+
+use dvm_api::grpc::ds_grpc::ds_service_server::{DsServiceServer, DsService};
+use dvm_api::tonic::{Request, Response, Status};
+use dvm_api::grpc::ds_grpc::{DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses};
 use std::time::Duration;
 use dvm_data_source::GrpcDataSource;
 use libra::libra_state_view::StateView;

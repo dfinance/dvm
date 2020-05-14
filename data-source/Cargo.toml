@@ -10,10 +10,10 @@ edition = "2018"
 
 [dependencies]
 libra = { path = "../libra", package = "dvm-libra-deps" }
-dvm-net = { path = "../net"}
 anyhow = "=1.0.27"
 crossbeam = "0.7.3"
 http = "=0.2.0"
 tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
 log = "0.4.8"
 lru = "0.4.3"

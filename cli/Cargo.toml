@@ -13,13 +13,13 @@ lang = { path = "../lang", package = "dvm-lang" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
 services = { path = "../services", package = "dvm-services" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
-dvm-net = { path = "../net" }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
 
 anyhow = "=1.0.27"
 log = "0.4.8"
 env_logger = "0.7.1"
 structopt = "0.3.13"
-http = "0.2"
+http = "=0.2.0"
 tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
 serde = "=1.0.106"
 serde_json = "1.0.52"

@@ -1,8 +1,8 @@
 use anyhow::Result;
 use std::sync::{Arc, Mutex};
 use tokio::runtime::Runtime;
-use dvm_net::tonic::transport::Channel;
-use dvm_net::tonic::Request;
+use dvm_api::tonic::transport::Channel;
+use dvm_api::tonic::Request;
 use crate::ArcMut;
 use crate::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
 use crate::compiled_protos::vm_grpc::{VmExecuteRequest, VmExecuteResponses};

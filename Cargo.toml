@@ -6,6 +6,5 @@ members = [
     "data-source",
     "runtime",
     "services",
-    "net",
     "cli",
 ]
