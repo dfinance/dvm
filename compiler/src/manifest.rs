@@ -5,7 +5,6 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use toml::Value;
-use std::collections::{BTreeMap, HashMap};
 
 pub const MANIFEST: &str = "Cmove.toml";
 
