@@ -658,12 +658,19 @@ name = "dvm-compiler"
 version = "0.2.0"
 dependencies = [
  "anyhow",
+ "bech32",
  "dvm-libra-deps",
+ "hex",
  "http",
+ "lazy_static",
+ "once_cell",
+ "regex",
  "serde",
  "serde_derive",
  "structopt",
  "toml 0.4.10",
+ "twox-hash",
+ "walkdir",
 ]
 
 [[package]]

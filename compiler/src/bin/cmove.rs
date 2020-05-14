@@ -21,17 +21,17 @@ enum Opt {
         #[structopt(help = "Project name.")]
         project_name: String,
         #[structopt(
-            help = "Basic uri to blockchain api.",
-            name = "Blockchain API",
-            long = "repo",
-            short = "r"
+        help = "Basic uri to blockchain api.",
+        name = "Blockchain API",
+        long = "repo",
+        short = "r"
         )]
         repository: Option<Uri>,
         #[structopt(
-            help = "Account address.",
-            name = "address",
-            long = "address",
-            short = "a"
+        help = "Account address.",
+        name = "address",
+        long = "address",
+        short = "a"
         )]
         address: Option<String>,
     },
@@ -40,17 +40,17 @@ enum Opt {
         #[structopt(help = "Project name.")]
         project_name: String,
         #[structopt(
-            help = "Basic uri to blockchain api.",
-            name = "Blockchain API",
-            long = "repo",
-            short = "r"
+        help = "Basic uri to blockchain api.",
+        name = "Blockchain API",
+        long = "repo",
+        short = "r"
         )]
         repository: Option<Uri>,
         #[structopt(
-            help = "Account address.",
-            name = "address",
-            long = "address",
-            short = "a"
+        help = "Account address.",
+        name = "address",
+        long = "address",
+        short = "a"
         )]
         address: Option<String>,
     },
@@ -58,6 +58,8 @@ enum Opt {
     Update {},
     #[structopt(help = "Build project")]
     Build {},
+    #[structopt(help = "Check project")]
+    Check {},
 }
 
 fn main() {
@@ -76,6 +78,7 @@ fn main() {
         } => init::execute(&project_dir, source_dir, repository, address),
         Opt::Update {} => update::execute(&project_dir, load_manifest(&project_dir)),
         Opt::Build {} => build::execute(&project_dir, load_manifest(&project_dir)),
+        Opt::Check {} => Ok(())
     });
 }
 
@@ -99,7 +102,15 @@ fn load_manifest(project_dir: &Path) -> CmoveToml {
         exit(1);
     }
     match read_manifest(&manifest) {
-        Ok(manifest) => manifest,
+        Ok(mut manifest) => {
+            if manifest.layout.is_none() {
+                manifest.layout = Some(Default::default());
+            }
+            if let Some(layout) = manifest.layout.as_mut() {
+                layout.fill();
+            }
+            manifest
+        }
         Err(_) => {
             println!("error: could not read `{:?}`.", &manifest);
             exit(1);
