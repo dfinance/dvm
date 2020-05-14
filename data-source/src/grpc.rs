@@ -39,17 +39,27 @@ impl GrpcDataSource {
     fn internal_loop(mut rt: Runtime, ds_addr: Uri, receiver: Receiver<Request>) {
         info!("Connecting to data-source: {}", ds_addr);
         let mut client: DsServiceClient<_> = rt.block_on(async {
+            let scheme_http = ds_addr.scheme_str().expect("scheme").starts_with("http");
             loop {
-                match ds_addr.clone().try_into() {
-                    Err(err) => {
-                        error!("Invalid DS address: {:?}", err);
-                        std::thread::sleep(Duration::from_millis(500));
-                        std::process::exit(-1);
+                // hotfix http://domain-not-socket/issue
+                // TODO: write it normally
+                if scheme_http {
+                    match DsServiceClient::connect(ds_addr.to_string()).await {
+                        Ok(client) => return client,
+                        Err(err) => tokio::time::delay_for(Duration::from_secs(1)).await,
                     }
-                    Ok::<Endpoint, _>(endpoint) => match endpoint.connect().await {
-                        Ok(channel) => return DsServiceClient::new(channel),
-                        Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
-                    },
+                } else {
+                    match ds_addr.clone().try_into() {
+                        Err(err) => {
+                            error!("Invalid DS address: {:?}", err);
+                            std::thread::sleep(Duration::from_millis(500));
+                            std::process::exit(-1);
+                        }
+                        Ok::<Endpoint, _>(endpoint) => match endpoint.connect().await {
+                            Ok(channel) => return DsServiceClient::new(channel),
+                            Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
+                        },
+                    }
                 }
             }
         });

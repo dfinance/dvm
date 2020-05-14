@@ -169,6 +169,28 @@ pub fn from_uri(uri: Uri) -> Result<Endpoint, crate::StdError> {
     }
 }
 
+impl TryInto<Uri> for Endpoint {
+    type Error = http::Error;
+
+    fn try_into(self) -> Result<Uri, Self::Error> {
+        match self {
+            Endpoint::Ipc(Ipc(pb)) => format!(
+                "ipc:{}{}",
+                if pb.is_absolute() { "/" } else { "//" },
+                pb.to_string_lossy()
+            )
+            .parse()
+            .map_err(|e: http::uri::InvalidUri| e.into()),
+
+            Endpoint::Http(Http(socket)) => Uri::builder()
+                .scheme("http")
+                .authority(socket.to_string().as_str())
+                .path_and_query("")
+                .build(),
+        }
+    }
+}
+
 impl std::fmt::Display for Endpoint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -183,9 +205,15 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
+    // test URIs & paths:
+    const IPC_ABS: &str = "ipc://tmp/dir/file";
+    const IPC_REL: [&str; 2] = ["ipc://./tmp/file", "ipc://../tmp/file"];
+    const HTTP_URI: [&str; 2] = ["http://[::1]:50042", "http://127.0.0.1:50042"];
+    const HTTP_SOC: [&str; 2] = ["[::1]:50042", "127.0.0.1:50042"];
+
     #[test]
     fn from_str_absolete_ipc() {
-        let endpoint: Result<Endpoint, _> = "ipc://tmp/dir/file".parse();
+        let endpoint: Result<Endpoint, _> = IPC_ABS.parse();
         assert!(endpoint.is_ok());
 
         if let Ok(endpoint) = endpoint {
@@ -204,8 +232,7 @@ mod tests {
 
     #[test]
     fn from_str_relative_ipc() {
-        let paths = ["ipc://./tmp/file", "ipc://../tmp/file"];
-        for path in paths.iter() {
+        for path in IPC_REL.iter() {
             let endpoint: Result<Endpoint, _> = path.parse();
             assert!(endpoint.is_ok());
 
@@ -227,23 +254,75 @@ mod tests {
 
     #[test]
     fn from_str_http() {
-        let expected = ["[::1]:50042", "127.0.0.1:50042"];
-        let uris = ["http://[::1]:50042", "http://127.0.0.1:50042"];
-
-        for (i, uri) in uris.iter().enumerate() {
+        for (i, uri) in HTTP_URI.iter().enumerate() {
             let endpoint: Result<Endpoint, _> = uri.parse();
             assert!(endpoint.is_ok());
 
             if let Ok(endpoint) = endpoint {
                 match endpoint {
                     Endpoint::Http(inner) => {
-                        assert_eq!(expected[i], &inner.to_string());
+                        assert_eq!(HTTP_SOC[i], &inner.to_string());
                     }
                     Endpoint::Ipc(_) => panic!("expected HTTP"),
                 }
             } else {
                 unreachable!();
             }
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn from_str_http_web() {
+        const URI: &str = "http://host.docker.internal:61191/";
+
+        let endpoint: Result<Endpoint, _> = URI.parse();
+        println!("endpoint: {:?}", endpoint);
+        assert!(endpoint.is_ok());
+
+        if let Ok(endpoint) = endpoint {
+            match endpoint {
+                Endpoint::Http(inner) => {
+                    assert_eq!(URI, &inner.to_string());
+                }
+                Endpoint::Ipc(_) => panic!("expected HTTP"),
+            }
+        } else {
+            unreachable!();
+        }
+    }
+
+    #[test]
+    fn to_uri_absolete_ipc() {
+        let endpoint: Endpoint = IPC_ABS.parse().unwrap();
+        let result: Result<Uri, _> = endpoint.try_into();
+        assert!(result.is_ok());
+        let uri = result.unwrap();
+        assert_eq!(IPC_ABS, uri.to_string())
+    }
+
+    #[test]
+    fn to_uri_relative_ipc() {
+        for uri in IPC_REL.iter() {
+            let endpoint: Endpoint = uri.parse().unwrap();
+            let result: Result<Uri, _> = endpoint.try_into();
+            assert!(result.is_ok());
+            assert_eq!(uri, &result.unwrap().to_string())
+        }
+    }
+
+    #[test]
+    fn to_uri_http() {
+        for expected in HTTP_URI.iter() {
+            let endpoint: Endpoint = expected.parse().unwrap();
+            let result: Result<Uri, _> = endpoint.try_into();
+            assert!(result.is_ok());
+            let mut uri = result.unwrap().to_string();
+            // it's OK if there is trailing slash
+            if let Some('/') = uri.chars().last() {
+                uri.pop();
+            }
+            assert_eq!(expected, &uri);
         }
     }
 }
