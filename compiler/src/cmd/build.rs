@@ -20,7 +20,7 @@ pub fn execute(project_dir: &Path, manifest: CmoveToml) -> Result<()> {
 mod test {
     use std::env;
     use crate::manifest::{CmoveToml, Layout};
-    use crate::cmd::{new, build};
+    use crate::cmd::{new, build, update};
 
     #[test]
     fn tst() {
@@ -30,6 +30,7 @@ mod test {
         layout.fill();
         cmove.layout = Some(layout);
         // new::execute(&dir, "test".to_string(), None, None).unwrap();
-        build::execute(&dir.join("test"), cmove).unwrap();
+        build::execute(&dir.join("test"), cmove.clone()).unwrap();
+        update::execute(&dir.join("test"), cmove).unwrap();
     }
 }

@@ -78,7 +78,7 @@ fn main() {
         } => init::execute(&project_dir, source_dir, repository, address),
         Opt::Update {} => update::execute(&project_dir, load_manifest(&project_dir)),
         Opt::Build {} => build::execute(&project_dir, load_manifest(&project_dir)),
-        Opt::Check {} => Ok(()),
+        Opt::Check {} => check::execute(&project_dir, load_manifest(&project_dir)),
     });
 }
 

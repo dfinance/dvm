@@ -136,18 +136,25 @@ impl<'a> Builder<'a> {
         source_list: Vec<PathBuf>,
         dep_list: Vec<PathBuf>,
     ) -> Result<(FilesSourceText, Vec<CompiledUnit>)> {
-        fn convert_path(path_list: Vec<PathBuf>) -> Result<Vec<String>> {
-            path_list
-                .iter()
-                .map(|path| path.to_str().map(|path| path.to_owned()))
-                .collect::<Option<Vec<_>>>()
-                .ok_or_else(|| anyhow!("Failed to convert source path"))
-        }
-
-        let source_list = convert_path(source_list)?;
-        let dep_list = convert_path(dep_list)?;
+        let source_list = Self::convert_path(source_list)?;
+        let dep_list = Self::convert_path(dep_list)?;
         let addr = self.address()?;
         Ok(move_lang::move_compile(&source_list, &dep_list, addr)?)
+    }
+
+    pub fn check(&self, source_list: Vec<PathBuf>, dep_list: Vec<PathBuf>) -> Result<()> {
+        let source_list = Self::convert_path(source_list)?;
+        let dep_list = Self::convert_path(dep_list)?;
+        let addr = self.address()?;
+        Ok(move_lang::move_check(&source_list, &dep_list, addr)?)
+    }
+
+    fn convert_path(path_list: Vec<PathBuf>) -> Result<Vec<String>> {
+        path_list
+            .iter()
+            .map(|path| path.to_str().map(|path| path.to_owned()))
+            .collect::<Option<Vec<_>>>()
+            .ok_or_else(|| anyhow!("Failed to convert source path"))
     }
 
     pub fn verify_and_store(&self, files: FilesSourceText, compiled_units: Vec<CompiledUnit>) -> Result<()> {
