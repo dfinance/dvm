@@ -3,7 +3,6 @@ use http::Uri;
 use std::path::Path;
 use std::fs;
 use crate::cmd::init;
-use crate::manifest::{CmoveToml, store_manifest, MANIFEST, Layout};
 
 pub fn execute(
     root: &Path,

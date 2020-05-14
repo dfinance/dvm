@@ -30,11 +30,17 @@ pub fn execute(
     layout.fill();
     let module_dir = project_dir.join(layout.module_dir.unwrap());
     fs::create_dir_all(&module_dir)?;
-    fs::write(module_dir.join("hello.move"), &include_str!("../../resources/default_module.move"))?;
+    fs::write(
+        module_dir.join("hello.move"),
+        &include_str!("../../resources/default_module.move"),
+    )?;
 
     let script_dir = project_dir.join(layout.script_dir.unwrap());
     fs::create_dir_all(&script_dir)?;
-    fs::write(script_dir.join("hello.move"), &include_str!("../../resources/default_script.move"))?;
+    fs::write(
+        script_dir.join("hello.move"),
+        &include_str!("../../resources/default_script.move"),
+    )?;
 
     Ok(())
 }
