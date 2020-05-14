@@ -12,11 +12,7 @@ pub const MANIFEST: &str = "Cmove.toml";
 pub struct CmoveToml {
     pub package: Package,
     pub layout: Option<Layout>,
-    pub dependencies: String,
 }
-
-#[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct Dependencies(Vec<String>);
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Package {

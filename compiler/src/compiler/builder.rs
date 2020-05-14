@@ -6,21 +6,37 @@ use libra::move_lang;
 use std::fs::{File, OpenOptions};
 use crate::compiler::bech32::bech32_into_libra;
 use std::io::Write;
-use crate::compiler::preprocessor;
+use crate::compiler::{preprocessor, disassembler};
 use anyhow::Result;
 use move_lang::shared::Address;
 use move_lang::errors::FilesSourceText;
 use move_lang::compiled_unit::CompiledUnit;
 use move_lang::{compiled_unit, errors};
+use crate::compiler::dependence::extractor::{extract_from_source, extract_from_bytecode};
+use crate::compiler::dependence::loader::{BytecodeSource, Loader};
+use std::collections::HashMap;
+use libra::libra_types::language_storage::ModuleId;
 
-pub struct Builder<'a> {
+pub struct Builder<'a, S: BytecodeSource> {
     project_dir: &'a Path,
     manifest: CmoveToml,
+    loader: Option<Loader<S>>,
 }
 
-impl<'a> Builder<'a> {
-    pub fn new(project_dir: &'a Path, manifest: CmoveToml) -> Builder<'a> {
-        Builder { project_dir, manifest }
+impl<'a, S> Builder<'a, S>
+where
+    S: BytecodeSource,
+{
+    pub fn new(
+        project_dir: &'a Path,
+        manifest: CmoveToml,
+        loader: Option<Loader<S>>,
+    ) -> Builder<'a, S> {
+        Builder {
+            project_dir,
+            manifest,
+            loader,
+        }
     }
 
     pub fn init_build_layout(&self) -> Result<()> {
@@ -53,13 +69,54 @@ impl<'a> Builder<'a> {
         Ok(())
     }
 
-    pub fn load_dependencies(&self, sources: &[PathBuf]) -> Result<Vec<PathBuf>> {
-        //todo
-        Ok(vec![])
+    pub fn load_dependencies(&self, sources: &[PathBuf]) -> Result<HashMap<ModuleId, Vec<u8>>> {
+        let source_imports = extract_from_source(sources)?;
+        let mut deps = HashMap::new();
+
+        if let Some(loader) = &self.loader {
+            for import in source_imports {
+                let bytecode = loader.get(&import)?;
+                self.load_bytecode_tree(&bytecode, &mut deps)?;
+                deps.insert(import, bytecode);
+            }
+        }
+
+        Ok(deps)
     }
 
-    pub fn make_dependencies_as_source(&self, bytecode: Vec<PathBuf>) -> Result<Vec<PathBuf>> {
-        Ok(vec![])
+    fn load_bytecode_tree(&self, bytecode: &[u8], deps: &mut HashMap<ModuleId, Vec<u8>>) -> Result<()> {
+        let source_imports = extract_from_bytecode(bytecode)?;
+        if let Some(loader) = &self.loader {
+            for import in source_imports {
+                let bytecode = loader.get(&import)?;
+                self.load_bytecode_tree(&bytecode, deps)?;
+                deps.insert(import, bytecode);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn make_dependencies_as_source(&self, bytecode: HashMap<ModuleId, Vec<u8>>) -> Result<Vec<PathBuf>> {
+        let deps = self.temp_dir()?.join("deps");
+        fs::create_dir_all(&deps)?;
+
+        let mut path_list = Vec::with_capacity(bytecode.len());
+
+        for (id, bytecode) in bytecode {
+            let signature  = disassembler::module_signature(&bytecode)?.to_string();
+            let path = deps.join(format!("{}_{}.move", id.address(), id.name().as_str()));
+
+            let mut f = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .open(&deps.join(&path))?;
+            f.write_all(signature.as_bytes())?;
+
+            path_list.push(path)
+        }
+
+        Ok(path_list)
     }
 
     pub fn make_source_map(&self) -> Result<Vec<PathBuf>> {
@@ -136,28 +193,24 @@ impl<'a> Builder<'a> {
         source_list: Vec<PathBuf>,
         dep_list: Vec<PathBuf>,
     ) -> Result<(FilesSourceText, Vec<CompiledUnit>)> {
-        let source_list = Self::convert_path(source_list)?;
-        let dep_list = Self::convert_path(dep_list)?;
+        let source_list = convert_path(&source_list)?;
+        let dep_list = convert_path(&dep_list)?;
         let addr = self.address()?;
         Ok(move_lang::move_compile(&source_list, &dep_list, addr)?)
     }
 
     pub fn check(&self, source_list: Vec<PathBuf>, dep_list: Vec<PathBuf>) -> Result<()> {
-        let source_list = Self::convert_path(source_list)?;
-        let dep_list = Self::convert_path(dep_list)?;
+        let source_list = convert_path(&source_list)?;
+        let dep_list = convert_path(&dep_list)?;
         let addr = self.address()?;
         Ok(move_lang::move_check(&source_list, &dep_list, addr)?)
     }
 
-    fn convert_path(path_list: Vec<PathBuf>) -> Result<Vec<String>> {
-        path_list
-            .iter()
-            .map(|path| path.to_str().map(|path| path.to_owned()))
-            .collect::<Option<Vec<_>>>()
-            .ok_or_else(|| anyhow!("Failed to convert source path"))
-    }
-
-    pub fn verify_and_store(&self, files: FilesSourceText, compiled_units: Vec<CompiledUnit>) -> Result<()> {
+    pub fn verify_and_store(
+        &self,
+        files: FilesSourceText,
+        compiled_units: Vec<CompiledUnit>,
+    ) -> Result<()> {
         let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
         let (modules, scripts): (Vec<_>, Vec<_>) = compiled_units
             .into_iter()
@@ -267,16 +320,26 @@ impl<'a> Builder<'a> {
     }
 }
 
-impl<'a> Drop for Builder<'a> {
+pub fn convert_path(path_list: &[PathBuf]) -> Result<Vec<String>> {
+    path_list
+        .iter()
+        .map(|path| path.to_str().map(|path| path.to_owned()))
+        .collect::<Option<Vec<_>>>()
+        .ok_or_else(|| anyhow!("Failed to convert source path"))
+}
+
+impl<'a, S> Drop for Builder<'a, S>
+where
+    S: BytecodeSource,
+{
     fn drop(&mut self) {
-        let res = self.temp_dir()
-            .and_then(|dir| {
-                if dir.exists() {
-                    Ok(fs::remove_dir_all(&dir)?)
-                } else {
-                    Ok(())
-                }
-            });
+        let res = self.temp_dir().and_then(|dir| {
+            if dir.exists() {
+                Ok(fs::remove_dir_all(&dir)?)
+            } else {
+                Ok(())
+            }
+        });
 
         if let Err(err) = res {
             println!("Failed to clean up temporary directory:{}", err);
