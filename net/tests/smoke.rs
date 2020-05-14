@@ -64,11 +64,15 @@ fn serve(uri: &str, counter: Arc<AtomicUsize>) -> JoinHandle<()> {
     })
 }
 
-const CLIENT_REQS: usize = 3;
-fn client(uri: &str) -> JoinHandle<()> {
+fn serve_with_shutdown(
+    uri: &str,
+    counter: Arc<AtomicUsize>,
+) -> (JoinHandle<()>, oneshot::Sender<()>) {
     let uri = uri.to_owned();
-    std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_secs(1));
+
+    let (tx, rx) = oneshot::channel::<()>();
+
+    let join = std::thread::spawn(move || {
         let mut rt = Builder::new()
             .basic_scheduler()
             .enable_all()
@@ -76,18 +80,67 @@ fn client(uri: &str) -> JoinHandle<()> {
             .unwrap();
         let endpoint: Endpoint = uri.parse().unwrap();
 
+        let service = Fake();
         rt.block_on(async {
-            let channel = endpoint.connect().await.unwrap();
-            let mut client = DsServiceClient::new(channel);
-            for _ in 0..CLIENT_REQS {
-                let request = tonic::Request::new(DsAccessPath {
-                    address: vec![0],
-                    path: vec![0],
-                });
-                let _: DsRawResponse = client.get_raw(request).await.unwrap().into_inner();
-            }
+            Server::builder()
+                .add_service(DsServiceServer::with_interceptor(service, move |req| {
+                    counter.fetch_add(1, Ordering::SeqCst);
+                    println!("REQ: {:?}", &req);
+                    Ok(req)
+                }))
+                .serve_ext_with_shutdown(
+                    endpoint,
+                    rx.map(|res| {
+                        println!("shutdown sig-channel polled, res: {:?}", res);
+                        ()
+                    }),
+                )
+                .await
+                .unwrap();
         });
-    })
+    });
+
+    (join, tx)
+}
+
+const CLIENT_REQS: usize = 3;
+fn client(uri: &str) -> (JoinHandle<()>, Arc<AtomicUsize>) {
+    let uri = uri.to_owned();
+    let err_counter = Arc::new(AtomicUsize::new(0));
+    let err_counter_clone = err_counter.clone();
+
+    (
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_secs(1));
+            let mut rt = Builder::new()
+                .basic_scheduler()
+                .enable_all()
+                .build()
+                .unwrap();
+            let endpoint: Endpoint = uri.parse().unwrap();
+
+            rt.block_on(async {
+                if let Ok(channel) = endpoint.connect().await {
+                    let mut client = DsServiceClient::new(channel);
+                    for _ in 0..CLIENT_REQS {
+                        let request = tonic::Request::new(DsAccessPath {
+                            address: vec![0],
+                            path: vec![0],
+                        });
+
+                        if let Ok(resp) = client.get_raw(request).await {
+                            let _: DsRawResponse = resp.into_inner();
+                        } else {
+                            err_counter.fetch_add(1, Ordering::SeqCst);
+                        }
+                    }
+                } else {
+                    err_counter.fetch_add(1, Ordering::SeqCst);
+                }
+            });
+        }),
+        err_counter_clone,
+    )
 }
 
 mod http {
@@ -99,7 +152,7 @@ mod http {
         let counter = Arc::new(AtomicUsize::new(0));
         {
             let _ = serve(URI, counter.clone());
-            client(URI).join().unwrap();
+            client(URI).0.join().unwrap();
         }
         assert_eq!(/* 1 *  */ CLIENT_REQS, counter.load(Ordering::Acquire));
     }
@@ -116,12 +169,32 @@ mod http {
                 self::client(URI);
             }
             // wait last client
-            client(URI).join().unwrap();
+            client(URI).0.join().unwrap();
 
             // wait one sec for drop:
             std::thread::sleep(Duration::from_secs(1))
         }
         assert_eq!(5 * CLIENT_REQS, counter.load(Ordering::Acquire));
+    }
+
+    #[test]
+    #[ignore]
+    fn http_1_to_1_with_shutdown() {
+        const URI: &str = "http://[::1]:50053";
+        let counter = Arc::new(AtomicUsize::new(0));
+        {
+            let (_, tx) = serve_with_shutdown(URI, counter.clone());
+            client(URI).0.join().unwrap();
+
+            // shutdown:
+            tx.send(()).expect("unable to send shutdown signal");
+            {
+                let (cl, errs) = client(URI);
+                cl.join().expect("client should not crash");
+                assert_eq!(1, errs.load(Ordering::Acquire));
+            }
+        }
+        assert_eq!(/* 1 *  */ CLIENT_REQS, counter.load(Ordering::Acquire));
     }
 }
 
@@ -135,7 +208,7 @@ mod ipc {
         let counter = Arc::new(AtomicUsize::new(0));
         {
             let _ = serve(URI, counter.clone());
-            client(URI).join().unwrap();
+            client(URI).0.join().unwrap();
         }
 
         #[cfg(unix)]
@@ -157,7 +230,7 @@ mod ipc {
                 client(URI);
             }
             // wait last client
-            client(URI).join().unwrap();
+            client(URI).0.join().unwrap();
 
             // wait one sec for drop
             std::thread::sleep(Duration::from_secs(1))
@@ -167,5 +240,29 @@ mod ipc {
         let _ = dvm_net::transport::close_uds(PATH);
 
         assert_eq!(5 * CLIENT_REQS, counter.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn ipc_1_to_1_with_shutdown() {
+        const URI: &str = "ipc://./tmp/test3.ipc";
+        const PATH: &str = "./tmp/test3.ipc";
+        let counter = Arc::new(AtomicUsize::new(0));
+        {
+            let (_, tx) = serve_with_shutdown(URI, counter.clone());
+            client(URI).0.join().unwrap();
+
+            // shutdown:
+            tx.send(()).expect("unable to send shutdown signal");
+            {
+                let (cl, errs) = client(URI);
+                cl.join().expect("client should not crash");
+                assert_eq!(1, errs.load(Ordering::Acquire));
+            }
+        }
+
+        #[cfg(unix)]
+        let _ = dvm_net::transport::close_uds(PATH);
+
+        assert_eq!(/* 1 *  */ CLIENT_REQS, counter.load(Ordering::Acquire));
     }
 }

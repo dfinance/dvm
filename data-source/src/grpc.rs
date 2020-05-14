@@ -46,7 +46,7 @@ impl GrpcDataSource {
                 if scheme_http {
                     match DsServiceClient::connect(ds_addr.to_string()).await {
                         Ok(client) => return client,
-                        Err(err) => tokio::time::delay_for(Duration::from_secs(1)).await,
+                        Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
                     }
                 } else {
                     match ds_addr.clone().try_into() {
