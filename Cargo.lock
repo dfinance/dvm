@@ -644,6 +644,7 @@ dependencies = [
  "dvm-libra-deps",
  "dvm-net",
  "dvm-services",
+ "enum-iterator",
  "env_logger",
  "http",
  "log",
