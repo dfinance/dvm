@@ -4,7 +4,7 @@ use structopt::StructOpt;
 use http::Uri;
 use std::env;
 use dvm_compiler::{
-    manifest::{MANIFEST, CmoveToml},
+    manifest::{MANIFEST, MoveToml},
     cmd::*,
 };
 use std::process::exit;
@@ -15,7 +15,7 @@ use dvm_compiler::manifest::read_manifest;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "git")]
 enum Opt {
-    #[structopt(help = "Init directory as cmove project.")]
+    #[structopt(help = "Init directory as move project.")]
     Init {
         #[structopt(help = "Project name.")]
         project_name: String,
@@ -34,7 +34,7 @@ enum Opt {
         )]
         address: Option<String>,
     },
-    #[structopt(help = "Create a new cmove project")]
+    #[structopt(help = "Create a new move project")]
     New {
         #[structopt(help = "Project name.")]
         project_name: String,
@@ -91,7 +91,7 @@ fn handle_error<T>(res: Result<T, Error>) -> T {
     }
 }
 
-fn load_manifest(project_dir: &Path) -> CmoveToml {
+fn load_manifest(project_dir: &Path) -> MoveToml {
     let manifest = project_dir.join(MANIFEST);
     if !manifest.exists() {
         println!(

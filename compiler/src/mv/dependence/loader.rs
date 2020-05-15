@@ -5,7 +5,7 @@ use tiny_keccak::{Hasher, Sha3};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use http::Uri;
-use crate::manifest::CmoveToml;
+use crate::manifest::MoveToml;
 use std::fs;
 
 pub trait BytecodeSource: Clone {
@@ -88,7 +88,7 @@ where
 
 pub fn make_rest_loader(
     project_dir: &Path,
-    cmove: &CmoveToml,
+    cmove: &MoveToml,
 ) -> Result<Option<Loader<RestBytecodeSource>>> {
     let path = cmove
         .layout

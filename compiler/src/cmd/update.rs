@@ -1,9 +1,9 @@
 use anyhow::Error;
 use std::path::Path;
-use crate::manifest::CmoveToml;
+use crate::manifest::MoveToml;
 use std::fs;
 
-pub fn execute(project_dir: &Path, manifest: CmoveToml) -> Result<(), Error> {
+pub fn execute(project_dir: &Path, manifest: MoveToml) -> Result<(), Error> {
     let cache_path = manifest
         .layout
         .as_ref()

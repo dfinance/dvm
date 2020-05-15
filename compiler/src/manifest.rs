@@ -6,10 +6,10 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use toml::Value;
 
-pub const MANIFEST: &str = "Cmove.toml";
+pub const MANIFEST: &str = "Move.toml";
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct CmoveToml {
+pub struct MoveToml {
     pub package: Package,
     pub layout: Option<Layout>,
 }
@@ -60,11 +60,11 @@ impl Layout {
     }
 }
 
-pub fn read_manifest(path: &Path) -> Result<CmoveToml, Error> {
+pub fn read_manifest(path: &Path) -> Result<MoveToml, Error> {
     Ok(toml::from_str(&fs::read_to_string(path)?)?)
 }
 
-pub fn store_manifest(path: &Path, manifest: CmoveToml) -> Result<(), Error> {
+pub fn store_manifest(path: &Path, manifest: MoveToml) -> Result<(), Error> {
     let value = toml::to_vec(&Value::try_from(manifest)?)?;
     let mut f = OpenOptions::new()
         .create(true)

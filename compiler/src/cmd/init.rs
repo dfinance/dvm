@@ -1,7 +1,7 @@
 use anyhow::Error;
 use http::Uri;
 use std::path::Path;
-use crate::manifest::{MANIFEST, CmoveToml, store_manifest, Layout};
+use crate::manifest::{MANIFEST, MoveToml, store_manifest, Layout};
 use std::fs;
 
 pub fn execute(
@@ -20,7 +20,7 @@ pub fn execute(
         return Err(anyhow!("destination `{:?}` already exists", cmove_path));
     }
 
-    let mut cmove = CmoveToml::default();
+    let mut cmove = MoveToml::default();
     cmove.package.name = Some(source_dir);
     cmove.package.blockchain_api = repository.map(|uri| uri.to_string());
     cmove.package.account_address = address;

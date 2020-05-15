@@ -10,7 +10,7 @@ use std::{env, fs};
 use std::path::{PathBuf, Path};
 use rand::Rng;
 use crate::mv::builder::Builder;
-use crate::manifest::{CmoveToml, Layout};
+use crate::manifest::{MoveToml, Layout};
 use std::fs::OpenOptions;
 use std::io::Write;
 
@@ -35,7 +35,7 @@ where
         address: Option<AccountAddress>,
     ) -> Result<HashMap<String, Vec<u8>>> {
         let dir = TempDir::new()?;
-        let mut cmove = CmoveToml::default();
+        let mut cmove = MoveToml::default();
         let mut layout = Layout::default();
         layout.fill();
 

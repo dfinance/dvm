@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use crate::manifest::CmoveToml;
+use crate::manifest::MoveToml;
 use std::fs;
 use walkdir::WalkDir;
 use libra::move_lang;
@@ -21,7 +21,7 @@ use libra::libra_types::account_address::AccountAddress;
 
 pub struct Builder<'a, S: BytecodeSource> {
     project_dir: &'a Path,
-    manifest: CmoveToml,
+    manifest: MoveToml,
     loader: &'a Option<Loader<S>>,
     print_err: bool,
     shutdown_on_err: bool,
@@ -33,7 +33,7 @@ where
 {
     pub fn new(
         project_dir: &'a Path,
-        manifest: CmoveToml,
+        manifest: MoveToml,
         loader: &'a Option<Loader<S>>,
         print_err: bool,
         shutdown_on_err: bool,
