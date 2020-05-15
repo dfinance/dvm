@@ -10,6 +10,7 @@ use libra::libra_logger::init_struct_log_from_env;
 use structopt::StructOpt;
 
 use tonic::transport::Server;
+use futures::future::{lazy, FutureExt};
 
 use dvm_net::prelude::*;
 use dvm_net::tonic;
@@ -18,7 +19,7 @@ use data_source::{GrpcDataSource, ModuleCache};
 use anyhow::Result;
 use services::vm::VmService;
 use dvm_cli::config::*;
-use dvm_cli::logging;
+use dvm_cli::{init, logging, ShutdownSignal};
 
 const MODULE_CACHE: usize = 1000;
 
@@ -55,21 +56,22 @@ struct Options {
 
 fn main() -> Result<()> {
     let options = Options::from_args();
-    let _guard = logging::init(&options.logging, &options.integrations);
-    main_internal(options)
+    let (sigterm, _guard) = init(&options.logging, &options.integrations);
+    main_internal(options, sigterm)
 }
 
 #[tokio::main]
-async fn main_internal(options: Options) -> Result<()> {
+async fn main_internal(options: Options, sigterm: ShutdownSignal) -> Result<()> {
     let ds = GrpcDataSource::new(options.ds).expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(ds, MODULE_CACHE);
     let service = VmService::new(ds).expect("Unable to initialize VmService.");
+    let sigterm = lazy(move |_| sigterm.recv()).map(|_| logging::log_shutdown(Some("DVM")));
 
     init_struct_log_from_env().unwrap();
     info!("DVM server listening on {}", options.address);
     Server::builder()
         .add_service(VmServiceServer::new(service))
-        .serve_ext(options.address)
+        .serve_ext_with_shutdown(options.address, sigterm)
         .await
         .expect("internal fail");
     Ok(())

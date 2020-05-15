@@ -646,11 +646,13 @@ dependencies = [
  "dvm-services",
  "enum-iterator",
  "env_logger",
+ "futures",
  "http",
  "log",
  "sentry",
  "serde",
  "serde_json",
+ "signal-notify",
  "structopt",
  "tokio",
 ]
@@ -2926,6 +2928,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94f478ede9f64724c5d173d7bb56099ec3e2d9fc2774aac65d34b8b890405f41"
 dependencies = [
  "arc-swap",
+ "libc",
+]
+
+[[package]]
+name = "signal-notify"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "847fbedad7c2e6fbb6077befa1fa61a6336658eaae2d9fe66cb94a0024742f4e"
+dependencies = [
+ "lazy_static",
  "libc",
 ]
 

@@ -47,7 +47,12 @@ impl GrpcDataSource {
                         std::process::exit(-1);
                     }
                     Ok::<Endpoint, _>(endpoint) => match endpoint.connect().await {
-                        Ok(channel) => return DsServiceClient::new(channel),
+                        Ok(channel) => {
+                            return DsServiceClient::with_interceptor(channel, |req| {
+                                debug!("request DS: {:?}", req);
+                                Ok(req)
+                            })
+                        }
                         Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
                     },
                 }

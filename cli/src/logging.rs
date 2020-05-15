@@ -1,10 +1,8 @@
 use crate::config::*;
+use std::fmt::Display;
 
 #[cfg(feature = "sentry")]
-pub use support_sentry::*;
-
-#[cfg(feature = "sentry")]
-mod support_sentry {
+pub(crate) mod support_sentry {
     use super::*;
     use sentry::internals::Dsn;
     use sentry::internals::ClientInitGuard;
@@ -61,16 +59,6 @@ mod support_sentry {
     }
 }
 
-/// Default logging initializer without extra integrations.
-/// Used as fallback if sentry feature disabled.
-#[cfg(not(feature = "sentry"))]
-pub fn init(log: &LoggingOptions, _: &IntegrationsOptions) -> Option<()> {
-    init_logging(log)
-        .map(|_| trace!("Logging system initialized."))
-        .map_err(|err| eprintln!("Attempt to init global logger once more. {:?}", err))
-        .ok()
-}
-
 pub fn init_logging(opts: &LoggingOptions) -> Result<(), log::SetLoggerError> {
     logging_builder(opts).try_init()
 }
@@ -101,6 +89,14 @@ fn rust_log_compat(rust_log: &str, rust_log_style: &str) {
     use std::env::set_var;
     set_var(RUST_LOG, rust_log);
     set_var(RUST_LOG_STYLE, rust_log_style);
+}
+
+pub fn log_shutdown<T: Display>(any: Option<T>) {
+    if let Some(s) = any {
+        info!("Shutting down services: {}", s)
+    } else {
+        info!("Shutting down services")
+    }
 }
 
 #[cfg(test)]
@@ -204,7 +200,7 @@ mod tests {
                 sentry_env: env.into(),
             };
 
-            let _guard = super::init(&logging, &integrations);
+            let _guard = crate::init(&logging, &integrations);
             let handle = spawn(move || panic!(TEXT));
             sleep(Duration::from_secs(5));
             sleep(Duration::from_secs(5));
