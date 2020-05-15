@@ -1,12 +1,12 @@
 use libra::libra_types;
 use libra_types::account_address::AccountAddress;
-use dvm_api::tonic;
+use dvm_net::{tonic, api};
 use tonic::{Request, Code};
 
 use data_source::MockDataSource;
 use dvm_services::metadata::MetadataService;
-use dvm_api::grpc::vm_grpc::{VmScript, VmTypeTag};
-use dvm_api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
+use api::grpc::vm_grpc::{VmScript, VmTypeTag};
+use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
 use compiler::Compiler;
 
 #[tokio::test]

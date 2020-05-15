@@ -8,21 +8,22 @@ authors = [
     ]
 edition = "2018"
 
+
 [dependencies]
 libra = { path = "../libra", package = "dvm-libra-deps" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
 ds = { path = "../data-source", package = "dvm-data-source" }
-anyhow = "=1.0.27"
-lazy_static = "=1.4.0"
-bech32 = "=0.7.2"
-regex = "=1.3.7"
+anyhow = "1.0"
+lazy_static = "1.4.0"
+bech32 = "0.7.2"
+regex = "1.3.7"
 lru = "0.4.3"
-codespan = "0.8.0"
-serde = "=1.0.110"
-serde_json = "1.0.51"
+codespan = "0.9"
+serde = "1.0"
+serde_json = "1.0"
 hex = "=0.4.2"
-maplit = "=1.0.2"
+maplit = "1.0.2"
 once_cell = "1.4.0"
 twox-hash = "1.5.0"
-include_dir = "0.5.0"
+include_dir = "0.6"
 rand = "0.7.3"
