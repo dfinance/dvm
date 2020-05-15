@@ -13,9 +13,9 @@ use anyhow::Error;
 use dvm_compiler::manifest::read_manifest;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "git")]
+#[structopt(name = "Move compiler.")]
 enum Opt {
-    #[structopt(help = "Init directory as move project.")]
+    #[structopt(about = "Init directory as move project.")]
     Init {
         #[structopt(help = "Project name.")]
         project_name: String,
@@ -34,7 +34,7 @@ enum Opt {
         )]
         address: Option<String>,
     },
-    #[structopt(help = "Create a new move project")]
+    #[structopt(about = "Create a new move project")]
     New {
         #[structopt(help = "Project name.")]
         project_name: String,
@@ -53,11 +53,11 @@ enum Opt {
         )]
         address: Option<String>,
     },
-    #[structopt(help = "Reload dependencies")]
+    #[structopt(about = "Reload dependencies")]
     Update {},
-    #[structopt(help = "Build project")]
+    #[structopt(about = "Build project")]
     Build {},
-    #[structopt(help = "Check project")]
+    #[structopt(about = "Check project")]
     Check {},
 }
 
