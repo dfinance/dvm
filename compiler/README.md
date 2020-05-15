@@ -1,2 +1,0 @@
-cmove init
- 
