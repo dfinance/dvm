@@ -93,9 +93,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.27"
+version = "1.0.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "013a6e0a2cbe3d20f9c60b65458f7a7f7a5e636c5d0f45a5a6aee5d4b1f01785"
+checksum = "85bb70cc08ec97ca5450e6eba421deeea5f172c0fc61f78b5357b2a8e8be195f"
 
 [[package]]
 name = "arc-swap"
@@ -169,15 +169,6 @@ dependencies = [
  "libc",
  "object",
  "rustc-demangle",
-]
-
-[[package]]
-name = "base64"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
-dependencies = [
- "byteorder",
 ]
 
 [[package]]
@@ -279,8 +270,8 @@ version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=15.05.2020#7b29dec33f32d4aaafa8df98963d861320c3d895"
 dependencies = [
  "anyhow",
- "codespan",
- "codespan-reporting",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
  "libra-canonical-serialization",
  "libra-types",
  "libra-workspace-hack",
@@ -398,12 +389,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "codespan"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c7ddb4fbbadc95403d087ced01b50729650c0fba279e3711c6d4f94c844c449"
+dependencies = [
+ "codespan-reporting 0.9.3",
+]
+
+[[package]]
 name = "codespan-reporting"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "600c3317d4705222ff820139aaa76a3a208024ffc41f894da565a4c3b949d4c9"
 dependencies = [
- "codespan",
+ "codespan 0.8.0",
+ "termcolor",
+ "unicode-width",
+]
+
+[[package]]
+name = "codespan-reporting"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5680df8512a0e825b9edc41b619ec88b367644d394b4d862a04b4d6387c65da"
+dependencies = [
  "termcolor",
  "unicode-width",
 ]
@@ -588,8 +598,8 @@ dependencies = [
  "prost",
  "serde_json",
  "tokio",
- "tonic 0.2.1",
- "tonic-build 0.2.0",
+ "tonic",
+ "tonic-build",
 ]
 
 [[package]]
@@ -626,11 +636,11 @@ checksum = "4358a9e11b9a09cf52383b451b49a169e8d797b68aa02301ff586d70d9661ea3"
 [[package]]
 name = "dvm-api"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/dvm-proto.git#b54f4d9892f9bd0a1e5c92f435b7b3a44386b112"
+source = "git+https://github.com/dfinance/dvm-proto.git#f53d1b134ee58feeab275edda5a661be3eac0fe1"
 dependencies = [
  "prost",
- "tonic 0.1.1",
- "tonic-build 0.1.1",
+ "tonic",
+ "tonic-build",
 ]
 
 [[package]]
@@ -677,7 +687,7 @@ dependencies = [
  "structopt",
  "termcolor",
  "tiny-keccak",
- "toml 0.4.10",
+ "toml",
  "twox-hash",
  "walkdir",
 ]
@@ -702,12 +712,12 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "bech32",
- "codespan",
+ "codespan 0.9.3",
  "dvm-compiler",
  "dvm-data-source",
  "dvm-libra-deps",
  "hex",
- "include_dir 0.5.0",
+ "include_dir",
  "lazy_static",
  "lru",
  "maplit",
@@ -784,11 +794,11 @@ name = "dvm-services"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "dvm-api",
  "dvm-compiler",
  "dvm-data-source",
  "dvm-lang",
  "dvm-libra-deps",
+ "dvm-net",
  "dvm-runtime",
  "hex",
  "tokio",
@@ -1144,7 +1154,7 @@ dependencies = [
  "log",
  "slab",
  "tokio",
- "tokio-util 0.3.1",
+ "tokio-util",
 ]
 
 [[package]]
@@ -1204,9 +1214,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b708cc7f06493459026f53b9a61a7a121a5d1ec6238dee58ea4941132b30156b"
+checksum = "28d569972648b2c512421b5f2a405ad6ac9666547189d0c5477a3f200f3e02f9"
 dependencies = [
  "bytes",
  "fnv",
@@ -1308,37 +1318,13 @@ dependencies = [
 
 [[package]]
 name = "include_dir"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25ec8c61b6100ad0fc58ca644c59c0137d526d73cefa7497426369ea0d84d769"
-dependencies = [
- "glob",
- "include_dir_impl 0.5.0",
- "proc-macro-hack",
-]
-
-[[package]]
-name = "include_dir"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23d58bdeb22b1c4691106c084b1063781904c35d0f22eda2a283598968eac61a"
 dependencies = [
  "glob",
- "include_dir_impl 0.6.0",
+ "include_dir_impl",
  "proc-macro-hack",
-]
-
-[[package]]
-name = "include_dir_impl"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f03b4f7b64011df46794cc221854be5c3084345e260576518b91693866d0afd1"
-dependencies = [
- "failure",
- "proc-macro-hack",
- "proc-macro2 1.0.12",
- "quote 1.0.5",
- "syn 1.0.21",
 ]
 
 [[package]]
@@ -1379,8 +1365,8 @@ source = "git+https://github.com/dfinance/libra.git?branch=15.05.2020#7b29dec33f
 dependencies = [
  "anyhow",
  "bytecode-source-map",
- "codespan",
- "codespan-reporting",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
  "ir-to-bytecode-syntax",
  "libra-types",
  "libra-workspace-hack",
@@ -1398,7 +1384,7 @@ version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=15.05.2020#7b29dec33f32d4aaafa8df98963d861320c3d895"
 dependencies = [
  "anyhow",
- "codespan",
+ "codespan 0.8.0",
  "hex",
  "libra-types",
  "libra-workspace-hack",
@@ -1537,7 +1523,7 @@ dependencies = [
  "rand 0.7.3",
  "serde",
  "thiserror",
- "toml 0.5.6",
+ "toml",
 ]
 
 [[package]]
@@ -1911,7 +1897,7 @@ version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=15.05.2020#7b29dec33f32d4aaafa8df98963d861320c3d895"
 dependencies = [
  "anyhow",
- "codespan",
+ "codespan 0.8.0",
  "hex",
  "libra-types",
  "libra-workspace-hack",
@@ -1928,8 +1914,8 @@ dependencies = [
  "borrow-graph",
  "bytecode-source-map",
  "bytecode-verifier",
- "codespan",
- "codespan-reporting",
+ "codespan 0.8.0",
+ "codespan-reporting 0.8.0",
  "datatest-stable",
  "difference",
  "hex",
@@ -2147,12 +2133,6 @@ dependencies = [
  "pkg-config",
  "vcpkg",
 ]
-
-[[package]]
-name = "percent-encoding"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31010dd2e1ac33d5b46a5b413495239882813e0369f8ed8a5e266f173602f831"
 
 [[package]]
 name = "percent-encoding"
@@ -2667,7 +2647,7 @@ version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02b81e49ddec5109a9dcfc5f2a317ff53377c915e9ae9d4f2fb50914b85614e2"
 dependencies = [
- "base64 0.11.0",
+ "base64",
  "bytes",
  "encoding_rs",
  "futures-core",
@@ -2682,7 +2662,7 @@ dependencies = [
  "mime",
  "mime_guess",
  "native-tls",
- "percent-encoding 2.1.0",
+ "percent-encoding",
  "pin-project-lite",
  "serde",
  "serde_json",
@@ -2795,9 +2775,9 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "sentry"
-version = "0.18.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efe1c6c258797410d14ef90993e00916318d17461b201538d76fd8d3031cad4e"
+checksum = "8b01b723fc1b0a0f9394ca1a8451daec6e20206d47f96c3dceea7fd11ec9eec0"
 dependencies = [
  "backtrace",
  "env_logger",
@@ -2989,7 +2969,7 @@ dependencies = [
  "anyhow",
  "bytecode-verifier",
  "datatest-stable",
- "include_dir 0.6.0",
+ "include_dir",
  "libra-canonical-serialization",
  "libra-crypto",
  "libra-types",
@@ -3213,20 +3193,6 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "571da51182ec208780505a32528fc5512a8fe1443ab960b3f2f3ef093cd16930"
-dependencies = [
- "bytes",
- "futures-core",
- "futures-sink",
- "log",
- "pin-project-lite",
- "tokio",
-]
-
-[[package]]
-name = "tokio-util"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be8242891f2b6cbef26a2d7e8605133c2c554cd35b3e4948ea892d6d68436499"
@@ -3241,50 +3207,11 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.4.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "758664fc71a3a69038656bee8b6be6477d2a6c315a6b81f7081f591bffa4111f"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "toml"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffc92d160b1eef40665be3a05630d003936a3bc7da7421277846c2613e92c71a"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "tonic"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08283643b1d483eb7f3fc77069e63b5cba3e4db93514b3d45470e67f123e4e48"
-dependencies = [
- "async-stream",
- "async-trait",
- "base64 0.10.1",
- "bytes",
- "futures-core",
- "futures-util",
- "http",
- "http-body",
- "hyper",
- "percent-encoding 1.0.1",
- "pin-project",
- "prost",
- "prost-derive",
- "tokio",
- "tokio-util 0.2.0",
- "tower",
- "tower-balance",
- "tower-load",
- "tower-make",
- "tower-service",
- "tracing",
- "tracing-futures",
 ]
 
 [[package]]
@@ -3295,19 +3222,19 @@ checksum = "4afef9ce97ea39593992cf3fa00ff33b1ad5eb07665b31355df63a690e38c736"
 dependencies = [
  "async-stream",
  "async-trait",
- "base64 0.11.0",
+ "base64",
  "bytes",
  "futures-core",
  "futures-util",
  "http",
  "http-body",
  "hyper",
- "percent-encoding 2.1.0",
+ "percent-encoding",
  "pin-project",
  "prost",
  "prost-derive",
  "tokio",
- "tokio-util 0.3.1",
+ "tokio-util",
  "tower",
  "tower-balance",
  "tower-load",
@@ -3315,18 +3242,6 @@ dependencies = [
  "tower-service",
  "tracing",
  "tracing-futures",
-]
-
-[[package]]
-name = "tonic-build"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0436413ba71545bcc6c2b9a0f9d78d72deb0123c6a75ccdfe7c056f9930f5e52"
-dependencies = [
- "proc-macro2 1.0.12",
- "prost-build",
- "quote 1.0.5",
- "syn 1.0.21",
 ]
 
 [[package]]
@@ -3675,7 +3590,7 @@ checksum = "829d4a8476c35c9bf0bbce5a3b23f4106f79728039b726d292bb93bc106787cb"
 dependencies = [
  "idna",
  "matches",
- "percent-encoding 2.1.0",
+ "percent-encoding",
  "serde",
 ]
 

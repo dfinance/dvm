@@ -8,15 +8,16 @@ authors = [
     ]
 edition = "2018"
 
+
 [dependencies]
-dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
+dvm-net = { path = "../net" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
 lang = { path = "../lang", package = "dvm-lang" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
 runtime = { path = "../runtime", package = "dvm-runtime" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
-anyhow = "1.0.27"
+anyhow = "1.0"
 hex = "=0.4.2"
 
 [dev-dependencies]
-tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
+tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }

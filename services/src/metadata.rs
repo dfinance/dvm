@@ -1,10 +1,10 @@
-use dvm_api::tonic;
-use tonic::{Request, Response, Status};
 use libra::libra_vm;
 use libra_vm::file_format::SignatureToken;
 use lang::bytecode::extract_script_params;
-use dvm_api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
-use dvm_api::grpc::vm_grpc::{Signature, VmScript, VmTypeTag};
+use crate::{tonic, api};
+use tonic::{Request, Response, Status};
+use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
+use api::grpc::vm_grpc::{Signature, VmScript, VmTypeTag};
 
 #[derive(Default)]
 pub struct MetadataService {}

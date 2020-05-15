@@ -9,15 +9,15 @@ use libra_types::transaction::{Module, TransactionStatus};
 use libra_types::vm_error::{StatusCode, VMStatus};
 use libra_types::write_set::{WriteOp, WriteSet};
 
-use dvm_api::tonic;
+use crate::{tonic, api};
 use tonic::{Request, Response, Status};
 
 use runtime::move_vm::{ExecutionMeta, VM, Script, ExecutionResult, Dvm};
-use dvm_api::grpc::vm_grpc::{
+use api::grpc::vm_grpc::{
     VmContract, VmExecuteResponse, VmExecuteRequest, VmExecuteResponses, VmTypeTag, VmStatus,
     VmValue, VmAccessPath, VmType, VmStructTag, VmEvent, ContractType,
 };
-use dvm_api::grpc::vm_grpc::vm_service_server::VmService as GrpcVmService;
+use api::grpc::vm_grpc::vm_service_server::VmService as GrpcVmService;
 use libra::move_vm_types::values::Value;
 use data_source::DataSource;
 

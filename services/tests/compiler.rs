@@ -4,16 +4,16 @@ use libra_vm::CompiledModule;
 use libra_vm::file_format::{Bytecode, ModuleHandleIndex, FunctionHandleIndex};
 use libra_vm::file_format::CompiledScript;
 use libra::libra_types::account_address::AccountAddress;
-use dvm_api::tonic;
+use dvm_net::{tonic, api};
 use tonic::{Request, Response, Status};
 
 use lang::{stdlib::build_std};
 use compiler::{Compiler, preprocessor::str_xxhash};
 
 use data_source::MockDataSource;
-use dvm_api::grpc::vm_grpc::{CompilationResult, SourceFile};
+use api::grpc::vm_grpc::{CompilationResult, SourceFile};
 use dvm_services::compiler::CompilerService;
-use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
+use api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
 
 fn new_source_file(source: &str, address: &AccountAddress) -> SourceFile {
     SourceFile {
