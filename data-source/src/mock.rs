@@ -9,7 +9,7 @@ use libra_types::write_set::{WriteSet, WriteOp, WriteSetMut};
 use libra_vm::errors::VMResult;
 use crate::{MergeWriteSet, DataSource, Clear};
 use libra_vm::CompiledModule;
-use libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 
 #[derive(Debug, Clone, Default)]
 pub struct MockDataSource {

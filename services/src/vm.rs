@@ -4,7 +4,7 @@ use anyhow::{ensure, anyhow, Error};
 use libra::libra_types;
 use libra_types::account_address::AccountAddress;
 use libra_types::contract_event::ContractEvent;
-use libra_types::language_storage::TypeTag;
+use libra::move_core_types::language_storage::TypeTag;
 use libra_types::transaction::{Module, TransactionStatus};
 use libra_types::vm_error::{StatusCode, VMStatus};
 use libra_types::write_set::{WriteOp, WriteSet};
@@ -253,6 +253,7 @@ fn convert_type_tag(type_tag: &TypeTag) -> VmType {
         ),
         TypeTag::U8 => (5, None),
         TypeTag::U128 => (6, None),
+        TypeTag::Signer => (7, None),
     };
     VmType {
         tag: tag.0,

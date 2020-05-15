@@ -13,7 +13,7 @@ libra = { path = "../libra", package = "dvm-libra-deps" }
 ds = { path = "../data-source", package = "dvm-data-source" }
 lang = { path = "../lang", package = "dvm-lang" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
-once_cell = "=1.3.1"
+once_cell = "1.4.0"
 log = "0.4.8"
 anyhow = "=1.0.27"
 hex = "=0.4.2"

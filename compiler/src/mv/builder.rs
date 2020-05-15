@@ -15,7 +15,7 @@ use move_lang::{compiled_unit, errors, parse_program, compile_program};
 use crate::mv::dependence::extractor::{extract_from_source, extract_from_bytecode};
 use crate::mv::dependence::loader::{BytecodeSource, Loader};
 use std::collections::{HashMap, HashSet};
-use libra::libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 use termcolor::{StandardStream, ColorChoice, Buffer};
 use libra::libra_types::account_address::AccountAddress;
 

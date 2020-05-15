@@ -1,5 +1,5 @@
 use anyhow::Result;
-use libra::libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 use std::path::PathBuf;
 use libra::move_lang::{parse_program, errors};
 use libra::move_lang::parser::ast::{Definition, ModuleDefinition, Script};

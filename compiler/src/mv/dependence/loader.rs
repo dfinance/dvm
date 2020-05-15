@@ -1,6 +1,6 @@
 use std::path::{PathBuf, Path};
 use anyhow::Result;
-use libra::libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 use tiny_keccak::{Hasher, Sha3};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};

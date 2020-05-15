@@ -108,7 +108,7 @@ async fn test_compile_script_with_dependencies() {
         ]
     );
 
-    let imported_module_handle = compiled_script.module_handle_at(ModuleHandleIndex::new(1u16));
+    let imported_module_handle = &compiled_script.module_handle_at(ModuleHandleIndex::new(0u16));
     assert_eq!(
         compiled_script
             .identifier_at(imported_module_handle.name)

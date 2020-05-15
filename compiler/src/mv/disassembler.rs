@@ -4,7 +4,7 @@ use std::fmt::Display;
 use serde::export::Formatter;
 use core::fmt;
 use std::collections::BTreeMap;
-use libra::libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 use libra::libra_vm::file_format::{
     StructFieldInformation, Kind, SignatureToken, StructHandleIndex, CompiledModuleMut, Signature,
 };
@@ -210,6 +210,7 @@ fn extract_type_signature(
             extract_type_signature(module, sign.as_ref(), config, imports)
         ),
         SignatureToken::TypeParameter(index) => format!("{}{}", config.generic_prefix, index + 1),
+        SignatureToken::Signer => "signer".to_owned(),
     }
 }
 

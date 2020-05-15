@@ -2,7 +2,7 @@ use crate::mv::dependence::loader::BytecodeSource;
 use anyhow::Result;
 use libra::libra_state_view::StateView;
 use libra::libra_types::access_path::AccessPath;
-use libra::libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 
 #[derive(Clone)]
 pub struct StateViewLoader<S: StateView + Clone> {

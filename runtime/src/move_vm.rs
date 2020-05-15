@@ -18,7 +18,7 @@ use libra::move_vm_types::interpreter_context::InterpreterContext;
 use move_vm_runtime::{MoveVM, loader::ModuleCache};
 use anyhow::Error;
 use crate::gas_schedule;
-use libra_types::language_storage::TypeTag;
+use libra::move_core_types::language_storage::TypeTag;
 use serde_derive::Deserialize;
 use libra_types::account_config::CORE_CODE_ADDRESS;
 use std::collections::HashMap;
