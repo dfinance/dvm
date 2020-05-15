@@ -61,23 +61,15 @@ module Dfinance {
         // check if this token has never been registered
         Transaction::assert(!::exists<Info<Token>>(0x0), 1);
 
-        register_token_info<Token>(total_supply, decimals, denom, owner);
+        let info = Info {denom, decimals, owner, total_supply, is_token: true };
+        register_token_info<Token>(info);
 
         T<Token> { value: total_supply }
     }
 
-    /// MUST BE NATIVE. Created Info resource must be attached to 0x0 address.
+    /// Created Info resource must be attached to 0x0 address.
     /// Keeping this public until native function is ready.
-    fun register_token_info<Token: resource>(total_supply: u128, decimals: u8, denom: vector<u8>, owner: address) {
-        move_to_sender<Info<Token>>(Info {
-            denom,
-            decimals,
-
-            owner,
-            total_supply,
-            is_token: true
-        }); // 0x0
-    }
+    native fun register_token_info<Coin: resource>(info: Info<Coin>);
 
     /// Working with CoinInfo - coin registration procedure, 0x0 account used
 

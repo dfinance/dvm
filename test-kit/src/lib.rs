@@ -201,3 +201,7 @@ pub fn meta(addr: &AccountAddress) -> ExecutionMeta {
 pub fn addr(addr: &AccountAddress) -> String {
     format!("0x{}", addr)
 }
+
+pub fn account(addr: &str) -> AccountAddress {
+    AccountAddress::from_hex_literal(addr).unwrap()
+}
