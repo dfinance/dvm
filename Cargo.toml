@@ -7,5 +7,6 @@ members = [
     "runtime",
     "services",
     "cli",
+    "net",
     "compiler",
 ]
