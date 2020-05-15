@@ -49,7 +49,6 @@ fn serve(uri: &str, counter: Arc<AtomicUsize>) -> JoinHandle<()> {
             .build()
             .unwrap();
         let endpoint: Endpoint = uri.parse().unwrap();
-
         let service = Fake();
         rt.block_on(async {
             Server::builder()
@@ -85,14 +84,12 @@ fn serve_with_shutdown(
             Server::builder()
                 .add_service(DsServiceServer::with_interceptor(service, move |req| {
                     counter.fetch_add(1, Ordering::SeqCst);
-                    println!("REQ: {:?}", &req);
                     Ok(req)
                 }))
                 .serve_ext_with_shutdown(
                     endpoint,
                     rx.map(|res| {
                         println!("shutdown sig-channel polled, res: {:?}", res);
-                        ()
                     }),
                 )
                 .await

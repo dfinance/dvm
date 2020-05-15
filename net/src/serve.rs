@@ -1,13 +1,14 @@
-use crate::StdError;
-use crate::endpoint::*;
-use crate::transport::Guard;
-use crate::tonic;
+use std::convert::TryInto;
 use tonic::body::BoxBody;
 use tower::Service;
 use futures::Future;
 use http::request::Request;
 use http::response::Response;
 use hyper::body::Body;
+use crate::StdError;
+use crate::endpoint::*;
+use crate::transport::Guard;
+use crate::tonic;
 
 pub async fn serve_with_drop<A, B>(
     router: tonic::transport::server::Router<A, B>,
@@ -23,7 +24,10 @@ where
     B::Error: Into<StdError> + Send,
 {
     Ok(match endpoint {
-        Endpoint::Http(http) => router.serve(http.0).await.map(|_| None)?,
+        Endpoint::Http(http) => {
+            let addr: std::net::SocketAddr = http.try_into()?;
+            router.serve(addr).await.map(|_| None)?
+        }
 
         Endpoint::Ipc(ipc) => {
             use crate::transport::*;
@@ -56,7 +60,10 @@ where
     F: Future<Output = ()>,
 {
     Ok(match endpoint {
-        Endpoint::Http(http) => router.serve(http.0).await.map(|_| None)?,
+        Endpoint::Http(http) => {
+            let addr: std::net::SocketAddr = http.try_into()?;
+            router.serve(addr).await.map(|_| None)?
+        }
 
         Endpoint::Ipc(ipc) => {
             use crate::transport::*;
