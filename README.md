@@ -43,13 +43,13 @@ services:
     image: dfinance/dvm
     restart: always
     network_mode: host
-    command: ./compiler "0.0.0.0:50053" "http://127.0.0.1:50052"
+    command: ./compiler "http://0.0.0.0:50053" "http://127.0.0.1:50052"
   dvm-server:
     container_name: dvm-server
     image: dfinance/dvm
     restart: always
     network_mode: host
-    command: ./dvm "0.0.0.0:50051" "http://127.0.0.1:50052"
+    command: ./dvm "http://0.0.0.0:50051" "http://127.0.0.1:50052"
 ```
 
 Or you can pull container from docker hub and run it by yourself:
@@ -63,10 +63,10 @@ That is how you do it:
 
 ```bash
 # run compiler
-docker run -d --rm --network host --name compiler -p 50053:50053 registry.wings.toys/dfinance/dvm:master ./compiler "0.0.0.0:50053" "http://127.0.0.1:50052"
+docker run -d --rm --network host --name compiler -p 50053:50053 registry.wings.toys/dfinance/dvm:master ./compiler "http://0.0.0.0:50053" "http://127.0.0.1:50052"
 
 # run virtual machine
-docker run -d --rm --network host --name dvm -p 50051:50051 registry.wings.toys/dfinance/dvm:master ./dvm "0.0.0.0:50051" "http://127.0.0.1:50052"
+docker run -d --rm --network host --name dvm -p 50051:50051 registry.wings.toys/dfinance/dvm:master ./dvm "http://0.0.0.0:50051" "http://127.0.0.1:50052"
 ```
 
 ```bash
@@ -126,7 +126,7 @@ To launch the DVM server use this command:
 
 ```bash
 # format: <which host:port to listen> <data-source address>
-dvm "[::1]:50051" "http://[::1]:50052"
+dvm "http://[::1]:50051" "http://[::1]:50052"
 ```
 
 
@@ -139,7 +139,7 @@ To launch the compilation server run:
 
 ```bash
 # format: <which host:port to listen> <data-source address>
-compiler "[::1]:50053" "http://[::1]:50052"
+compiler "http://[::1]:50053" "http://[::1]:50052"
 ```
 
 > Compiler supports Move lang.
@@ -176,27 +176,36 @@ __DVM__ and __compiler__ both require positional argument described as `<data-so
 This is URI of a data source server, typically [Dnode][], local or external.
 This argument can be ommited because we'll read the `DVM_DATA_SOURCE` [environment variable][environment variables] as fallback.
 
+All of this URIs are supports following schemes:
+
+- `http`
+- `ipc` (using [UDS][]), e.g.:
+    - `ipc://tmp/dir/file` (absolute path)
+    - `ipc://./dir/file` (relative path with `.` and `..`)
+    - `ipc://~/dir/file` (relative to `$HOME`)
+
 Positional arguments have higher priority than [environment variables][], and override them when specified.
 
 For example:
 
 ```bash
 # using env var:
-DVM_DATA_SOURCE="http://[::1]:50052" dvm "[::1]:50051"
+DVM_DATA_SOURCE="http://[::1]:50052" dvm "http://[::1]:50051"
 # or using positional arg:
-dvm "[::1]:50051" "http://[::1]:50052"
+dvm "http://[::1]:50051" "http://[::1]:50052"
 # both is same
 ```
 
 But env vars used just as fallback, so args are higher prioritised.
 ```bash
-DVM_DATA_SOURCE="http://[::1]:42" dvm "[::1]:50051" "http://[::1]:50052"
+DVM_DATA_SOURCE="http://[::1]:42" dvm "http://[::1]:50051" "http://[::1]:50052"
 # There DVM will listen port 50051
 # and connect to data source on 50052 port
 # ignoring env variable.
 ```
 
 [Dnode]: https://github.com/dfinance/dnode
+[UDS]: https://en.wikipedia.org/wiki/Unix_domain_socket
 
 
 #### Environment variables:
@@ -210,7 +219,7 @@ DVM_DATA_SOURCE="http://[::1]:42" dvm "[::1]:50051" "http://[::1]:50052"
   Possible values in verbosity ordering: `auto`, `always`, `never`.
 - `DVM_SENTRY_DSN` - Optional key-uri, enables crash logging service integration.
   If value ommited, crash logging service will not be initialized.
-  E.g.: `DVM_SENTRY_DSN=https://your-dsn@uri dvm "[::1]:50051"`
+  E.g.: `DVM_SENTRY_DSN=https://your-dsn@uri dvm "http://[::1]:50051"`
 - `DVM_SENTRY_ENVIRONMENT` - Sets the environment code to separate events from testnet and production.
   Optional. Works with Sentry integration.
   E.g.: `DVM_SENTRY_ENVIRONMENT="testnet"`
