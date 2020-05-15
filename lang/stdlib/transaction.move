@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module Transaction {
 
@@ -16,4 +16,5 @@ module Transaction {
     // native public fun gas_unit_price(): u64;
     // native public fun max_gas_units(): u64;
     // native public fun gas_remaining(): u64;
+}
 }

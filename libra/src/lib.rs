@@ -17,3 +17,4 @@ pub extern crate compiler;
 pub extern crate libra_logger;
 pub extern crate ir_to_bytecode;
 pub extern crate move_vm_runtime;
+pub extern crate move_vm_natives;

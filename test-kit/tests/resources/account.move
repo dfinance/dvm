@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module Account {
     use 0x0::Transaction;
@@ -51,4 +51,5 @@ module Account {
             let t = borrow_global<T>(Transaction::sender());
             t.value
     }
+}
 }

@@ -9,7 +9,7 @@ pub mod wrappers;
 
 use libra::{libra_types, libra_state_view};
 use libra_types::write_set::WriteSet;
-use libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 use libra_types::transaction::Module;
 use libra_types::access_path::AccessPath;
 use libra::move_vm_state::data_cache::RemoteCache;

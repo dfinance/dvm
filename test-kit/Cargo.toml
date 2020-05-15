@@ -13,13 +13,14 @@ edition = "2018"
 dvm-net = { path = "../net" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
+compiler = { path = "../compiler", package = "dvm-compiler" }
 lang = { path = "../lang", package = "dvm-lang" }
 services = { path = "../services", package = "dvm-services" }
 runtime = { path = "../runtime", package = "dvm-runtime" }
 anyhow = "=1.0.27"
 tokio = { version = "=0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
-futures = { version = "=0.3.4", features = ["async-await"] }
-serde = "=1.0.106"
+futures = { version = "=0.3.5", features = ["async-await"] }
+serde = "=1.0.110"
 serde_json = "1.0.51"
 serde_derive = "1.0.106"
 hex = "=0.4.2"

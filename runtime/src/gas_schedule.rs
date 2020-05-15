@@ -5,8 +5,9 @@ use libra::libra_vm::{
         FunctionHandleIndex, FunctionInstantiationIndex, StructDefInstantiationIndex,
         StructDefinitionIndex, NUMBER_OF_NATIVE_FUNCTIONS,
     },
-    gas_schedule::{new_from_instructions, instruction_key},
+    file_format_common::instruction_key,
 };
+use libra::move_vm_types::gas_schedule::*;
 
 pub fn cost_table() -> CostTable {
     use Bytecode::*;
@@ -33,7 +34,6 @@ pub fn cost_table() -> CostTable {
         (Mul, GasCost::new(41, 1)),
         (MoveLoc(0), GasCost::new(41, 1)),
         (And, GasCost::new(49, 1)),
-        (GetTxnPublicKey, GasCost::new(41, 1)),
         (Pop, GasCost::new(27, 1)),
         (BitAnd, GasCost::new(44, 1)),
         (ReadRef, GasCost::new(51, 1)),
@@ -90,7 +90,6 @@ pub fn cost_table() -> CostTable {
         (Or, GasCost::new(43, 1)),
         (LdFalse, GasCost::new(30, 1)),
         (LdTrue, GasCost::new(29, 1)),
-        (GetTxnGasUnitPrice, GasCost::new(29, 1)),
         (Mod, GasCost::new(42, 1)),
         (BrFalse(0), GasCost::new(29, 1)),
         (Exists(StructDefinitionIndex::new(0)), GasCost::new(856, 1)),
@@ -98,10 +97,7 @@ pub fn cost_table() -> CostTable {
             ExistsGeneric(StructDefInstantiationIndex::new(0)),
             GasCost::new(856, 1),
         ),
-        (GetGasRemaining, GasCost::new(32, 1)),
         (BitOr, GasCost::new(45, 1)),
-        (GetTxnMaxGasUnits, GasCost::new(34, 1)),
-        (GetTxnSequenceNumber, GasCost::new(29, 1)),
         (FreezeRef, GasCost::new(10, 1)),
         (
             MutBorrowGlobal(StructDefinitionIndex::new(0)),

@@ -1,53 +1,119 @@
+use anyhow::Result;
+use libra::move_core_types::language_storage::ModuleId;
+use std::path::PathBuf;
+use libra::move_lang::{parse_program, errors};
+use libra::move_lang::parser::ast::{Definition, ModuleDefinition, Script};
 use std::collections::HashSet;
-use libra::libra_types::language_storage::ModuleId;
-use libra::move_lang::parser::ast::*;
-use anyhow::Error;
-use libra::libra_types::account_address::AccountAddress;
 use libra::move_core_types::identifier::Identifier;
+use libra::libra_types::account_address::AccountAddress;
+use libra::move_lang::parser::ast::*;
+use libra::libra_vm::CompiledModule;
+use termcolor::{StandardStream, ColorChoice};
+use std::process::exit;
+use crate::mv::builder::convert_path;
 
-#[derive(Default)]
-pub struct ImportsExtractor {
-    imports: HashSet<ModuleId>,
+pub fn extract_from_source(
+    targets: &[PathBuf],
+    address: Option<AccountAddress>,
+    print_err: bool,
+    shutdown_on_err: bool,
+) -> Result<HashSet<ModuleId>> {
+    let mut extractor = DefinitionUses::with_address(address);
+    let (files, pprog_and_comments_res) = parse_program(&convert_path(targets)?, &[])?;
+    match pprog_and_comments_res {
+        Ok((program, _)) => {
+            for def in program.source_definitions {
+                extractor.extract(&def)?;
+            }
+        }
+        Err(errs) => {
+            if print_err {
+                let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                errors::output_errors(&mut writer, files, errs);
+            }
+            if shutdown_on_err {
+                exit(1);
+            }
+        }
+    }
+
+    Ok(extractor.imports())
 }
 
-impl ImportsExtractor {
-    pub fn extract(&mut self, file_definition: &FileDefinition) -> Result<(), Error> {
-        match file_definition {
-            FileDefinition::Modules(deps) => {
-                for dep in deps {
-                    match dep {
-                        ModuleOrAddress::Module(module) => {
-                            self.usages(&module.uses)?;
-                            for func in &module.functions {
-                                self.internal_usages(&func.body)?;
-                            }
-                            for st in &module.structs {
-                                match &st.fields {
-                                    StructFields::Defined(types) => {
-                                        for (_, t) in types {
-                                            self.s_type_usages(&t.value)?;
-                                        }
-                                    }
-                                    StructFields::Native(_) => {
-                                        //No-op
-                                    }
-                                }
-                            }
-                        }
-                        ModuleOrAddress::Address(_, _) => {}
-                    }
+pub fn extract_from_bytecode(bytecode: &[u8]) -> Result<HashSet<ModuleId>> {
+    let mut extractor = BytecodeUses::default();
+    extractor.extract(CompiledModule::deserialize(bytecode)?)?;
+    Ok(extractor.imports())
+}
+
+#[derive(Default)]
+pub struct DefinitionUses {
+    imports: HashSet<ModuleId>,
+    modules: HashSet<ModuleId>,
+    address: Option<AccountAddress>,
+}
+
+impl DefinitionUses {
+    pub fn with_address(address: Option<AccountAddress>) -> DefinitionUses {
+        DefinitionUses {
+            imports: Default::default(),
+            modules: Default::default(),
+            address,
+        }
+    }
+
+    pub fn extract(&mut self, def: &Definition) -> Result<()> {
+        match def {
+            Definition::Module(module) => self.module(
+                module,
+                self.address
+                    .ok_or_else(|| anyhow!("Expected account address."))?,
+            )?,
+            Definition::Address(_, addr, modules) => {
+                let addr = AccountAddress::new(addr.to_u8());
+                for module in modules {
+                    self.module(module, addr)?;
                 }
             }
-            FileDefinition::Main(main) => {
-                self.usages(&main.uses)?;
-                self.internal_usages(&main.function.body)?;
-            }
+            Definition::Script(script) => self.script(script)?,
         }
         Ok(())
     }
 
-    fn usages(&mut self, deps: &[(ModuleIdent, Option<ModuleName>)]) -> Result<(), Error> {
-        for (dep, _) in deps {
+    fn module(&mut self, module: &ModuleDefinition, address: AccountAddress) -> Result<()> {
+        self.uses(&module.uses)?;
+        self.modules.insert(ModuleId::new(
+            address,
+            Identifier::new(module.name.0.value.to_owned())?,
+        ));
+
+        for st in &module.structs {
+            match &st.fields {
+                StructFields::Defined(types) => {
+                    for (_, t) in types {
+                        self.s_type_usages(&t.value)?;
+                    }
+                }
+                StructFields::Native(_) => {
+                    //No-op
+                }
+            }
+        }
+
+        for func in &module.functions {
+            self.function(func)?;
+        }
+
+        Ok(())
+    }
+
+    fn script(&mut self, script: &Script) -> Result<()> {
+        self.uses(&script.uses)?;
+        self.function(&script.function)
+    }
+
+    fn uses(&mut self, uses: &[(ModuleIdent, Option<ModuleName>)]) -> Result<()> {
+        for (dep, _) in uses {
             let ident = &dep.0.value;
             let name = Identifier::new(ident.name.0.value.to_owned())?;
             let address = AccountAddress::new(ident.address.clone().to_u8());
@@ -56,7 +122,19 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn internal_usages(&mut self, func: &FunctionBody) -> Result<(), Error> {
+    fn function(&mut self, func: &Function) -> Result<()> {
+        self.signature(&func.signature)?;
+        self.internal_usages(&func.body)
+    }
+
+    fn signature(&mut self, signature: &FunctionSignature) -> Result<()> {
+        for (_, v_type) in &signature.parameters {
+            self.type_usages(&v_type.value)?;
+        }
+        self.type_usages(&signature.return_type.value)
+    }
+
+    fn internal_usages(&mut self, func: &FunctionBody) -> Result<()> {
         match &func.value {
             FunctionBody_::Defined((seq, _, exp)) => {
                 self.block_usages(seq)?;
@@ -71,7 +149,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn type_usages(&mut self, v_type: &Type_) -> Result<(), Error> {
+    fn type_usages(&mut self, v_type: &Type_) -> Result<()> {
         match v_type {
             Type_::Unit => { /*No-op*/ }
             Type_::Multiple(s_types) => {
@@ -98,7 +176,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn block_usages(&mut self, seq: &[SequenceItem]) -> Result<(), Error> {
+    fn block_usages(&mut self, seq: &[SequenceItem]) -> Result<()> {
         for item in seq {
             match &item.value {
                 SequenceItem_::Seq(exp) => self.expresion_usages(&exp.value)?,
@@ -126,7 +204,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn bind_usages(&mut self, bind: &Bind_) -> Result<(), Error> {
+    fn bind_usages(&mut self, bind: &Bind_) -> Result<()> {
         match bind {
             Bind_::Var(_) => { /*no-op*/ }
             Bind_::Unpack(access, s_types, binds) => {
@@ -144,7 +222,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn access_usages(&mut self, access: &ModuleAccess_) -> Result<(), Error> {
+    fn access_usages(&mut self, access: &ModuleAccess_) -> Result<()> {
         match access {
             ModuleAccess_::QualifiedModuleAccess(ident, _name) => {
                 let ident = &ident.0.value;
@@ -160,7 +238,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn s_type_usages(&mut self, s_type: &Type_) -> Result<(), Error> {
+    fn s_type_usages(&mut self, s_type: &Type_) -> Result<()> {
         match s_type {
             Type_::Apply(module_access, s_types) => {
                 self.access_usages(&module_access.value)?;
@@ -187,7 +265,7 @@ impl ImportsExtractor {
         Ok(())
     }
 
-    fn expresion_usages(&mut self, exp: &Exp_) -> Result<(), Error> {
+    fn expresion_usages(&mut self, exp: &Exp_) -> Result<()> {
         match exp {
             Exp_::Value(_)
             | Exp_::Move(_)
@@ -286,7 +364,42 @@ impl ImportsExtractor {
         Ok(())
     }
 
+    pub fn imports(mut self) -> HashSet<ModuleId> {
+        for module_id in self.modules {
+            self.imports.remove(&module_id);
+        }
+
+        self.imports
+    }
+}
+
+#[derive(Default)]
+pub struct BytecodeUses {
+    imports: HashSet<ModuleId>,
+}
+
+impl BytecodeUses {
     pub fn imports(self) -> HashSet<ModuleId> {
         self.imports
+    }
+
+    pub fn extract(&mut self, module: CompiledModule) -> Result<()> {
+        let module = module.into_inner();
+        let mut module_handles = module.module_handles;
+        if !module_handles.is_empty() {
+            // Remove self module with 0 index.
+            module_handles.remove(0);
+        }
+
+        for module_handle in module_handles {
+            let name = module.identifiers[module_handle.name.0 as usize]
+                .as_str()
+                .to_owned();
+            let address = module.address_identifiers[module_handle.address.0 as usize];
+            self.imports
+                .insert(ModuleId::new(address, Identifier::new(name)?));
+        }
+
+        Ok(())
     }
 }

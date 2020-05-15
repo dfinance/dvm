@@ -5,7 +5,7 @@
 // const LESS_THAN = 1u8
 // const GREATER_THAN = 2u8
 
-address 0x0:
+address 0x0 {
 
 module Compare {
 
@@ -70,4 +70,5 @@ module Compare {
         else 2
     }
 
+}
 }

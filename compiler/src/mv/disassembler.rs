@@ -4,13 +4,13 @@ use std::fmt::Display;
 use serde::export::Formatter;
 use core::fmt;
 use std::collections::BTreeMap;
-use libra::libra_types::language_storage::ModuleId;
+use libra::move_core_types::language_storage::ModuleId;
 use libra::libra_vm::file_format::{
     StructFieldInformation, Kind, SignatureToken, StructHandleIndex, CompiledModuleMut, Signature,
 };
 use libra::libra_types::account_address::AccountAddress;
 
-const PHANTOM_RESOURCE_NAME: &str = "_X_phantom_resource_X_";
+const PHANTOM_RESOURCE_NAME: &str = "X_phantom_resource_X_";
 const GENERIC_PREFIX: &str = "__G_";
 
 pub struct Config<'a> {
@@ -210,6 +210,7 @@ fn extract_type_signature(
             extract_type_signature(module, sign.as_ref(), config, imports)
         ),
         SignatureToken::TypeParameter(index) => format!("{}{}", config.generic_prefix, index + 1),
+        SignatureToken::Signer => "signer".to_owned(),
     }
 }
 
@@ -651,7 +652,7 @@ impl Display for ModuleSignature {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(
             f,
-            "address 0x{address}:\n\nmodule {name} {{\n{imports}{structs}{functions}}}",
+            "address 0x{address} {{\n\nmodule {name} {{\n{imports}{structs}{functions}}}\n}}",
             address = self.id.address(),
             name = self.id.name(),
             structs = self.structs,
@@ -665,10 +666,10 @@ impl ModuleSignature {}
 
 #[cfg(test)]
 mod tests {
-    use crate::bytecode::disassembler::*;
     use libra::libra_types::account_address::AccountAddress;
     use ds::MockDataSource;
-    use crate::compiler::Compiler;
+    use crate::embedded::Compiler;
+    use crate::mv::disassembler::module_signature;
 
     #[test]
     pub fn test_module_signature() {
@@ -678,7 +679,7 @@ mod tests {
             compiler
                 .compile(
                     include_str!("../../tests/resources/disassembler/base.move"),
-                    &AccountAddress::new([0x1; 24]),
+                    Some(AccountAddress::new([0x1; 24])),
                 )
                 .unwrap(),
         )
@@ -687,7 +688,7 @@ mod tests {
             compiler
                 .compile(
                     include_str!("../../tests/resources/disassembler/base_1.move"),
-                    &AccountAddress::default(),
+                    Some(AccountAddress::default()),
                 )
                 .unwrap(),
         )
@@ -695,12 +696,14 @@ mod tests {
 
         for (source, dis) in test_set() {
             let bytecode = compiler
-                .compile(source, &AccountAddress::default())
+                .compile(source, Some(AccountAddress::default()))
                 .unwrap();
             let signature = module_signature(&bytecode).unwrap();
             assert_eq!(&signature.to_string(), dis);
 
-            let bytecode = compiler.compile(dis, &AccountAddress::default()).unwrap();
+            let bytecode = compiler
+                .compile(dis, Some(AccountAddress::default()))
+                .unwrap();
             let signature = module_signature(&bytecode).unwrap();
             assert_eq!(&signature.to_string(), dis);
         }

@@ -1,7 +1,8 @@
-use libra::{libra_types, libra_vm, move_vm_runtime};
+use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
 use libra_types::transaction::TransactionStatus;
 use libra_types::{account_address::AccountAddress, transaction::Module};
-use libra_vm::{transaction_metadata::TransactionMetadata, CompiledModule};
+use libra_vm::CompiledModule;
+use move_vm_types::transaction_metadata::TransactionMetadata;
 use libra::move_core_types::gas_schedule::{GasAlgebra, GasPrice, GasUnits, CostTable};
 use std::fmt;
 use libra_types::vm_error::{VMStatus, StatusCode};
@@ -17,10 +18,11 @@ use libra::move_vm_types::interpreter_context::InterpreterContext;
 use move_vm_runtime::{MoveVM, loader::ModuleCache};
 use anyhow::Error;
 use crate::gas_schedule;
-use libra_types::language_storage::TypeTag;
+use libra::move_core_types::language_storage::TypeTag;
 use serde_derive::Deserialize;
 use libra_types::account_config::CORE_CODE_ADDRESS;
 use std::collections::HashMap;
+use move_vm_runtime::loader::ScriptCache;
 
 #[derive(Debug)]
 pub struct ExecutionMeta {
@@ -162,6 +164,7 @@ where
             if meta.sender == CORE_CODE_ADDRESS {
                 self.ds.clear();
                 let loader = &self.vm.runtime.loader;
+                *loader.scripts.lock().unwrap() = ScriptCache::new();
                 *loader.libra_cache.lock().unwrap() = HashMap::new();
                 *loader.module_cache.lock().unwrap() = ModuleCache::new();
             } else if InterpreterContext::exists_module(&context, &module_id) {
@@ -248,18 +251,19 @@ pub struct VectorU8Store {
 
 #[cfg(test)]
 pub mod tests {
-    use lang::{compiler::Compiler, stdlib::zero_sdt};
+    use compiler::Compiler;
+    use lang::{stdlib::zero_sdt};
     use libra::{
         libra_types::{
             account_address::AccountAddress, transaction::Module, vm_error::StatusCode,
             write_set::WriteOp,
         },
-        libra_vm::CompiledModule,
         lcs,
     };
     use ds::{MockDataSource, MergeWriteSet, DataAccess};
     use libra::move_vm_types::values::Value;
     use crate::move_vm::{ExecutionMeta, Dvm, VM, Script, U64Store};
+    use libra::libra_vm::CompiledModule;
 
     #[test]
     fn test_publish_module() {
@@ -269,7 +273,7 @@ pub mod tests {
         let account = AccountAddress::random();
 
         let program = "module M {}";
-        let module = Module::new(compiler.compile(program, &account).unwrap());
+        let module = Module::new(compiler.compile(program, Some(account)).unwrap());
         let output = vm
             .publish_module(ExecutionMeta::new(1_000_000, 1, account), module.clone())
             .unwrap();
@@ -303,7 +307,7 @@ pub mod tests {
         let account = AccountAddress::random();
 
         let module = include_str!("../../test-kit/tests/resources/store.move");
-        let module = Module::new(compiler.compile(module, &account).unwrap());
+        let module = Module::new(compiler.compile(module, Some(account)).unwrap());
         ds.merge_write_set(
             vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
                 .unwrap()
@@ -312,14 +316,16 @@ pub mod tests {
 
         let script = format!(
             "
+            script {{
             use 0x{}::Store;
             fun main(val: u64) {{
                 Store::store_u64(val);
             }}
+            }}
         ",
             account
         );
-        let script = compiler.compile(&script, &account).unwrap();
+        let script = compiler.compile(&script, Some(account)).unwrap();
         let test_value = U64Store { val: 100 };
         let result = vm
             .execute_script(

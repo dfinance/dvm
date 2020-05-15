@@ -7,10 +7,9 @@ use libra::libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
-use lang::{
-    compiler::{Compiler, preprocessor::str_xxhash},
-    stdlib::build_std,
-};
+use lang::{stdlib::build_std};
+use compiler::{Compiler, preprocessor::str_xxhash};
+
 use data_source::MockDataSource;
 use dvm_api::grpc::vm_grpc::{CompilationResult, SourceFile};
 use dvm_services::compiler::CompilerService;
@@ -58,7 +57,9 @@ async fn test_compile_module() {
 #[tokio::test]
 async fn test_compile_script() {
     let source_text = r"
+            script {
             fun main() {
+            }
             }
         ";
     let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
@@ -74,9 +75,11 @@ async fn test_compile_script() {
 #[tokio::test]
 async fn test_compile_script_with_dependencies() {
     let source_text = "
+            script {
             use 0x0::Oracle;
             fun main() {
                 Oracle::get_price(#\"USDBTC\");
+            }
             }
         ";
     let source_file_request = new_source_file_request(source_text);
@@ -105,7 +108,7 @@ async fn test_compile_script_with_dependencies() {
         ]
     );
 
-    let imported_module_handle = compiled_script.module_handle_at(ModuleHandleIndex::new(1u16));
+    let imported_module_handle = &compiled_script.module_handle_at(ModuleHandleIndex::new(0u16));
     assert_eq!(
         compiled_script
             .identifier_at(imported_module_handle.name)
@@ -117,8 +120,10 @@ async fn test_compile_script_with_dependencies() {
 #[tokio::test]
 async fn test_required_libracoin_dependency_is_not_available() {
     let source_text = r"
+            script {
             use 0x0::Coin;
             fun main() {
+            }
             }
         ";
 
@@ -137,16 +142,18 @@ async fn test_required_libracoin_dependency_is_not_available() {
     let error = compilation_result.errors.get(0).unwrap();
     assert_eq!(
         error,
-        r#"Module with path [ModuleId { address: 000000000000000000000000000000000000000000000000, name: Identifier("Coin") }] not found"#
+        r#"Module '0x000000000000000000000000000000000000000000000000::Coin' not found"#
     )
 }
 
 #[tokio::test]
 async fn test_allows_for_bech32_addresses() {
     let source_text = r"
+            script {
             use wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Hash;
             fun main() {
                 Hash::hash();
+            }
             }
         ";
 
@@ -165,7 +172,7 @@ async fn test_allows_for_bech32_addresses() {
             public fun hash(){}
         }
     ",
-            &libra_address,
+            Some(libra_address),
         )
         .unwrap();
     ds.publish_module(hash).unwrap();
@@ -187,9 +194,11 @@ async fn test_allows_for_bech32_addresses() {
 #[tokio::test]
 async fn test_compilation_error_on_expected_an_expression_term() {
     let source_text = r#"
+            script {
             fun main() {
                 let a: u128;
                 return;
+            }
             }
         "#;
     let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();

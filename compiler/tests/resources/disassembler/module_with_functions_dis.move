@@ -1,4 +1,4 @@
-address 0x000000000000000000000000000000000000000000000000:
+address 0x000000000000000000000000000000000000000000000000 {
 
 module Foo {
     use 0x000000000000000000000000000000000000000000000000::Base as OtherBase1;
@@ -21,7 +21,7 @@ module Foo {
         g: __G_1,
     }
 
-    resource struct _X_phantom_resource_X_ {
+    resource struct X_phantom_resource_X_ {
         dummy_field: bool,
     }
 
@@ -33,7 +33,7 @@ module Foo {
     fun fun_multiple_acquires<__G_1: copyable>(): (u64, u64, address, T<__G_1>) acquires T, T1, TRes {
         borrow_global<T<u64>>(0x0);
         borrow_global<T1>(0x0);
-        borrow_global<TRes<_X_phantom_resource_X_>>(0x0);
+        borrow_global<TRes<X_phantom_resource_X_>>(0x0);
         abort 1
     }
 
@@ -73,4 +73,5 @@ module Foo {
 
     native public fun vector_params<__G_1: copyable>(_arg_1: vector<__G_1>);
 
+}
 }

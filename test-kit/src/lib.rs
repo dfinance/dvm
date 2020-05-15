@@ -21,9 +21,9 @@ use libra_vm::CompiledModule;
 use libra::libra_state_view::StateView;
 use data_source::MockDataSource;
 use lang::{
-    compiler::Compiler,
     stdlib::{build_std, zero_sdt},
 };
+use compiler::Compiler;
 pub use genesis::genesis_write_set;
 use anyhow::Error;
 use libra_types::write_set::WriteSet;
@@ -80,7 +80,7 @@ impl TestKit {
     }
 
     pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponses {
-        let module = self.compiler.compile(code, &meta.sender).unwrap();
+        let module = self.compiler.compile(code, Some(meta.sender)).unwrap();
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {
                 address: addr(&meta.sender),
@@ -99,7 +99,7 @@ impl TestKit {
     pub fn add_std_module(&self, code: &str) {
         let module = self
             .compiler
-            .compile(code, &AccountAddress::default())
+            .compile(code, Some(AccountAddress::default()))
             .unwrap();
 
         let id = CompiledModule::deserialize(&module).unwrap().self_id();
@@ -112,7 +112,7 @@ impl TestKit {
         meta: ExecutionMeta,
         args: Vec<VmArgs>,
     ) -> VmExecuteResponses {
-        let code = self.compiler.compile(code, &meta.sender).unwrap();
+        let code = self.compiler.compile(code, Some(meta.sender)).unwrap();
 
         let request = Request::new(VmExecuteRequest {
             contracts: vec![VmContract {

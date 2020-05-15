@@ -1,6 +1,6 @@
-use dvm_lang::bech32::{libra_into_bech32, bech32_into_libra, replace_bech32_addresses, HRP};
 use libra::libra_types::account_address::AccountAddress;
 use bech32::{encode, ToBase32};
+use dvm_compiler::bech32::{libra_into_bech32, replace_bech32_addresses, HRP, bech32_into_libra};
 
 pub fn make_bach32() -> String {
     encode(HRP, rand::random::<[u8; 20]>().to_base32()).unwrap()

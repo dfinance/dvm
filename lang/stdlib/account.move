@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 /// Account is the access point for assets flow. It holds withdraw-deposit handlers
 /// for generic currency <Token>. It also stores log of sent and received events
@@ -172,4 +172,5 @@ module Account {
 
      native fun save_balance<Token>(balance: Balance<Token>, addr: address);
      native fun save_account(account: T, event_generator: Event::EventHandleGenerator, addr: address);
+}
 }

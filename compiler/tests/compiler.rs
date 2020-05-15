@@ -1,18 +1,39 @@
-use libra::libra_types::{account_address::AccountAddress, language_storage::ModuleId};
-use libra::move_core_types::identifier::Identifier;
+use libra::libra_types::account_address::AccountAddress;
 use ds::MockDataSource;
-use dvm_lang::stdlib::zero_sdt;
-use std::collections::HashSet;
 use libra::libra_vm::{
     file_format::{CompiledScript, CompiledModule},
     access::ModuleAccess,
 };
-use dvm_lang::compiler::{
-    make_address, compile,
-    preprocessor::{replace_u_literal, str_xxhash},
-    meta::ModuleMeta,
-    Compiler,
-};
+
+use dvm_compiler::preprocessor::{replace_u_literal, str_xxhash};
+use dvm_compiler::Compiler;
+use anyhow::Error;
+
+pub fn compile(
+    source: &str,
+    dep_list: Vec<(&str, &AccountAddress)>,
+    address: &AccountAddress,
+) -> Result<Vec<u8>, Error> {
+    let ds = MockDataSource::new();
+    let compiler = Compiler::new(ds.clone());
+    for (code, address) in dep_list {
+        ds.publish_module(compiler.compile(code, Some(*address))?)?;
+    }
+
+    compiler.compile(source, Some(*address))
+}
+
+pub fn compile_script(
+    source: &str,
+    dep: Vec<(&str, &AccountAddress)>,
+    address: &AccountAddress,
+) -> CompiledScript {
+    CompiledScript::deserialize(&compile(source, dep, address).unwrap()).unwrap()
+}
+
+pub fn make_address(address: &str) -> AccountAddress {
+    AccountAddress::from_hex_literal(address).unwrap()
+}
 
 #[test]
 fn test_u_literal() {
@@ -37,7 +58,9 @@ fn test_hex_lateral() {
             }
         }
     ";
-    compiler.compile(module, &AccountAddress::random()).unwrap();
+    compiler
+        .compile(module, Some(AccountAddress::random()))
+        .unwrap();
 }
 
 #[test]
@@ -57,7 +80,7 @@ pub fn test_build_module_failed() {
 
 #[test]
 pub fn test_build_script() {
-    let program = "fun main() {}";
+    let program = "script{fun main() {}}";
     compile(program, vec![], &AccountAddress::random()).unwrap();
 }
 
@@ -71,8 +94,10 @@ pub fn test_build_script_with_dependence() {
         }
         ";
     let program = "\
+        script {
         fun main() {\
             0x1::M::foo();
+        }
         }";
 
     compile(
@@ -92,9 +117,12 @@ fn test_parse_script_with_bech32_addresses() {
         ";
 
     let program = "
+            script {
             use wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh::Account;
+
             fun main() {
                Account::foo();
+            }
             }
         ";
 
@@ -171,102 +199,17 @@ fn test_create_compiler() {
 }
 
 #[test]
-fn test_move_meta() {
-    let view = MockDataSource::new();
-    let compiler = Compiler::new(view);
-    let meta = compiler
-        .code_meta(&include_str!("resources/transaction_fee_distribution.move"))
-        .unwrap();
-    assert_eq!(&meta.module_name, "TransactionFeeDistribution");
-    assert_eq!(
-        meta.dep_list.into_iter().collect::<HashSet<_>>(),
-        vec![
-            ModuleId::new(
-                AccountAddress::default(),
-                Identifier::new("ValidatorSet").unwrap(),
-            ),
-            ModuleId::new(
-                AccountAddress::default(),
-                Identifier::new("Account").unwrap(),
-            ),
-            ModuleId::new(AccountAddress::default(), Identifier::new("Coin").unwrap()),
-            ModuleId::new(
-                AccountAddress::default(),
-                Identifier::new("Transaction").unwrap(),
-            ),
-        ]
-        .into_iter()
-        .collect::<HashSet<_>>()
-    );
-}
-
-#[test]
-fn test_script_meta() {
-    let view = MockDataSource::new();
-    let compiler = Compiler::new(view);
-    let meta = compiler
-        .code_meta(
-            "
-                use 0x0::Oracle;
-                fun main(payee: address, amount: u64) {
-                    Oracle::get_price(#\"\");
-                }
-            ",
-        )
-        .unwrap();
-    assert_eq!(
-        meta,
-        ModuleMeta {
-            module_name: "main".to_string(),
-            dep_list: vec![ModuleId::new(
-                AccountAddress::default(),
-                Identifier::new("Oracle").unwrap(),
-            ),],
-        }
-    )
-}
-
-#[test]
-fn test_move_script_meta() {
-    let view = MockDataSource::new();
-    let compiler = Compiler::new(view);
-    let meta = compiler
-        .code_meta(
-            "\
-            use 0x0::Coins;
-
-            fun main(payee: address, amount: u64) {
-                0x0::Account::mint_to_address(payee, amount)
-            }
-            ",
-        )
-        .unwrap();
-    assert_eq!(&meta.module_name, "main");
-    assert_eq!(
-        meta.dep_list.into_iter().collect::<HashSet<_>>(),
-        vec![
-            ModuleId::new(AccountAddress::default(), Identifier::new("Coins").unwrap()),
-            ModuleId::new(
-                AccountAddress::default(),
-                Identifier::new("Account").unwrap(),
-            ),
-        ]
-        .into_iter()
-        .collect::<HashSet<_>>()
-    );
-}
-
-#[test]
 fn test_build_move() {
-    let compiler = Compiler::new(MockDataSource::with_write_set(zero_sdt()));
+    let compiler = Compiler::new(MockDataSource::new());
 
     compiler
         .compile(
             "\
-            fun main() {
+            script {
+                fun main() {}
             }
             ",
-            &AccountAddress::default(),
+            Some(AccountAddress::default()),
         )
         .unwrap();
 }

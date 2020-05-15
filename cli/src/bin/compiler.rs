@@ -12,7 +12,7 @@ use tonic::transport::{Server, Uri};
 
 use data_source::{GrpcDataSource, ModuleCache};
 
-use lang::compiler::Compiler;
+use compiler::Compiler;
 use services::compiler::CompilerService;
 use services::metadata::MetadataService;
 use dvm_net::prelude::*;

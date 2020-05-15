@@ -1,6 +1,6 @@
-use crate::bech32::replace_bech32_addresses;
 use twox_hash::XxHash64;
 use std::hash::Hasher;
+use crate::mv::bech32::replace_bech32_addresses;
 
 #[macro_export]
 macro_rules! pattern {

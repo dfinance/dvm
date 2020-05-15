@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module Time {
     // A singleton resource holding the current Unix time in seconds
@@ -15,4 +15,5 @@ module Time {
     public fun is_genesis(): bool {
         !::exists<Self::CurrentTimestamp>(0x0)
     }
+}
 }
