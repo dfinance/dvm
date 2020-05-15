@@ -75,9 +75,38 @@ impl WhitelistVerifier {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
-    use crate::compiler::{compile_script, make_address};
+    use libra::libra_types::account_address::AccountAddress;
+    use compiler::Compiler;
+    use anyhow::Error;
+    use ds::MockDataSource;
+
+    pub fn compile(
+        source: &str,
+        dep_list: Vec<(&str, &AccountAddress)>,
+        address: &AccountAddress,
+    ) -> Result<Vec<u8>, Error> {
+        let ds = MockDataSource::new();
+        let compiler = Compiler::new(ds.clone());
+        for (code, address) in dep_list {
+            ds.publish_module(compiler.compile(code, Some(*address))?)?;
+        }
+
+        compiler.compile(source, Some(*address))
+    }
+
+    pub fn compile_script(
+        source: &str,
+        dep: Vec<(&str, &AccountAddress)>,
+        address: &AccountAddress,
+    ) -> CompiledScript {
+        CompiledScript::deserialize(&compile(source, dep, address).unwrap()).unwrap()
+    }
+
+    pub fn make_address(address: &str) -> AccountAddress {
+        AccountAddress::from_hex_literal(address).unwrap()
+    }
 
     fn verify_source_code(
         source: &str,
@@ -97,12 +126,14 @@ mod tests {
         let oracle = include_str!("../../../tests/resources/oracle.move");
 
         let source = "
+            script {
             use 0x0::Empty;
             use 0x0::Oracle;
 
             fun main() {
                 Empty::create();
                 Oracle::get_price(#\"USDBTC\");
+            }
             }
         ";
         let whitelist = hashmap! {
@@ -130,9 +161,11 @@ mod tests {
             }
         ";
         let source = r"
+            script {
             use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d::Account;
             fun main() {
                 Account::foo();
+            }
             }
         ";
         let verifier =
@@ -158,9 +191,11 @@ mod tests {
         ";
 
         let source = r"
+            script {
             use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d::Unknown;
             fun main() {
                 Unknown::foo();
+            }
             }
         ";
         let verifier =
@@ -186,12 +221,14 @@ mod tests {
         let oracle = include_str!("../../../tests/resources/oracle.move");
 
         let source = "
+                 script {
                  use 0x0::Empty;
                  use 0x0::Oracle;
 
                 fun main() {
                     Empty::create();
                     Oracle::get_price(#\"USDBTC\");
+                }
                 }
             ";
         let whitelist = hashmap! {

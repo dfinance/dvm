@@ -1,16 +1,12 @@
 use anyhow::Result;
 use std::path::Path;
 use crate::manifest::CmoveToml;
-use crate::compiler::builder::Builder;
-use crate::compiler::dependence::loader::make_rest_loader;
+use crate::mv::builder::Builder;
+use crate::mv::dependence::loader::make_rest_loader;
 
 pub fn execute(project_dir: &Path, manifest: CmoveToml) -> Result<()> {
     let loader = make_rest_loader(&project_dir, &manifest)?;
-    let builder = Builder::new(
-        project_dir,
-        manifest,
-        loader,
-    );
+    let builder = Builder::new(project_dir, manifest, &loader, true, true);
     builder.init_build_layout()?;
 
     let source_map = builder.make_source_map()?;
@@ -21,22 +17,4 @@ pub fn execute(project_dir: &Path, manifest: CmoveToml) -> Result<()> {
 
     let (text_source, units) = builder.compile(pre_processed_source_map, dep_list)?;
     builder.verify_and_store(text_source, units)
-}
-
-mod test {
-    use std::env;
-    use crate::manifest::{CmoveToml, Layout};
-    use crate::cmd::{new, build, update};
-
-    #[test]
-    fn tst() {
-        let dir = env::current_dir().unwrap();
-        let mut cmove = CmoveToml::default();
-        let mut layout = Layout::default();
-        layout.fill();
-        cmove.layout = Some(layout);
-        //new::execute(&dir, "test".to_string(), None, None).unwrap();
-        build::execute(&dir.join("test"), cmove.clone()).unwrap();
-        update::execute(&dir.join("test"), cmove).unwrap();
-    }
 }

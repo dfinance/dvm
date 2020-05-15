@@ -1,12 +1,12 @@
 use anyhow::Result;
 use std::path::Path;
 use crate::manifest::CmoveToml;
-use crate::compiler::builder::Builder;
-use crate::compiler::dependence::loader::make_rest_loader;
+use crate::mv::builder::Builder;
+use crate::mv::dependence::loader::make_rest_loader;
 
 pub fn execute(project_dir: &Path, manifest: CmoveToml) -> Result<()> {
     let loader = make_rest_loader(project_dir, &manifest)?;
-    let builder = Builder::new(project_dir, manifest, loader);
+    let builder = Builder::new(project_dir, manifest, &loader, true, true);
     builder.init_build_layout()?;
 
     let source_map = builder.make_source_map()?;

@@ -23,7 +23,7 @@ pub fn execute(
     let mut cmove = CmoveToml::default();
     cmove.package.name = Some(source_dir);
     cmove.package.blockchain_api = repository.map(|uri| uri.to_string());
-    cmove.package.account_address = address.map(|uri| uri.to_string());
+    cmove.package.account_address = address;
 
     store_manifest(&project_dir.join(MANIFEST), cmove)?;
     let mut layout = Layout::default();

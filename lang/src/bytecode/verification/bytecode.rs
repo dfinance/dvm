@@ -31,12 +31,14 @@ pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
 mod tests {
     use super::*;
     use libra::libra_types::account_address::AccountAddress;
-    use crate::compiler::compile_script;
+    use crate::bytecode::verification::whitelist::tests::compile_script;
 
     #[test]
     fn test_trivial_script_is_accepted() {
         let source = r"
+            script {
             fun main() {}
+            }
         ";
         let compiled = compile_script(source, vec![], &AccountAddress::default());
         validate_bytecode_instructions(&compiled).unwrap();
@@ -45,8 +47,10 @@ mod tests {
     #[test]
     fn test_assignment_is_accepted() {
         let source = r"
+            script {
             fun main() {
                 let _a = 1;
+            }
             }
         ";
         let compiled = compile_script(source, vec![], &AccountAddress::default());
@@ -58,10 +62,12 @@ mod tests {
         let empty = include_str!("../../../tests/resources/empty.move");
 
         let source = r"
+            script {
             use 0x0::Empty;
 
             fun main() {
                Empty::create();
+            }
             }
         ";
         let compiled = compile_script(
@@ -75,9 +81,11 @@ mod tests {
     #[test]
     fn test_if_is_forbidden() {
         let source = r"
+            script {
             fun main() {
                 if (true) {
                 }
+            }
             }
         ";
         let compiled = compile_script(source, vec![], &AccountAddress::default());
@@ -87,9 +95,11 @@ mod tests {
     #[test]
     fn test_loop_is_forbidden() {
         let source = r"
+            script {
             fun main() {
                 loop {
                 }
+            }
             }
         ";
         let compiled = compile_script(source, vec![], &AccountAddress::default());

@@ -13,6 +13,7 @@ edition = "2018"
 dvm-net = { path = "../net" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
+compiler = { path = "../compiler", package = "dvm-compiler" }
 lang = { path = "../lang", package = "dvm-lang" }
 services = { path = "../services", package = "dvm-services" }
 runtime = { path = "../runtime", package = "dvm-runtime" }

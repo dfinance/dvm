@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 /// Dfinance is a governance module which handles balances merging. It's basically
 /// a mediator or wrapper around money-related operations. It holds knowledge about
@@ -130,4 +130,5 @@ module Dfinance {
     fun assert_can_register_coin() {
         Transaction::assert(Transaction::sender() == 0x0, 1);
     }
+}
 }

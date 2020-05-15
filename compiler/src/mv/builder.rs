@@ -4,23 +4,27 @@ use std::fs;
 use walkdir::WalkDir;
 use libra::move_lang;
 use std::fs::{File, OpenOptions};
-use crate::compiler::bech32::bech32_into_libra;
+use crate::mv::bech32::bech32_into_libra;
 use std::io::Write;
-use crate::compiler::{preprocessor, disassembler};
-use anyhow::Result;
+use crate::mv::{preprocessor, disassembler};
+use anyhow::{Result, Error};
 use move_lang::shared::Address;
-use move_lang::errors::FilesSourceText;
+use move_lang::errors::{FilesSourceText, Errors, output_errors};
 use move_lang::compiled_unit::CompiledUnit;
-use move_lang::{compiled_unit, errors};
-use crate::compiler::dependence::extractor::{extract_from_source, extract_from_bytecode};
-use crate::compiler::dependence::loader::{BytecodeSource, Loader};
-use std::collections::HashMap;
+use move_lang::{compiled_unit, errors, parse_program, compile_program};
+use crate::mv::dependence::extractor::{extract_from_source, extract_from_bytecode};
+use crate::mv::dependence::loader::{BytecodeSource, Loader};
+use std::collections::{HashMap, HashSet};
 use libra::libra_types::language_storage::ModuleId;
+use termcolor::{StandardStream, ColorChoice, Buffer};
+use libra::libra_types::account_address::AccountAddress;
 
 pub struct Builder<'a, S: BytecodeSource> {
     project_dir: &'a Path,
     manifest: CmoveToml,
-    loader: Option<Loader<S>>,
+    loader: &'a Option<Loader<S>>,
+    print_err: bool,
+    shutdown_on_err: bool,
 }
 
 impl<'a, S> Builder<'a, S>
@@ -30,12 +34,16 @@ where
     pub fn new(
         project_dir: &'a Path,
         manifest: CmoveToml,
-        loader: Option<Loader<S>>,
+        loader: &'a Option<Loader<S>>,
+        print_err: bool,
+        shutdown_on_err: bool,
     ) -> Builder<'a, S> {
         Builder {
             project_dir,
             manifest,
             loader,
+            print_err,
+            shutdown_on_err,
         }
     }
 
@@ -70,13 +78,18 @@ where
     }
 
     pub fn load_dependencies(&self, sources: &[PathBuf]) -> Result<HashMap<ModuleId, Vec<u8>>> {
-        let source_imports = extract_from_source(sources)?;
+        let address = self
+            .address()?
+            .map(|addr| AccountAddress::new(addr.to_u8()));
+        let source_imports =
+            extract_from_source(sources, address, self.print_err, self.shutdown_on_err)?;
         let mut deps = HashMap::new();
 
+        let mut dep_list = HashSet::new();
         if let Some(loader) = &self.loader {
             for import in source_imports {
                 let bytecode = loader.get(&import)?;
-                self.load_bytecode_tree(&bytecode, &mut deps)?;
+                self.load_bytecode_tree(&bytecode, &mut deps, &mut dep_list)?;
                 deps.insert(import, bytecode);
             }
         }
@@ -84,27 +97,37 @@ where
         Ok(deps)
     }
 
-    fn load_bytecode_tree(&self, bytecode: &[u8], deps: &mut HashMap<ModuleId, Vec<u8>>) -> Result<()> {
+    fn load_bytecode_tree(
+        &self,
+        bytecode: &[u8],
+        deps: &mut HashMap<ModuleId, Vec<u8>>,
+        dep_list: &mut HashSet<ModuleId>,
+    ) -> Result<()> {
         let source_imports = extract_from_bytecode(bytecode)?;
         if let Some(loader) = &self.loader {
             for import in source_imports {
-                let bytecode = loader.get(&import)?;
-                self.load_bytecode_tree(&bytecode, deps)?;
-                deps.insert(import, bytecode);
+                if dep_list.insert(import.clone()) {
+                    let bytecode = loader.get(&import)?;
+                    self.load_bytecode_tree(&bytecode, deps, dep_list)?;
+                    deps.insert(import, bytecode);
+                }
             }
         }
 
         Ok(())
     }
 
-    pub fn make_dependencies_as_source(&self, bytecode: HashMap<ModuleId, Vec<u8>>) -> Result<Vec<PathBuf>> {
+    pub fn make_dependencies_as_source(
+        &self,
+        bytecode: HashMap<ModuleId, Vec<u8>>,
+    ) -> Result<Vec<PathBuf>> {
         let deps = self.temp_dir()?.join("deps");
         fs::create_dir_all(&deps)?;
 
         let mut path_list = Vec::with_capacity(bytecode.len());
 
         for (id, bytecode) in bytecode {
-            let signature  = disassembler::module_signature(&bytecode)?.to_string();
+            let signature = disassembler::module_signature(&bytecode)?.to_string();
             let path = deps.join(format!("{}_{}.move", id.address(), id.name().as_str()));
 
             let mut f = OpenOptions::new()
@@ -196,7 +219,27 @@ where
         let source_list = convert_path(&source_list)?;
         let dep_list = convert_path(&dep_list)?;
         let addr = self.address()?;
-        Ok(move_lang::move_compile(&source_list, &dep_list, addr)?)
+
+        let (files, pprog_and_comments_res) = parse_program(&source_list, &dep_list)?;
+        let pprog_res = pprog_and_comments_res.map(|(pprog, _)| pprog);
+        match compile_program(pprog_res, addr) {
+            Err(errors) => {
+                if self.print_err {
+                    let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                    output_errors(&mut writer, files, errors);
+                    if self.shutdown_on_err {
+                        std::process::exit(1)
+                    } else {
+                        Err(Error::msg("Unexpected errors."))
+                    }
+                } else {
+                    let mut writer = Buffer::ansi();
+                    output_errors(&mut writer, files, errors);
+                    Err(Error::msg(String::from_utf8(writer.into_inner())?))
+                }
+            }
+            Ok(compiled_units) => Ok((files, compiled_units)),
+        }
     }
 
     pub fn check(&self, source_list: Vec<PathBuf>, dep_list: Vec<PathBuf>) -> Result<()> {
@@ -245,9 +288,44 @@ where
         }
 
         if !ice_errors.is_empty() {
-            errors::report_errors(files, ice_errors);
+            if self.print_err {
+                let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                output_errors(&mut writer, files, ice_errors);
+            }
+            if self.shutdown_on_err {
+                std::process::exit(1);
+            }
         }
         Ok(())
+    }
+
+    pub fn verify(
+        &self,
+        files: FilesSourceText,
+        compiled_units: Vec<CompiledUnit>,
+    ) -> Result<HashMap<String, Vec<u8>>> {
+        let (compiled_units, ice_errors) = compiled_unit::verify_units(compiled_units);
+        let (modules, scripts): (Vec<_>, Vec<_>) = compiled_units
+            .into_iter()
+            .partition(|u| matches!(u, CompiledUnit::Module { .. }));
+
+        let mut bytecode_map = HashMap::new();
+
+        for module in modules {
+            bytecode_map.insert(module.name(), module.serialize());
+        }
+
+        for script in scripts {
+            bytecode_map.insert(script.name(), script.serialize());
+        }
+
+        if ice_errors.is_empty() {
+            Ok(bytecode_map)
+        } else {
+            let mut writer = Buffer::ansi();
+            output_errors(&mut writer, files, ice_errors);
+            Err(Error::msg(String::from_utf8(writer.into_inner())?))
+        }
     }
 
     fn address(&self) -> Result<Option<Address>> {
@@ -318,6 +396,11 @@ where
             .map(|t| self.project_dir.join(t))
             .ok_or_else(|| anyhow!("Expected script_output"))
     }
+}
+
+pub fn report_errors(files: FilesSourceText, errors: Errors) {
+    let mut writer = StandardStream::stderr(ColorChoice::Auto);
+    errors::output_errors(&mut writer, files, errors);
 }
 
 pub fn convert_path(path_list: &[PathBuf]) -> Result<Vec<String>> {

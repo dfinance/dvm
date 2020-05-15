@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module Block {
 
@@ -11,4 +11,5 @@ module Block {
     public fun get_current_block_height(): u64 acquires BlockMetadata {
         borrow_global<BlockMetadata>(0x0).height
     }
+}
 }

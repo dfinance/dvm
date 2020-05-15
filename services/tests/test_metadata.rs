@@ -3,21 +3,23 @@ use libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Code};
 
-use lang::compiler::Compiler;
 use data_source::MockDataSource;
 use dvm_services::metadata::MetadataService;
 use dvm_api::grpc::vm_grpc::{VmScript, VmTypeTag};
 use dvm_api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
+use compiler::Compiler;
 
 #[tokio::test]
 async fn test_no_arguments_for_script() {
     let source_text = r"
+            script {
             fun main() {
+            }
             }
         ";
     let compiler = Compiler::new(MockDataSource::new());
     let script_bytecode = compiler
-        .compile(source_text, &AccountAddress::random())
+        .compile(source_text, Some(AccountAddress::random()))
         .unwrap();
     let metadata_service = MetadataService::default();
     let request = Request::new(VmScript::new(script_bytecode));
@@ -33,12 +35,14 @@ async fn test_no_arguments_for_script() {
 #[tokio::test]
 async fn test_multiple_arguments_for_move_script() {
     let source_text = r"
+            script {
             fun main(_recipient: address, _amount: u128, _denom: vector<u8>) {
+            }
             }
         ";
     let compiler = Compiler::new(MockDataSource::new());
     let script_bytecode = compiler
-        .compile(source_text, &AccountAddress::random())
+        .compile(source_text, Some(AccountAddress::random()))
         .unwrap();
     let metadata_service = MetadataService::default();
     let request = Request::new(VmScript::new(script_bytecode));
@@ -61,12 +65,14 @@ async fn test_multiple_arguments_for_move_script() {
 #[tokio::test]
 async fn test_cannot_deserialize_bytecode() {
     let source_text = r"
+            script {
             fun main(_recipient: address, _amount: u128, _denom: vector<u8>) {
+            }
             }
         ";
     let compiler = Compiler::new(MockDataSource::new());
     let mut script_bytecode = compiler
-        .compile(source_text, &AccountAddress::random())
+        .compile(source_text, Some(AccountAddress::random()))
         .unwrap();
     script_bytecode[13] = 0xff;
     let metadata_service = MetadataService::default();

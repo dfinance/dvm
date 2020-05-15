@@ -3,24 +3,38 @@ use libra::libra_types::language_storage::ModuleId;
 use std::path::PathBuf;
 use libra::move_lang::{parse_program, errors};
 use libra::move_lang::parser::ast::{Definition, ModuleDefinition, Script};
-use crate::compiler::builder::convert_path;
 use std::collections::HashSet;
 use libra::move_core_types::identifier::Identifier;
 use libra::libra_types::account_address::AccountAddress;
 use libra::move_lang::parser::ast::*;
 use libra::libra_vm::CompiledModule;
+use termcolor::{StandardStream, ColorChoice};
+use std::process::exit;
+use crate::mv::builder::convert_path;
 
-
-pub fn extract_from_source(targets: &[PathBuf]) -> Result<HashSet<ModuleId>> {
-    let mut extractor = DefinitionUses::default();
-    let (files, pprog_and_comments_res) = parse_program(&convert_path(targets)?, &vec![])?;
+pub fn extract_from_source(
+    targets: &[PathBuf],
+    address: Option<AccountAddress>,
+    print_err: bool,
+    shutdown_on_err: bool,
+) -> Result<HashSet<ModuleId>> {
+    let mut extractor = DefinitionUses::with_address(address);
+    let (files, pprog_and_comments_res) = parse_program(&convert_path(targets)?, &[])?;
     match pprog_and_comments_res {
         Ok((program, _)) => {
             for def in program.source_definitions {
                 extractor.extract(&def)?;
             }
         }
-        Err(errs) => errors::report_errors(files, errs),
+        Err(errs) => {
+            if print_err {
+                let mut writer = StandardStream::stderr(ColorChoice::Auto);
+                errors::output_errors(&mut writer, files, errs);
+            }
+            if shutdown_on_err {
+                exit(1);
+            }
+        }
     }
 
     Ok(extractor.imports())
@@ -35,15 +49,30 @@ pub fn extract_from_bytecode(bytecode: &[u8]) -> Result<HashSet<ModuleId>> {
 #[derive(Default)]
 pub struct DefinitionUses {
     imports: HashSet<ModuleId>,
+    modules: HashSet<ModuleId>,
+    address: Option<AccountAddress>,
 }
 
 impl DefinitionUses {
+    pub fn with_address(address: Option<AccountAddress>) -> DefinitionUses {
+        DefinitionUses {
+            imports: Default::default(),
+            modules: Default::default(),
+            address,
+        }
+    }
+
     pub fn extract(&mut self, def: &Definition) -> Result<()> {
         match def {
-            Definition::Module(module) => self.module(module)?,
-            Definition::Address(_, _, modules) => {
+            Definition::Module(module) => self.module(
+                module,
+                self.address
+                    .ok_or_else(|| anyhow!("Expected account address."))?,
+            )?,
+            Definition::Address(_, addr, modules) => {
+                let addr = AccountAddress::new(addr.to_u8());
                 for module in modules {
-                    self.module(module)?;
+                    self.module(module, addr)?;
                 }
             }
             Definition::Script(script) => self.script(script)?,
@@ -51,8 +80,12 @@ impl DefinitionUses {
         Ok(())
     }
 
-    fn module(&mut self, module: &ModuleDefinition) -> Result<()> {
+    fn module(&mut self, module: &ModuleDefinition, address: AccountAddress) -> Result<()> {
         self.uses(&module.uses)?;
+        self.modules.insert(ModuleId::new(
+            address,
+            Identifier::new(module.name.0.value.to_owned())?,
+        ));
 
         for st in &module.structs {
             match &st.fields {
@@ -331,7 +364,11 @@ impl DefinitionUses {
         Ok(())
     }
 
-    pub fn imports(self) -> HashSet<ModuleId> {
+    pub fn imports(mut self) -> HashSet<ModuleId> {
+        for module_id in self.modules {
+            self.imports.remove(&module_id);
+        }
+
         self.imports
     }
 }
@@ -349,15 +386,18 @@ impl BytecodeUses {
     pub fn extract(&mut self, module: CompiledModule) -> Result<()> {
         let module = module.into_inner();
         let mut module_handles = module.module_handles;
-        if module_handles.len() > 1 {
+        if !module_handles.is_empty() {
             // Remove self module with 0 index.
             module_handles.remove(0);
         }
 
         for module_handle in module_handles {
-            let name = module.identifiers[module_handle.name.0 as usize].as_str().to_owned();
+            let name = module.identifiers[module_handle.name.0 as usize]
+                .as_str()
+                .to_owned();
             let address = module.address_identifiers[module_handle.address.0 as usize];
-            self.imports.insert(ModuleId::new(address, Identifier::new(name)?));
+            self.imports
+                .insert(ModuleId::new(address, Identifier::new(name)?));
         }
 
         Ok(())

@@ -14,6 +14,7 @@ libra = { path = "../libra", package = "dvm-libra-deps" }
 lang = { path = "../lang", package = "dvm-lang" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
 runtime = { path = "../runtime", package = "dvm-runtime" }
+compiler = { path = "../compiler", package = "dvm-compiler" }
 anyhow = "1.0.27"
 hex = "=0.4.2"
 

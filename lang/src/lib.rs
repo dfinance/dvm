@@ -6,5 +6,4 @@ extern crate include_dir;
 
 pub mod bech32;
 pub mod bytecode;
-pub mod compiler;
 pub mod stdlib;

@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module Event {
 
@@ -85,4 +85,5 @@ module Event {
     public fun destroy_handle<T: copyable>(handle: EventHandle<T>) {
         EventHandle<T> { counter: _, guid: _ } = handle;
     }
+}
 }

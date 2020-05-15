@@ -4,7 +4,6 @@ use libra_types::account_address::AccountAddress;
 use dvm_api::tonic;
 use tonic::{Request, Response, Status};
 
-use lang::compiler::Compiler;
 use libra::libra_state_view::StateView;
 use dvm_api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
 use dvm_api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompiler;
@@ -12,6 +11,7 @@ use dvm_api::grpc::vm_grpc::{
     SourceFile, CompilationResult, SourceFiles, MultipleCompilationResult, CompiledUnit,
 };
 use std::convert::TryFrom;
+use compiler::Compiler;
 
 #[derive(Clone)]
 pub struct CompilerService<S>
@@ -46,7 +46,7 @@ where
         let address = convert_address(&source_file_data.address)?;
         Ok(self
             .compiler
-            .compile(&source_file_data.text, &address)
+            .compile(&source_file_data.text, Some(address))
             .map_err(|err| err.to_string()))
     }
 
@@ -64,7 +64,7 @@ where
 
         Ok(self
             .compiler
-            .compile_source_map(source_map, &address)
+            .compile_source_map(source_map, Some(address))
             .map_err(|err| err.to_string())
             .map(|map| {
                 map.into_iter()

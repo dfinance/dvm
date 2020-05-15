@@ -10,6 +10,7 @@ edition = "2018"
 
 [dependencies]
 libra = { path = "../libra", package = "dvm-libra-deps" }
+compiler = { path = "../compiler", package = "dvm-compiler" }
 ds = { path = "../data-source", package = "dvm-data-source" }
 anyhow = "=1.0.27"
 lazy_static = "=1.4.0"

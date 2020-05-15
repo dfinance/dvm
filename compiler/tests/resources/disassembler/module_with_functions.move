@@ -1,4 +1,4 @@
-address 0x000000000000000000000000000000000000000000000000:
+address 0x000000000000000000000000000000000000000000000000 {
 
 module Foo {
      use 0x0::Base as Base1;
@@ -54,4 +54,5 @@ module Foo {
         borrow_global<T1>(0x0);
         abort 1
      }
+}
 }

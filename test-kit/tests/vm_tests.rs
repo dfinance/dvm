@@ -1,9 +1,9 @@
 use byteorder::{LittleEndian, ByteOrder};
 use libra::libra_types;
 use libra_types::account_address::AccountAddress;
-use libra::move_vm_types::native_functions::oracle;
+use libra::move_vm_natives::oracle;
 use dvm_test_kit::*;
-use lang::compiler::preprocessor::str_xxhash;
+use compiler::preprocessor::str_xxhash;
 use runtime::move_vm::{U64Store, AddressStore, VectorU8Store};
 use libra::lcs;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
@@ -21,11 +21,13 @@ fn test_oracle() {
     test_kit.add_std_module(include_str!("resources/store.move"));
 
     let script = "
+        script {
         use 0x0::Store;
         use 0x0::Oracle;
 
         fun main() {
             Store::store_u64(Oracle::get_price(#\"USDBTC\"));
+        }
         }
     ";
 
@@ -37,11 +39,13 @@ fn test_oracle() {
     assert_eq!(price, value.val);
 
     let script = "
+        script {
         use 0x0::Store;
         use 0x0::Oracle;
 
         fun main() {
           Store::store_u64(Oracle::get_price(#\"USDxrp\"));
+        }
         }
     ";
     let res = test_kit.execute_script(script, meta(&account_address), vec![]);
@@ -57,11 +61,13 @@ fn test_native_function() {
     test_kit.add_std_module(include_str!("resources/store.move"));
 
     let script = "
+        script {
         use 0x0::Store;
         use 0x0::Transaction;
 
         fun main() {
             Store::store_address(Transaction::sender());
+        }
         }
     ";
 
@@ -79,10 +85,12 @@ fn test_address_as_argument() {
     test_kit.add_std_module(include_str!("resources/store.move"));
 
     let script = "
+        script {
         use 0x0::Store;
 
         fun main(addr: address) {
             Store::store_address(addr);
+        }
         }
     ";
 
@@ -103,10 +111,12 @@ fn test_vector_as_argument() {
     test_kit.add_std_module(include_str!("resources/store.move"));
 
     let script = "
+        script {
         use 0x0::Store;
 
         fun main(vec: vector<u8>) {
             Store::store_vector_u8(vec);
+        }
         }
     ";
 
@@ -133,11 +143,13 @@ fn test_native_save_balance() {
     let recipient = AccountAddress::random();
 
     let send_script = "\
+        script {
         use 0x0::Account;
 
         fun main(coin_1_balance: u64, coin_2_balance: u64, addr: address) {
             Account::save_coin<Account::Coin1>(coin_1_balance, addr);
             Account::save_coin<Account::Coin2>(coin_2_balance, addr);
+        }
         }
     ";
 
@@ -163,11 +175,13 @@ fn test_native_save_balance() {
     test_kit.merge_result(&res);
 
     let recipient_coin_1_script = "\
+        script {
         use 0x0::Account;
         use 0x0::Store;
 
         fun main() {
             Store::store_u64(Account::balance<Account::Coin1>());
+        }
         }
     ";
     let res = test_kit.execute_script(recipient_coin_1_script, meta(&recipient), vec![]);
@@ -176,11 +190,13 @@ fn test_native_save_balance() {
     assert_eq!(coin_1, value.val);
 
     let recipient_coin_2_script = "\
+        script {
         use 0x0::Account;
         use 0x0::Store;
 
         fun main() {
             Store::store_u64(Account::balance<Account::Coin2>());
+        }
         }
     ";
     let res = test_kit.execute_script(recipient_coin_2_script, meta(&recipient), vec![]);
@@ -198,10 +214,12 @@ fn test_native_save_account() {
     test_kit.add_std_module(include_str!("resources/store.move"));
 
     let create_account_script = "\
+        script {
         use 0x0::Account;
 
         fun main(t_value: u64, addr: address) {
             Account::create_account(t_value, addr);
+        }
         }
     ";
 
@@ -223,11 +241,13 @@ fn test_native_save_account() {
     test_kit.merge_result(&res);
 
     let load_t = "\
+        script {
         use 0x0::Account;
         use 0x0::Store;
 
         fun main() {
             Store::store_u64(Account::get_t_value());
+        }
         }
     ";
     let res = test_kit.execute_script(load_t, meta(&account), vec![]);
@@ -243,11 +263,13 @@ fn test_update_std_module() {
     test_kit.add_std_module("module Foo{ public fun foo(): u64 {1}}");
 
     let load_foo = "\
+        script {
         use 0x0::Foo;
         use 0x0::Store;
 
         fun main() {
             Store::store_u64(Foo::foo());
+        }
         }
     ";
     let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![]);
@@ -264,13 +286,16 @@ fn test_update_std_module() {
     test_kit.add_std_module(include_str!("resources/store.move"));
 
     let load_foo = "\
+        script {
         use 0x0::Foo;
         use 0x0::Store;
 
         fun main() {
             Store::store_u64(Foo::foo());
         }
+        }
     ";
+
     let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![]);
     test_kit.assert_success(&res);
     let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();

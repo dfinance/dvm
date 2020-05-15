@@ -2,7 +2,6 @@ use anyhow::Error;
 use libra::libra_vm::file_format::{SignatureToken, CompiledScript};
 use libra::libra_vm::access::ScriptAccess;
 
-pub mod disassembler;
 pub mod verification;
 
 pub fn extract_script_params(bytecode: &[u8]) -> Result<Vec<SignatureToken>, Error> {

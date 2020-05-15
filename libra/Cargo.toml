@@ -28,3 +28,4 @@ libra-logger = { git = "https://github.com/dfinance/libra.git", branch = "12.05.
 ir-to-bytecode = { git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
 libra-vm = { git = "https://github.com/dfinance/libra.git", branch = "12.05.2020", package = "vm" }
 move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }
+move-vm-natives = { git = "https://github.com/dfinance/libra.git", branch = "12.05.2020" }

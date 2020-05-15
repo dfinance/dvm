@@ -1,4 +1,4 @@
-address 0x0:
+address 0x0 {
 
 module Event {
     resource struct EventHandleGenerator {
@@ -9,4 +9,5 @@ module Event {
     public fun new_event_generator(addr: address,): EventHandleGenerator {
         EventHandleGenerator{ counter: 0, addr }
     }
+}
 }

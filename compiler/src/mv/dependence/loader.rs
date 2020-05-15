@@ -8,17 +8,20 @@ use http::Uri;
 use crate::manifest::CmoveToml;
 use std::fs;
 
-pub trait BytecodeSource {
+pub trait BytecodeSource: Clone {
     fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>>;
 }
 
+#[derive(Clone)]
 pub struct ZeroSource;
+
 impl BytecodeSource for ZeroSource {
     fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
         Err(anyhow!("Module {:?} not found", module_id))
     }
 }
 
+#[derive(Clone)]
 pub struct RestBytecodeSource {
     url: Uri,
 }
@@ -30,13 +33,14 @@ impl RestBytecodeSource {
 }
 
 impl BytecodeSource for RestBytecodeSource {
-    fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
-        todo!()
+    fn load(&self, _module_id: &ModuleId) -> Result<Vec<u8>> {
+        todo!("Load dependencies from node REST API.")
     }
 }
 
+#[derive(Clone)]
 pub struct Loader<S: BytecodeSource> {
-    cache_path: PathBuf,
+    cache_path: Option<PathBuf>,
     source: S,
 }
 
@@ -44,26 +48,31 @@ impl<S> Loader<S>
 where
     S: BytecodeSource,
 {
-    pub fn new(cache_path: PathBuf, source: S) -> Loader<S> {
+    pub fn new(cache_path: Option<PathBuf>, source: S) -> Loader<S> {
         Loader { cache_path, source }
     }
 
     pub fn get(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
         let name = self.make_local_name(&module_id)?;
-        let local_path = self.cache_path.join(name);
-        if local_path.exists() {
-            let mut f = File::open(local_path)?;
-            let mut bytecode = Vec::new();
-            f.read_to_end(&mut bytecode)?;
-            Ok(bytecode)
+
+        if let Some(cache_path) = &self.cache_path {
+            let local_path = cache_path.join(name);
+            if local_path.exists() {
+                let mut f = File::open(local_path)?;
+                let mut bytecode = Vec::new();
+                f.read_to_end(&mut bytecode)?;
+                Ok(bytecode)
+            } else {
+                let bytecode = self.source.load(module_id)?;
+                let mut f = OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .open(&local_path)?;
+                f.write_all(&bytecode)?;
+                Ok(bytecode)
+            }
         } else {
-            let bytecode = self.source.load(module_id)?;
-            let mut f = OpenOptions::new()
-                .create(true)
-                .write(true)
-                .open(&local_path)?;
-            f.write_all(&bytecode)?;
-            Ok(bytecode)
+            self.source.load(module_id)
         }
     }
 
@@ -93,7 +102,7 @@ pub fn make_rest_loader(
 
     Ok(if let Some(uri) = cmove.package.blockchain_api.as_ref() {
         Some(Loader::new(
-            cache_path,
+            Some(cache_path),
             RestBytecodeSource::new(uri.parse()?),
         ))
     } else {

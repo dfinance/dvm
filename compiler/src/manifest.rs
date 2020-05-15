@@ -65,13 +65,13 @@ pub fn read_manifest(path: &Path) -> Result<CmoveToml, Error> {
 }
 
 pub fn store_manifest(path: &Path, manifest: CmoveToml) -> Result<(), Error> {
-    let mut value = toml::to_vec(&Value::try_from(manifest)?)?;
+    let value = toml::to_vec(&Value::try_from(manifest)?)?;
     let mut f = OpenOptions::new()
         .create(true)
         .read(true)
         .write(true)
         .open(path)?;
     f.set_len(0)?;
-    f.write_all(&mut value)?;
+    f.write_all(&value)?;
     Ok(())
 }
