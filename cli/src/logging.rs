@@ -1,5 +1,4 @@
 use crate::config::*;
-use std::fmt::Display;
 
 #[cfg(feature = "sentry")]
 pub(crate) mod support_sentry {
@@ -89,14 +88,6 @@ fn rust_log_compat(rust_log: &str, rust_log_style: &str) {
     use std::env::set_var;
     set_var(RUST_LOG, rust_log);
     set_var(RUST_LOG_STYLE, rust_log_style);
-}
-
-pub fn log_shutdown<T: Display>(any: Option<T>) {
-    if let Some(s) = any {
-        info!("Shutting down services: {}", s)
-    } else {
-        info!("Shutting down services")
-    }
 }
 
 #[cfg(test)]
