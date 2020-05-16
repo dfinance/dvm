@@ -66,7 +66,10 @@ where
         Endpoint::Http(http) => {
             let addr: std::net::SocketAddr = http.try_into()?;
             info!("server listening on TCP {}", &addr);
-            router.serve(addr).await.map(|_| None)?
+            router
+                .serve_with_shutdown(addr, signal)
+                .await
+                .map(|_| None)?
         }
 
         Endpoint::Ipc(ipc) => {
