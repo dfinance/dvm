@@ -130,7 +130,7 @@ fn test_parse_script_with_bech32_addresses() {
         program,
         vec![(
             dep,
-            &make_address("0xde5f86ce8ad7944f272d693cb4625a955b61015000000000"),
+            &make_address("0xde5f86ce8ad7944f272d693cb4625a955b610150"),
         )],
         &AccountAddress::default(),
     )
@@ -148,7 +148,7 @@ fn test_parse_script_with_bech32_addresses() {
     let address = script.address_identifier_at(module.address);
     assert_eq!(
         address.to_string(),
-        "de5f86ce8ad7944f272d693cb4625a955b61015000000000"
+        "de5f86ce8ad7944f272d693cb4625a955b610150"
     );
 }
 
@@ -173,7 +173,7 @@ fn test_parse_module_with_bech32_addresses() {
         program,
         vec![(
             dep,
-            &make_address("0xde5f86ce8ad7944f272d693cb4625a955b61015000000000"),
+            &make_address("0xde5f86ce8ad7944f272d693cb4625a955b610150"),
         )],
         &AccountAddress::default(),
     )
@@ -188,7 +188,7 @@ fn test_parse_module_with_bech32_addresses() {
     let address = main_module.address_identifier_at(module.address);
     assert_eq!(
         address.to_string(),
-        "de5f86ce8ad7944f272d693cb4625a955b61015000000000"
+        "de5f86ce8ad7944f272d693cb4625a955b610150"
     );
 }
 

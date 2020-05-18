@@ -120,7 +120,7 @@ pub mod tests {
 
     #[test]
     fn test_all_modules_are_whitelisted() {
-        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a");
 
         let empty = include_str!("../../../tests/resources/empty.move");
         let oracle = include_str!("../../../tests/resources/oracle.move");
@@ -153,7 +153,7 @@ pub mod tests {
 
     #[test]
     fn test_modules_from_sender_address_not_flagged() {
-        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a");
 
         let dep = r"
             module Account {
@@ -162,7 +162,7 @@ pub mod tests {
         ";
         let source = r"
             script {
-            use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d::Account;
+            use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a::Account;
             fun main() {
                 Account::foo();
             }
@@ -182,7 +182,7 @@ pub mod tests {
 
     #[test]
     fn test_module_on_sender_does_not_exist() {
-        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a");
 
         let dep = r"
             module Unknown {
@@ -192,7 +192,7 @@ pub mod tests {
 
         let source = r"
             script {
-            use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d::Unknown;
+            use 0x646600000a6d43cfd2d2b999efbbf24b3c73409a::Unknown;
             fun main() {
                 Unknown::foo();
             }
@@ -210,13 +210,13 @@ pub mod tests {
         .unwrap_err();
         assert_eq!(
             err.to_string(),
-            "Module 646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d.Unknown is not whitelisted"
+            "Module 646600000a6d43cfd2d2b999efbbf24b3c73409a.Unknown is not whitelisted"
         );
     }
 
     #[test]
     fn test_some_module_is_not_whitelisted() {
-        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a5385028d");
+        let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a");
         let empty = include_str!("../../../tests/resources/empty.move");
         let oracle = include_str!("../../../tests/resources/oracle.move");
 
@@ -246,7 +246,7 @@ pub mod tests {
         .unwrap_err();
         assert_eq!(
             verified_err.to_string(),
-            "Module 000000000000000000000000000000000000000000000000.Empty is not whitelisted"
+            "Module 0000000000000000000000000000000000000000.Empty is not whitelisted"
         );
     }
 }
