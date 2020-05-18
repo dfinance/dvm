@@ -1,10 +1,7 @@
 use crate::config::*;
 
 #[cfg(feature = "sentry")]
-pub use support_sentry::*;
-
-#[cfg(feature = "sentry")]
-mod support_sentry {
+pub(crate) mod support_sentry {
     use super::*;
     use sentry::internals::Dsn;
     use sentry::internals::ClientInitGuard;
@@ -59,16 +56,6 @@ mod support_sentry {
         }
         client
     }
-}
-
-/// Default logging initializer without extra integrations.
-/// Used as fallback if sentry feature disabled.
-#[cfg(not(feature = "sentry"))]
-pub fn init(log: &LoggingOptions, _: &IntegrationsOptions) -> Option<()> {
-    init_logging(log)
-        .map(|_| trace!("Logging system initialized."))
-        .map_err(|err| eprintln!("Attempt to init global logger once more. {:?}", err))
-        .ok()
 }
 
 pub fn init_logging(opts: &LoggingOptions) -> Result<(), log::SetLoggerError> {
@@ -204,7 +191,7 @@ mod tests {
                 sentry_env: env.into(),
             };
 
-            let _guard = super::init(&logging, &integrations);
+            let _guard = crate::init(&logging, &integrations);
             let handle = spawn(move || panic!(TEXT));
             sleep(Duration::from_secs(5));
             sleep(Duration::from_secs(5));

@@ -53,7 +53,11 @@ pub fn run_ds_service_mock() {
 #[test]
 fn test_grpc_ds() {
     run_ds_service_mock();
-    let ds = GrpcDataSource::new(format!("http://{}", ADDRESS).parse().unwrap()).unwrap();
+    let ds = GrpcDataSource::new(
+        format!("http://{}", ADDRESS).parse().unwrap(),
+        Default::default(),
+    )
+    .unwrap();
 
     let handlers = (0..8)
         .map(|_| ds.clone())
