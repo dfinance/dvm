@@ -11,7 +11,7 @@ fn test_match_valid_import_bech32_lines() {
     let sources = "import wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Account; import wallet1zhw7vn8stj4zu7jgjalyunyhn8462pwnu0v252.Account;";
     let replaced_line = replace_bech32_addresses(sources);
     assert_eq!(
-        r"import 0xde5f86ce8ad7944f272d693cb4625a955b61015000000000.Account; import 0x15dde64cf05caa2e7a48977e4e4c9799eba505d300000000.Account;",
+        r"import 0xde5f86ce8ad7944f272d693cb4625a955b610150.Account; import 0x15dde64cf05caa2e7a48977e4e4c9799eba505d3.Account;",
         replaced_line
     );
 }
@@ -21,7 +21,7 @@ fn test_match_arbitrary_import_whitespaces() {
     let line = "import          wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh.Account;";
     let replaced_line = replace_bech32_addresses(line);
     assert_eq!(
-        r"import          0xde5f86ce8ad7944f272d693cb4625a955b61015000000000.Account;",
+        r"import          0xde5f86ce8ad7944f272d693cb4625a955b610150.Account;",
         replaced_line
     );
 }
@@ -74,7 +74,7 @@ fn test_match_valid_import_bech32_lines_move() {
     let replaced_line = replace_bech32_addresses(line);
     assert_eq!(
         replaced_line,
-        r"use 0xde5f86ce8ad7944f272d693cb4625a955b61015000000000::Account; use 0xde5f86ce8ad7944f272d693cb4625a955b61015000000000::Account;",
+        r"use 0xde5f86ce8ad7944f272d693cb4625a955b610150::Account; use 0xde5f86ce8ad7944f272d693cb4625a955b610150::Account;",
     );
 }
 
@@ -100,7 +100,7 @@ fn test_address_as_variable() {
     let source = r"addr = wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh;";
     assert_eq!(
         replace_bech32_addresses(source),
-        r"addr = 0xde5f86ce8ad7944f272d693cb4625a955b61015000000000;",
+        r"addr = 0xde5f86ce8ad7944f272d693cb4625a955b610150;",
     )
 }
 
@@ -122,13 +122,13 @@ fn test_invalid_libra_address_length() {
         libra_into_bech32(invalid_libra_address)
             .unwrap_err()
             .to_string(),
-        "Address should be of length 50",
+        "Address should be of length 42",
     );
 }
 
 #[test]
 fn test_convert_valid_libra_into_bech32() {
-    let libra_address = "0xde5f86ce8ad7944f272d693cb4625a955b61015000000000";
+    let libra_address = "0xde5f86ce8ad7944f272d693cb4625a955b610150";
     assert_eq!(
         libra_into_bech32(libra_address).unwrap(),
         "wallet1me0cdn52672y7feddy7tgcj6j4dkzq2su745vh",

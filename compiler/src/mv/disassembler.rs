@@ -679,7 +679,7 @@ mod tests {
             compiler
                 .compile(
                     include_str!("../../tests/resources/disassembler/base.move"),
-                    Some(AccountAddress::new([0x1; 24])),
+                    Some(AccountAddress::new([0x1; 20])),
                 )
                 .unwrap(),
         )

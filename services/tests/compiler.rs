@@ -142,7 +142,7 @@ async fn test_required_libracoin_dependency_is_not_available() {
     let error = compilation_result.errors.get(0).unwrap();
     assert_eq!(
         error,
-        r#"Module '0x000000000000000000000000000000000000000000000000::Coin' not found"#
+        r#"Module '0x0000000000000000000000000000000000000000::Coin' not found"#
     )
 }
 
@@ -160,8 +160,7 @@ async fn test_allows_for_bech32_addresses() {
     let source_file_request = new_source_file_request(source_text);
 
     let libra_address =
-        AccountAddress::from_hex_literal("0xde5f86ce8ad7944f272d693cb4625a955b61015000000000")
-            .unwrap();
+        AccountAddress::from_hex_literal("0xde5f86ce8ad7944f272d693cb4625a955b610150").unwrap();
 
     let ds = MockDataSource::with_write_set(build_std());
     let compiler = Compiler::new(ds.clone());
