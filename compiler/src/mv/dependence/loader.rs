@@ -1,12 +1,14 @@
 use std::path::{PathBuf, Path};
 use anyhow::Result;
 use libra::move_core_types::language_storage::ModuleId;
+use libra::libra_types::access_path::AccessPath;
 use tiny_keccak::{Hasher, Sha3};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use http::Uri;
 use crate::manifest::MoveToml;
 use std::fs;
+use serde::{Deserialize, Serialize};
 
 pub trait BytecodeSource: Clone {
     fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>>;
@@ -33,9 +35,43 @@ impl RestBytecodeSource {
 }
 
 impl BytecodeSource for RestBytecodeSource {
-    fn load(&self, _module_id: &ModuleId) -> Result<Vec<u8>> {
-        todo!("Load dependencies from node REST API.")
+    fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
+        let path = AccessPath::code_access_path(module_id);
+        let url = format!(
+            "{base_url}vm/data/{address}/{path}",
+            base_url = self.url,
+            address = hex::encode(&path.address),
+            path = hex::encode(path.path)
+        );
+
+        let resp = reqwest::blocking::get(&url)?;
+        if resp.status().is_success() {
+            let res: LoaderResponse = resp.json()?;
+            Ok(hex::decode(&res.result.value)?)
+        } else {
+            let res: LoaderErrorResponse = resp.json()?;
+            Err(anyhow!(
+                "Failed to load dependencies :'{}' [{}]",
+                url,
+                res.error
+            ))
+        }
     }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
+pub struct LoaderResponse {
+    result: Response,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
+pub struct Response {
+    value: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
+pub struct LoaderErrorResponse {
+    error: String,
 }
 
 #[derive(Clone)]
