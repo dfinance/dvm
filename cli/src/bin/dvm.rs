@@ -70,7 +70,7 @@ async fn main_internal(options: Options) -> Result<()> {
             Err(err) => error!("unable to send sig into the DS client: {:?}", err),
         }
 
-        // shutdown VM
+        // shutdown server
         match serv_term_tx.send(()) {
             Ok(_) => info!("shutting down VM server"),
             Err(err) => error!("unable to send sig into the server: {:?}", err),
@@ -82,14 +82,18 @@ async fn main_internal(options: Options) -> Result<()> {
     let ds = ModuleCache::new(ds, MODULE_CACHE);
     let service = VmService::new(ds).expect("Unable to initialize VmService.");
 
-    tokio::select! {
-        _ = sigterm => {},
-        res = Server::builder().add_service(VmServiceServer::new(service))
-                               .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ())) => {
-            info!("DVM server is shutted down");
-            res.expect("internal fail");
-        }
-    }
+    // spawn the signal-router:
+    tokio::spawn(sigterm);
+    // block-on the server:
+    Server::builder()
+        .add_service(VmServiceServer::new(service))
+        .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ()))
+        .map(|res| {
+            info!("VM server is shutted down");
+            res
+        })
+        .await
+        .expect("internal fail");
 
     Ok(())
 }
