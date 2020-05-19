@@ -80,8 +80,7 @@ mod support_libra_logger {
     struct TraceLog;
     impl StructLogSink for TraceLog {
         fn send(&self, entry: StructuredLogEntry) {
-            println!("{}", serde_json::to_string(&entry).unwrap());
-            eprintln!("{}", serde_json::to_string(&entry).unwrap());
+            trace!("{}", serde_json::to_string(&entry).unwrap());
         }
     }
 }

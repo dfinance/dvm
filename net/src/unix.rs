@@ -124,18 +124,16 @@ impl FdGuard {
 impl Drop for FdGuard {
     fn drop(&mut self) {
         debug!("UDS fd-guard dropping");
-        println!("UDS fd-guard dropping");
 
         if !self.enabled {
             debug!("UDS fd-guard dropping skipped.");
-            println!("UDS fd-guard dropping skipped.");
             return;
         }
 
         if let Some(path) = self.path.as_pathname() {
             match close_uds(path) {
                 Ok(_) => debug!("UDS fd closed"),
-                Err(err) => error!("{}", err),
+                Err(err) => error!("Unable to close UDS fd: {}", err),
             }
         } else {
             error!("Failed to close UDS fd: No local pathname.");
