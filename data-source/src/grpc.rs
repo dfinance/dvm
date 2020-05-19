@@ -33,18 +33,6 @@ impl GrpcDataSource {
         let handler =
             thread::spawn(move || Self::internal_loop(rt, uri, receiver, shutdown_signal));
 
-        // check DS connection, send empty request:
-        {
-            let (tx, rx) = bounded(10);
-            sender
-                .send(Request {
-                    path: AccessPath::default(),
-                    sender: tx,
-                })
-                .expect("cannot sent test req to DS client");
-            debug!("DS connection check received: {:?}", rx.recv());
-        }
-
         Ok(GrpcDataSource {
             handler: Arc::new(handler),
             sender,
