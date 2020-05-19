@@ -6,10 +6,10 @@
 extern crate log;
 
 use http::Uri;
-use libra::libra_logger::init_struct_log_from_env;
 use structopt::StructOpt;
 
 use tonic::transport::Server;
+use futures::future::FutureExt;
 
 use dvm_net::prelude::*;
 use dvm_net::tonic;
@@ -18,7 +18,7 @@ use data_source::{GrpcDataSource, ModuleCache};
 use anyhow::Result;
 use services::vm::VmService;
 use dvm_cli::config::*;
-use dvm_cli::logging;
+use dvm_cli::init;
 
 const MODULE_CACHE: usize = 1000;
 
@@ -55,22 +55,45 @@ struct Options {
 
 fn main() -> Result<()> {
     let options = Options::from_args();
-    let _guard = logging::init(&options.logging, &options.integrations);
+    let _guard = init(&options.logging, &options.integrations);
     main_internal(options)
 }
 
 #[tokio::main]
 async fn main_internal(options: Options) -> Result<()> {
-    let ds = GrpcDataSource::new(options.ds).expect("Unable to instantiate GrpcDataSource.");
+    let (serv_term_tx, serv_term_rx) = futures::channel::oneshot::channel();
+    let (ds_term_tx, ds_term_rx) = tokio::sync::oneshot::channel();
+    let sigterm = dvm_cli::init_sigterm_handler_fut(move || {
+        // shutdown DS
+        match ds_term_tx.send(()) {
+            Ok(_) => info!("shutting down DS client"),
+            Err(err) => error!("unable to send sig into the DS client: {:?}", err),
+        }
+
+        // shutdown server
+        match serv_term_tx.send(()) {
+            Ok(_) => info!("shutting down VM server"),
+            Err(err) => error!("unable to send sig into the server: {:?}", err),
+        }
+    });
+
+    let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
+        .expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(ds, MODULE_CACHE);
     let service = VmService::new(ds).expect("Unable to initialize VmService.");
 
-    init_struct_log_from_env().unwrap();
-    info!("DVM server listening on {}", options.address);
+    // spawn the signal-router:
+    tokio::spawn(sigterm);
+    // block-on the server:
     Server::builder()
         .add_service(VmServiceServer::new(service))
-        .serve_ext(options.address)
+        .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ()))
+        .map(|res| {
+            info!("VM server is shutted down");
+            res
+        })
         .await
         .expect("internal fail");
+
     Ok(())
 }

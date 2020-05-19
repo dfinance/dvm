@@ -1,10 +1,7 @@
 use crate::config::*;
 
 #[cfg(feature = "sentry")]
-pub use support_sentry::*;
-
-#[cfg(feature = "sentry")]
-mod support_sentry {
+pub(crate) mod support_sentry {
     use super::*;
     use sentry::internals::Dsn;
     use sentry::internals::ClientInitGuard;
@@ -17,7 +14,7 @@ mod support_sentry {
         integrations: &IntegrationsOptions,
     ) -> Option<ClientInitGuard> {
         let mut builder = logging_builder(log);
-        if let Some(sentry_dsn) = &integrations.sentry_dsn {
+        let result = if let Some(sentry_dsn) = &integrations.sentry_dsn {
             sentry_log_init(Some(builder.build()), Default::default());
 
             let sentry = init_sentry(sentry_dsn, &integrations.sentry_env);
@@ -35,7 +32,9 @@ mod support_sentry {
                 DVM_SENTRY_DSN
             );
             None
-        }
+        };
+        support_libra_logger::init();
+        result
     }
 
     pub fn init_sentry(dsn: &Dsn, env: &Option<String>) -> ClientInitGuard {
@@ -61,18 +60,36 @@ mod support_sentry {
     }
 }
 
-/// Default logging initializer without extra integrations.
-/// Used as fallback if sentry feature disabled.
-#[cfg(not(feature = "sentry"))]
-pub fn init(log: &LoggingOptions, _: &IntegrationsOptions) -> Option<()> {
-    init_logging(log)
-        .map(|_| trace!("Logging system initialized."))
-        .map_err(|err| eprintln!("Attempt to init global logger once more. {:?}", err))
-        .ok()
+mod support_libra_logger {
+    use libra::libra_logger as logger;
+    use logger::{StructLogSink, StructuredLogEntry};
+    use logger::{struct_logger_set, set_struct_logger};
+
+    pub fn init() {
+        let logger = TraceLog;
+        let logger = Box::leak(Box::new(logger));
+        set_struct_logger(logger)
+            .map(|_| trace!("internall logger initialized: {}", struct_logger_set()))
+            .map_err(|_| {
+                warn!("unable to initialize sub-logger");
+            })
+            .ok();
+        // logger::init_println_struct_log()
+    }
+
+    struct TraceLog;
+    impl StructLogSink for TraceLog {
+        fn send(&self, entry: StructuredLogEntry) {
+            trace!("{}", serde_json::to_string(&entry).unwrap());
+        }
+    }
 }
 
 pub fn init_logging(opts: &LoggingOptions) -> Result<(), log::SetLoggerError> {
-    logging_builder(opts).try_init()
+    logging_builder(opts).try_init().and_then(|_| {
+        support_libra_logger::init();
+        Ok(())
+    })
 }
 
 pub fn logging_builder(opts: &LoggingOptions) -> env_logger::Builder {
@@ -204,7 +221,7 @@ mod tests {
                 sentry_env: env.into(),
             };
 
-            let _guard = super::init(&logging, &integrations);
+            let _guard = crate::init(&logging, &integrations);
             let handle = spawn(move || panic!(TEXT));
             sleep(Duration::from_secs(5));
             sleep(Duration::from_secs(5));

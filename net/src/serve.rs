@@ -26,6 +26,7 @@ where
     Ok(match endpoint {
         Endpoint::Http(http) => {
             let addr: std::net::SocketAddr = http.try_into()?;
+            info!("server listening on TCP {}", &addr);
             router.serve(addr).await.map(|_| None)?
         }
 
@@ -37,6 +38,8 @@ where
             // TODO: are we should close on drop really?
             let mut uds = Listener::bind(&ipc.0)?.guarded(should_close_on_drop);
             let guard = uds.guard();
+
+            info!("server listening on IPC {}", ipc.0.display());
             router
                 .serve_with_incoming(uds.incoming())
                 .await
@@ -62,7 +65,11 @@ where
     Ok(match endpoint {
         Endpoint::Http(http) => {
             let addr: std::net::SocketAddr = http.try_into()?;
-            router.serve(addr).await.map(|_| None)?
+            info!("server listening on TCP {}", &addr);
+            router
+                .serve_with_shutdown(addr, signal)
+                .await
+                .map(|_| None)?
         }
 
         Endpoint::Ipc(ipc) => {
@@ -73,6 +80,8 @@ where
             // TODO: are we should close on drop really?
             let mut uds = Listener::bind(&ipc.0)?.guarded(true);
             let guard = uds.guard();
+
+            info!("server listening on IPC {}", ipc.0.display());
             router
                 .serve_with_incoming_shutdown(uds.incoming(), signal)
                 .await
