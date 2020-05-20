@@ -132,7 +132,7 @@ impl Drop for FdGuard {
         if let Some(path) = self.path.as_pathname() {
             match close_uds(path) {
                 Ok(_) => debug!("UDS fd closed"),
-                Err(err) => error!("unable to close UDS fd: {}", err),
+                Err(err) => error!("Unable to close UDS fd: {}", err),
             }
         } else {
             error!("Failed to close UDS fd: No local pathname.");

@@ -49,7 +49,7 @@ impl Server {
                             if IoError::last_os_error().kind() == ErrorKind::AddrInUse {
                                 continue;
                             } else {
-                                println!("err:{:?}", err);
+                                eprintln!("err:{:?}", err);
                             }
                             shutdown_signal.send(()).unwrap();
                             break;
