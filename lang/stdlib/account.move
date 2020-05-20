@@ -166,7 +166,7 @@ module Account {
         save_account(acc, evt, addr);
     }
 
-     native fun save_balance<Token>(balance: Balance<Token>, addr: address);
-     native fun save_account(account: T, event_generator: Event::EventHandleGenerator, addr: address);
+    native fun save_balance<Token>(balance: Balance<Token>, addr: address);
+    native fun save_account(account: T, event_generator: Event::EventHandleGenerator, addr: address);
 }
 }
