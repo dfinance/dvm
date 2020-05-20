@@ -58,11 +58,7 @@ module Account {
 
     public fun deposit<Token>(payee: address, to_deposit: Dfinance::T<Token>)
     acquires Balance {
-        let value = Dfinance::value(&to_deposit);
-        Transaction::assert(value > 0, 7);
-
-        let payee_balance = borrow_global_mut<Balance<Token>>(payee);
-        Dfinance::deposit(&mut payee_balance.coin, to_deposit);
+        deposit_with_metadata(payee, to_deposit, x"")
     }
 
     public fun deposit_to_sender<Token>(to_deposit: Dfinance::T<Token>)
