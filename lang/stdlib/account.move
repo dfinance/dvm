@@ -57,12 +57,12 @@ module Account {
     }
 
     public fun deposit<Token>(payee: address, to_deposit: Dfinance::T<Token>)
-    acquires Balance {
+    acquires T, Balance {
         deposit_with_metadata(payee, to_deposit, x"")
     }
 
     public fun deposit_to_sender<Token>(to_deposit: Dfinance::T<Token>)
-    acquires Balance {
+    acquires T, Balance {
         deposit(Transaction::sender(), to_deposit)
     }
 
