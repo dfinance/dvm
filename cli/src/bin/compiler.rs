@@ -75,7 +75,7 @@ async fn main_internal(options: Options) -> Result<()> {
             Err(err) => error!("unable to send sig into the DS client: {:?}", err),
         }
 
-        // shutdown compilation server
+        // shutdown server
         match serv_term_tx.send(()) {
             Ok(_) => info!("shutting down compilation server"),
             Err(err) => error!("unable to send sig into the server: {:?}", err),
@@ -88,16 +88,20 @@ async fn main_internal(options: Options) -> Result<()> {
     let compiler_service = CompilerService::new(Compiler::new(ds));
     let metadata_service = MetadataService::default();
 
-    tokio::select! {
-        _ = sigterm => {},
-        res = Server::builder().add_service(VmCompilerServer::new(compiler_service.clone()))
-                               .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
-                               .add_service(VmScriptMetadataServer::new(metadata_service))
-                               .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ())) => {
+    // spawn the signal-router:
+    tokio::spawn(sigterm);
+    // block-on the server:
+    Server::builder()
+        .add_service(VmCompilerServer::new(compiler_service.clone()))
+        .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
+        .add_service(VmScriptMetadataServer::new(metadata_service))
+        .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ()))
+        .map(|res| {
             info!("Compilation server is shutted down");
-            res.expect("internal fail");
-        }
-    }
+            res
+        })
+        .await
+        .expect("internal fail");
 
     Ok(())
 }

@@ -46,7 +46,7 @@ where
             use std::time::Duration;
             std::thread::sleep(Duration::from_secs(3));
 
-            println!(".");
+            debug!(".");
             std::process::exit(130);
         }
     })
