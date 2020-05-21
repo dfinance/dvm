@@ -74,9 +74,9 @@ jobs:
         cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests panic_sentry_integrity
         curl -H "Authorization: Bearer ${SENTRY_API_TOKEN}" https://$SENTRY_HOST_URI/api/0/projects/$SENTRY_COMPANY_PROJECT/events/ 2>&1 | grep "$SENTRY_CROSS_RANDOM_TAG" 1>/dev/null
 
-    # terminal signals
-    - name: SIGs handling (DVM)
-      run: tests/test-shutdown.sh dvm
-
-    - name: SIGs handling (compiler)
-      run: tests/test-shutdown.sh compiler
+    - name: SIGs handling
+      # TODO: fix test, make compat with nix
+      if: matrix.os != 'ubuntu-latest'
+      run: |
+        tests/test-shutdown.sh dvm
+        tests/test-shutdown.sh compiler
