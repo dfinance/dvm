@@ -1,23 +1,16 @@
-name: Audit
+name: Docs
 on:
-  pull_request:
   push:
-    branches:
-    - master
-    - release-*
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+*
 
 jobs:
-  rust:
-    name: Rust
-    runs-on: ${{ matrix.os }}
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: false
-      matrix:
-        os:
-        - macos-latest
-        - ubuntu-latest
-        # - windows-latest
+      fail-fast: true
 
     env:
       RUSTFLAGS: -D warnings
@@ -41,12 +34,14 @@ jobs:
     #     restore-keys: |
     #       ${{ runner.os }}-cargo
 
-    - name: Install cargo-audit
-      uses: actions-rs/install@v0.1
-      with:
-        crate: cargo-audit
-        version: latest
-        # use-tool-cache: true
+    - name: Run cargo-doc
+      run: cargo doc --all --no-deps --all-features
 
-    - name: Run cargo-audit
-      run: cargo audit # --deny-warnings
+    - name: Copy index.html
+      run: cp -rf ./.github/docs-index.html target/doc/index.html
+
+    # - run: echo $GITHUB_SHA >> target/doc/index.html
+    - uses: maxheld83/ghpages@v0.3.0
+      env:
+        BUILD_DIR: target/doc/
+        GH_PAT: ${{ secrets.GH_PAT }}
