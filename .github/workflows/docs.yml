@@ -1,0 +1,47 @@
+name: Docs
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+*
+
+jobs:
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      CARGO_INCREMENTAL: 1
+      RUSTUP_MAX_RETRIES: 10
+      CARGO_NET_RETRY: 10
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - if: matrix.os == 'ubuntu-latest'
+      run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+    # - name: Restore cargo cache
+    #   uses: actions/cache@v1
+    #   with:
+    #     path: ~/.cargo
+    #     key: ${{ runner.os }}-cargo
+    #     restore-keys: |
+    #       ${{ runner.os }}-cargo
+
+    - name: Run cargo-doc
+      run: cargo doc --all --no-deps --all-features
+
+    - name: Copy index.html
+      run: cp -rf ./.github/docs-index.html target/doc/index.html
+
+    # - run: echo $GITHUB_SHA >> target/doc/index.html
+    - uses: maxheld83/ghpages@v0.3.0
+      env:
+        BUILD_DIR: target/doc/
+        GH_PAT: ${{ secrets.GH_PAT }}
