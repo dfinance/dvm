@@ -35,13 +35,13 @@ echo "killing-timer setted up for $EXECUTABLE_PID"
 
 wait "$EXECUTABLE_PID"
 EXECUTABLE_EXIT_CODE=$?
-EXECUTABLE_KILL_EXIT_CODE=`cat $KILL_EXIT_CODE_PATH`
+EXECUTABLE_KILL_EXIT_CODE=$(cat $KILL_EXIT_CODE_PATH)
 
 echo "$1 exit-code: $EXECUTABLE_EXIT_CODE"
 echo "kill exit-code: $EXECUTABLE_KILL_EXIT_CODE"
 
 # check kill exit code:
-if [ "$EXECUTABLE_KILL_EXIT_CODE" == "$EXPECTED_KILL_EXIT_CODE" ]; then
+if (( $EXECUTABLE_KILL_EXIT_CODE == $EXPECTED_KILL_EXIT_CODE )); then
   echo "SIGTERM catched: OK"
 else
   echo "SIGTERM not catched: ERR: $EXECUTABLE_KILL_EXIT_CODE != $EXPECTED_KILL_EXIT_CODE"
@@ -49,7 +49,7 @@ else
 fi
 
 # check the exit code:
-if [ $EXECUTABLE_EXIT_CODE == $EXPECTED_EXIT_CODE ]; then
+if (( $EXECUTABLE_EXIT_CODE == $EXPECTED_EXIT_CODE )); then
   echo "exit-code: OK"
 else
   echo "exit-code: ERR: $EXECUTABLE_EXIT_CODE != $EXPECTED_EXIT_CODE"
@@ -57,7 +57,7 @@ else
 fi
 
 # check size of stderr:
-STDERR_LOG=`cat $STDERR_LOG_PATH`
+STDERR_LOG=$(cat $STDERR_LOG_PATH)
 STDERR_LOG_SIZE=${#STDERR_LOG}
 if [ $STDERR_LOG_SIZE == $EXPECTED_STDERR_LOG_SIZE ]; then
   echo "stderr size: OK"
@@ -67,7 +67,7 @@ else
 fi
 
 # check size of stdout:
-STDOUT_LOG=`cat $STDOUT_LOG_PATH`
+STDOUT_LOG=$(cat $STDOUT_LOG_PATH)
 STDOUT_LOG_SIZE=${#STDOUT_LOG}
 if [ $STDOUT_LOG_SIZE -gt 0 ]; then
   echo "stdout size: OK"
