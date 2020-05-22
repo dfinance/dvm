@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Usage:
 # PWD should be root of workspace (project)
@@ -22,7 +22,7 @@ EXPECTED_KILL_EXIT_CODE=0
 EXPECTED_STDERR_LOG_SIZE=0
 
 # build
-cargo build --bin $1
+# cargo build --bin $1
 
 # run with verbosity and log redirection
 ./target/debug/$1 -v > $STDOUT_LOG_PATH 2>$STDERR_LOG_PATH &
@@ -41,7 +41,7 @@ echo "$1 exit-code: $EXECUTABLE_EXIT_CODE"
 echo "kill exit-code: $EXECUTABLE_KILL_EXIT_CODE"
 
 # check kill exit code:
-if [ $EXECUTABLE_KILL_EXIT_CODE == $EXPECTED_KILL_EXIT_CODE ]; then
+if [ "$EXECUTABLE_KILL_EXIT_CODE" == "$EXPECTED_KILL_EXIT_CODE" ]; then
   echo "SIGTERM catched: OK"
 else
   echo "SIGTERM not catched: ERR: $EXECUTABLE_KILL_EXIT_CODE != $EXPECTED_KILL_EXIT_CODE"
