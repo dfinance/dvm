@@ -41,7 +41,7 @@ echo "$1 exit-code: $EXECUTABLE_EXIT_CODE"
 echo "kill exit-code: $EXECUTABLE_KILL_EXIT_CODE"
 
 # check kill exit code:
-if [ "$EXECUTABLE_KILL_EXIT_CODE" == "$EXPECTED_KILL_EXIT_CODE" ]; then
+if (( $EXECUTABLE_KILL_EXIT_CODE == $EXPECTED_KILL_EXIT_CODE )); then
   echo "SIGTERM catched: OK"
 else
   echo "SIGTERM not catched: ERR: $EXECUTABLE_KILL_EXIT_CODE != $EXPECTED_KILL_EXIT_CODE"
@@ -49,7 +49,7 @@ else
 fi
 
 # check the exit code:
-if [ $EXECUTABLE_EXIT_CODE == $EXPECTED_EXIT_CODE ]; then
+if (( $EXECUTABLE_EXIT_CODE == $EXPECTED_EXIT_CODE )); then
   echo "exit-code: OK"
 else
   echo "exit-code: ERR: $EXECUTABLE_EXIT_CODE != $EXPECTED_EXIT_CODE"
