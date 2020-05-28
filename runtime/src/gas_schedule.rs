@@ -101,19 +101,19 @@ pub fn cost_table() -> CostTable {
         (FreezeRef, GasCost::new(10, 1)),
         (
             MutBorrowGlobal(StructDefinitionIndex::new(0)),
-            GasCost::new(929, 1),
+            GasCost::new(1000, 3),
         ),
         (
             MutBorrowGlobalGeneric(StructDefInstantiationIndex::new(0)),
-            GasCost::new(929, 1),
+            GasCost::new(1000, 3),
         ),
         (
             ImmBorrowGlobal(StructDefinitionIndex::new(0)),
-            GasCost::new(929, 1),
+            GasCost::new(1000, 3),
         ),
         (
             ImmBorrowGlobalGeneric(StructDefInstantiationIndex::new(0)),
-            GasCost::new(929, 1),
+            GasCost::new(1000, 3),
         ),
         (Div, GasCost::new(41, 1)),
         (Eq, GasCost::new(48, 1)),

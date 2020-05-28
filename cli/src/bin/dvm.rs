@@ -80,7 +80,7 @@ async fn main_internal(options: Options) -> Result<()> {
     let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
         .expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(ds, MODULE_CACHE);
-    let service = VmService::new(ds).expect("Unable to initialize VmService.");
+    let service = VmService::new(ds);
 
     // spawn the signal-router:
     tokio::spawn(sigterm);
