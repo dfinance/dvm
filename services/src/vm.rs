@@ -12,7 +12,7 @@ use libra_types::write_set::{WriteOp, WriteSet};
 use crate::{tonic, api};
 use tonic::{Request, Response, Status};
 
-use runtime::move_vm::{ExecutionMeta, VM, Script, ExecutionResult, Dvm};
+use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
 use api::grpc::vm_grpc::{
     VmContract, VmExecuteResponse, VmExecuteRequest, VmExecuteResponses, VmTypeTag, VmStatus,
     VmValue, VmAccessPath, VmType, VmStructTag, VmEvent, ContractType,
@@ -33,10 +33,8 @@ impl<D> VmService<D>
 where
     D: DataSource,
 {
-    pub fn new(view: D) -> Result<VmService<D>, Error> {
-        Ok(VmService {
-            vm: Dvm::new(view)?,
-        })
+    pub fn new(view: D) -> VmService<D> {
+        VmService { vm: Dvm::new(view) }
     }
 
     pub fn execute_contract(&self, contract: VmContract, _options: u64) -> VmExecuteResponse {

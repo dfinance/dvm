@@ -32,9 +32,7 @@ impl Server {
                 for port in PORT_RANGE {
                     service_port.store(port, Ordering::SeqCst);
                     let service_res = TService::builder()
-                        .add_service(VmServiceServer::new(
-                            VmService::new(data_source.clone()).unwrap(),
-                        ))
+                        .add_service(VmServiceServer::new(VmService::new(data_source.clone())))
                         .serve_with_shutdown(
                             format!("0.0.0.0:{}", port).parse().unwrap(),
                             service_signal.clone(),

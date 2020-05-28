@@ -16,7 +16,6 @@ use ds::DataSource;
 use libra::move_vm_state::data_cache::BlockDataCache;
 use libra::move_vm_types::interpreter_context::InterpreterContext;
 use move_vm_runtime::{MoveVM, loader::ModuleCache};
-use anyhow::Error;
 use crate::gas_schedule;
 use libra::move_core_types::language_storage::TypeTag;
 use serde_derive::Deserialize;
@@ -93,15 +92,13 @@ impl ExecutionResult {
 
 pub type VmResult = Result<ExecutionResult, VMStatus>;
 
-// XXX: not used currently
-pub trait VM {
-    fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult;
-    fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult;
-}
-
+/// Dfinance virtual machine.
 pub struct Dvm<D: DataSource> {
+    /// Libra virtual machine.
     vm: MoveVM,
+    /// Data source.
     ds: D,
+    /// Instructions cost table.
     cost_table: CostTable,
 }
 
@@ -109,21 +106,24 @@ impl<D> Dvm<D>
 where
     D: DataSource,
 {
-    pub fn new(ds: D) -> Result<Dvm<D>, Error> {
+    /// Create a new virtual machine with the given data source.
+    pub fn new(ds: D) -> Dvm<D> {
         let vm = MoveVM::new();
 
         trace!("vm service is ready.");
-        Ok(Dvm {
+        Dvm {
             vm,
             ds,
             cost_table: gas_schedule::cost_table(),
-        })
+        }
     }
 
+    /// Creates cache for script execution.
     fn make_data_cache(&self) -> BlockDataCache {
         BlockDataCache::new(&self.ds)
     }
 
+    /// Creates execution context.
     fn make_execution_context<'a>(
         &self,
         meta: &TransactionMetadata,
@@ -131,22 +131,8 @@ where
     ) -> TransactionExecutionContext<'a> {
         TransactionExecutionContext::new(meta.max_gas_amount, cache)
     }
-}
 
-impl<D> fmt::Debug for Dvm<D>
-where
-    D: DataSource,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Dvm {{ }}")
-    }
-}
-
-impl<D> VM for Dvm<D>
-where
-    D: DataSource,
-{
-    fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
+    pub fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
         let cache = self.make_data_cache();
         let meta = meta.into();
         let mut context = self.make_execution_context(&meta, &cache);
@@ -179,7 +165,7 @@ where
         ExecutionResult::new(context, meta, res)
     }
 
-    fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult {
+    pub fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult {
         let cache = self.make_data_cache();
         let meta = meta.into();
         let mut context = self.make_execution_context(&meta, &cache);
@@ -194,6 +180,15 @@ where
             args,
         );
         ExecutionResult::new(context, meta, res)
+    }
+}
+
+impl<D> fmt::Debug for Dvm<D>
+where
+    D: DataSource,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Dvm {{ }}")
     }
 }
 
@@ -262,14 +257,14 @@ pub mod tests {
     };
     use ds::{MockDataSource, MergeWriteSet, DataAccess};
     use libra::move_vm_types::values::Value;
-    use crate::move_vm::{ExecutionMeta, Dvm, VM, Script, U64Store};
+    use crate::move_vm::{ExecutionMeta, Dvm, Script, U64Store};
     use libra::libra_vm::CompiledModule;
 
     #[test]
     fn test_publish_module() {
         let ds = MockDataSource::with_write_set(zero_sdt());
         let compiler = Compiler::new(ds.clone());
-        let vm = Dvm::new(ds.clone()).unwrap();
+        let vm = Dvm::new(ds.clone());
         let account = AccountAddress::random();
 
         let program = "module M {}";
@@ -303,7 +298,7 @@ pub mod tests {
     fn test_execute_script() {
         let ds = MockDataSource::with_write_set(zero_sdt());
         let compiler = Compiler::new(ds.clone());
-        let vm = Dvm::new(ds.clone()).unwrap();
+        let vm = Dvm::new(ds.clone());
         let account = AccountAddress::random();
 
         let module = include_str!("../../test-kit/tests/resources/store.move");
