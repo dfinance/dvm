@@ -16,13 +16,14 @@ services = { path = "../services", package = "dvm-services" }
 libra = { path = "../libra", package = "dvm-libra-deps" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
 dvm-net = { path = "../net" }
+dvm-info = { path = "../info" }
 
 anyhow = "1.0"
 log = "0.4.8"
 env_logger = "0.7.1"
 structopt = "0.3"
 http = "0.2"
-tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
+tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full", "time" ] }
 futures = "0.3"
 serde = "1.0.111"
 serde_json = "1.0"

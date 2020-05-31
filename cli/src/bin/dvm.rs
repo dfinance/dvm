@@ -20,11 +20,14 @@ use api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
 use api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
 use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 use dvm_net::api::grpc::vm_grpc::vm_service_server::VmServiceServer;
-use data_source::{GrpcDataSource, ModuleCache};
+use data_source::{GrpcDataSource, ModuleCache, DsMeter};
 use anyhow::Result;
 use services::vm::VmService;
 use dvm_cli::config::*;
 use dvm_cli::init;
+use futures::join;
+use dvm_info::config::InfoServiceConfig;
+use dvm_cli::info_service::create_info_service;
 
 const MODULE_CACHE: usize = 1000;
 
@@ -46,6 +49,9 @@ struct Options {
         verbatim_doc_comment
     )]
     address: Endpoint,
+
+    #[structopt(flatten)]
+    info_service: InfoServiceConfig,
 
     /// DataSource Server internet address.
     #[structopt(
@@ -86,12 +92,14 @@ async fn main_internal(options: Options) -> Result<()> {
         }
     });
 
+    let (info_service, hrm) = create_info_service(options.address.clone(), options.info_service);
+
     // data-source client
     let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
         .expect("Unable to instantiate GrpcDataSource.");
-    let ds = ModuleCache::new(ds, MODULE_CACHE);
+    let ds = ModuleCache::new(DsMeter::new(ds), MODULE_CACHE);
     // vm services
-    let service = VmService::new(ds.clone());
+    let service = VmService::new(ds.clone(), hrm);
     // comp services
     let compiler_service = CompilerService::new(Compiler::new(ds));
     let metadata_service = MetadataService::default();
@@ -99,7 +107,7 @@ async fn main_internal(options: Options) -> Result<()> {
     // spawn the signal-router:
     tokio::spawn(sigterm);
     // block-on the server:
-    Server::builder()
+    let dvm = Server::builder()
         // vm service
         .add_service(VmServiceServer::new(service))
         // comp services
@@ -111,9 +119,14 @@ async fn main_internal(options: Options) -> Result<()> {
         .map(|res| {
             info!("VM server is shutted down");
             res
-        })
-        .await
-        .expect("internal fail");
+        });
+
+    if let Some(info_service) = info_service {
+        let (_info_service, dvm) = join!(info_service, dvm);
+        dvm.expect("Dvm internal error");
+    } else {
+        dvm.await.expect("Dvm internal error");
+    }
 
     Ok(())
 }

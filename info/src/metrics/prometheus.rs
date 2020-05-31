@@ -1,0 +1,119 @@
+use crate::metrics::metric::{Metrics, ExecutionMetric};
+use crate::metrics::live_time::SysMetrics;
+use prometheus_exporter_base::{PrometheusMetric, MetricType};
+use std::collections::HashMap;
+use once_cell::sync::Lazy;
+
+static METRIC_HEADER: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
+    let mut m = HashMap::new();
+    m.insert(
+        "total_requests",
+        "The number of requests performed in the time interval.",
+    );
+    m.insert(
+        "executions_without_results",
+        "Number of actions without results. (Actions with panic.)",
+    );
+    m.insert(
+        "success_actions",
+        "The number of actions completed with success.",
+    );
+    m.insert(
+        "action_with_status",
+        "The number of actions completed with status.",
+    );
+    m.insert("total_gas", "Total gas used in the interval.");
+    m.insert("percentile", "percentiles");
+    m.insert("average", "Average time.");
+    m.insert("standard_deviation", "Standard deviation");
+    m.insert("min_time", "Minimum time.");
+    m.insert("max_time", "Maximum time.");
+    m
+});
+
+macro_rules! store {
+    ($buf:expr, $pm:expr, $metric_name:expr, $val:expr) => {
+        $buf.push_str(&$pm.render_sample(Some(&[("process", $metric_name)]), $val))
+    };
+    ($buf:expr, $pm:expr, $metric_name:expr, $name:expr, $p:expr, $val:expr) => {
+        $buf.push_str(&$pm.render_sample(Some(&[("process", $metric_name), ($name, $p)]), $val))
+    };
+}
+
+/// Encode metrics.
+pub fn encode_metrics(metrics: Metrics, metrics_list: &[&str], system_metrics: bool) -> String {
+    let mut buf = String::new();
+
+    if system_metrics {
+        encode_sys_metrics(&mut buf, &metrics.system_metrics);
+        buf.push('\n');
+    }
+
+    let empty = ExecutionMetric::default();
+
+    for (field, description) in METRIC_HEADER.iter() {
+        let pm = PrometheusMetric::new(field, MetricType::Gauge, description);
+        buf.push_str(&pm.render_header());
+        for name in metrics_list {
+            let metric = metrics.execution_metrics.get(name).unwrap_or(&empty);
+
+            match *field {
+                "total_requests" => store!(buf, pm, name, metric.total_executions),
+                "executions_without_results" => {
+                    store!(buf, pm, name, metric.executions_without_results)
+                }
+                "success_actions" => store!(buf, pm, name, metric.success_actions),
+                "action_with_status" => {
+                    for (status, count) in metric.statuses.iter() {
+                        store!(buf, pm, name, "status", &status.to_string(), *count);
+                    }
+                }
+                "total_gas" => store!(buf, pm, name, metric.total_gas),
+                "percentile" => {
+                    let percentiles = &metric.percentiles;
+                    store!(buf, pm, name, "p", "50", percentiles.p_50);
+                    store!(buf, pm, name, "p", "75", percentiles.p_75);
+                    store!(buf, pm, name, "p", "90", percentiles.p_90);
+                }
+                "average" => store!(buf, pm, name, metric.average.avg),
+                "standard_deviation" => store!(buf, pm, name, metric.average.sd),
+                "min_time" => store!(buf, pm, name, metric.min_time),
+                "max_time" => store!(buf, pm, name, metric.max_time),
+                _ => {
+                    // no-op
+                }
+            }
+        }
+
+        buf.push('\n');
+    }
+
+    buf
+}
+
+/// Encode system metrics.
+fn encode_sys_metrics(buf: &mut String, metric: &SysMetrics) {
+    let pc = PrometheusMetric::new(
+        "sys_info_cpu_usage",
+        MetricType::Gauge,
+        "CPU used by the process",
+    );
+    buf.push_str(&pc.render_header());
+    buf.push_str(&pc.render_sample(None, metric.cpu_usage));
+
+    let pc = PrometheusMetric::new(
+        "sys_info_memory",
+        MetricType::Gauge,
+        "Memory used by the process",
+    );
+    buf.push_str(&pc.render_header());
+    buf.push_str(&pc.render_sample(None, metric.memory));
+
+    let pc = PrometheusMetric::new(
+        "sys_info_threads_count",
+        MetricType::Gauge,
+        "Threads count.",
+    );
+    buf.push_str(&pc.render_header());
+    buf.push_str(&pc.render_sample(None, metric.threads_count));
+}

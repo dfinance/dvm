@@ -12,7 +12,10 @@ use api::grpc::vm_grpc::{
 };
 use std::convert::TryFrom;
 use compiler::Compiler;
+use info::metrics::meter::ScopeMeter;
+use info::metrics::live_time::ExecutionResult;
 
+/// Compilation service.
 #[derive(Clone)]
 pub struct CompilerService<S>
 where
@@ -25,11 +28,13 @@ impl<S> CompilerService<S>
 where
     S: StateView + Clone + Send + Sync + 'static,
 {
+    /// Create a new compiler service with the given compiler.
     pub fn new(compiler: Compiler<S>) -> Self {
         CompilerService { compiler }
     }
 }
 
+/// Convert address from bytes.
 fn convert_address(addr: &[u8]) -> Result<AccountAddress, Status> {
     AccountAddress::try_from(addr).map_err(|err| Status::invalid_argument(err.to_string()))
 }
@@ -38,6 +43,7 @@ impl<S> CompilerService<S>
 where
     S: StateView + Clone + Send + Sync + 'static,
 {
+    /// Compile source code.
     async fn compile(
         &self,
         request: Request<SourceFile>,
@@ -50,6 +56,7 @@ where
             .map_err(|err| err.to_string()))
     }
 
+    /// Compiler source codes.
     async fn multiple_source_compile(
         &self,
         request: Request<SourceFiles>,
@@ -79,14 +86,25 @@ impl<S> VmCompiler for CompilerService<S>
 where
     S: StateView + Clone + Send + Sync + 'static,
 {
+    /// Compile source code.
     async fn compile(
         &self,
         request: Request<SourceFile>,
     ) -> Result<Response<CompilationResult>, Status> {
-        let res = self.compile(request).await?;
-        match res {
-            Ok(bytecode) => Ok(Response::new(CompilationResult::with_bytecode(bytecode))),
-            Err(errors) => Ok(Response::new(CompilationResult::with_errors(vec![errors]))),
+        let mut meter = ScopeMeter::new("compile");
+        match self.compile(request).await {
+            Ok(Ok(bytecode)) => {
+                meter.set_result(ExecutionResult::new(true, 200, 0));
+                Ok(Response::new(CompilationResult::with_bytecode(bytecode)))
+            }
+            Ok(Err(errors)) => {
+                meter.set_result(ExecutionResult::new(false, 400, 0));
+                Ok(Response::new(CompilationResult::with_errors(vec![errors])))
+            }
+            Err(status) => {
+                meter.set_result(ExecutionResult::new(false, 500, 0));
+                Err(status)
+            }
         }
     }
 }
@@ -96,23 +114,32 @@ impl<S> VmMultipleSourcesCompiler for CompilerService<S>
 where
     S: StateView + Clone + Send + Sync + 'static,
 {
+    /// Compiler source codes.
     async fn compile(
         &self,
         request: Request<SourceFiles>,
     ) -> Result<Response<MultipleCompilationResult>, Status> {
-        let compilation_result = self.multiple_source_compile(request).await?;
+        let mut meter = ScopeMeter::new("multiple_compile");
 
-        let result = match compilation_result {
-            Ok(units) => MultipleCompilationResult {
-                units,
-                errors: vec![],
-            },
-            Err(errors) => MultipleCompilationResult {
-                units: vec![],
-                errors: vec![errors],
-            },
-        };
-
-        Ok(Response::new(result))
+        match self.multiple_source_compile(request).await {
+            Ok(Ok(units)) => {
+                meter.set_result(ExecutionResult::new(true, 200, 0));
+                Ok(Response::new(MultipleCompilationResult {
+                    units,
+                    errors: vec![],
+                }))
+            }
+            Ok(Err(errors)) => {
+                meter.set_result(ExecutionResult::new(false, 400, 0));
+                Ok(Response::new(MultipleCompilationResult {
+                    units: vec![],
+                    errors: vec![errors],
+                }))
+            }
+            Err(status) => {
+                meter.set_result(ExecutionResult::new(false, 500, 0));
+                Err(status)
+            }
+        }
     }
 }
