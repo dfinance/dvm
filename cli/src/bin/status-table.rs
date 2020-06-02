@@ -7,7 +7,9 @@ use anyhow::Result;
 use std::fs::OpenOptions;
 use std::io::Write;
 
+/// Status table generator.
 #[derive(StructOpt)]
+#[structopt(name = "status-table")]
 struct Opts {
     /// Optional path to the output file.
     /// If not passed, result will be printed to stdout.
