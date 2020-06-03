@@ -11,8 +11,14 @@ use structopt::StructOpt;
 use tonic::transport::Server;
 use futures::future::FutureExt;
 
-use dvm_net::prelude::*;
-use dvm_net::tonic;
+use compiler::Compiler;
+use services::compiler::CompilerService;
+use services::metadata::MetadataService;
+
+use dvm_net::{prelude::*, api, tonic};
+use api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
+use api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
+use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 use dvm_net::api::grpc::vm_grpc::vm_service_server::VmServiceServer;
 use data_source::{GrpcDataSource, ModuleCache};
 use anyhow::Result;
@@ -22,14 +28,16 @@ use dvm_cli::init;
 
 const MODULE_CACHE: usize = 1000;
 
-/// Definance Virtual Machine with gRPC interface on top of TCP/IPC.
+/// Definance Virtual Machine
+///  combined with Move compilation server
+///  powered by gRPC interface on top of TCP/IPC.
 /// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(name = "dvm")]
 #[structopt(verbatim_doc_comment)]
 struct Options {
     /// Address in the form of HOST_ADDRESS:PORT.
-    /// The address will be listen to by DVM (this) server.
+    /// The address will be listen to by DVM and compilation server.
     /// Listening localhost by default.
     /// Supports schemes: http, ipc.
     #[structopt(
@@ -78,16 +86,27 @@ async fn main_internal(options: Options) -> Result<()> {
         }
     });
 
+    // data-source client
     let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
         .expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(ds, MODULE_CACHE);
-    let service = VmService::new(ds);
+    // vm services
+    let service = VmService::new(ds.clone());
+    // comp services
+    let compiler_service = CompilerService::new(Compiler::new(ds));
+    let metadata_service = MetadataService::default();
 
     // spawn the signal-router:
     tokio::spawn(sigterm);
     // block-on the server:
     Server::builder()
+        // vm service
         .add_service(VmServiceServer::new(service))
+        // comp services
+        .add_service(VmCompilerServer::new(compiler_service.clone()))
+        .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
+        .add_service(VmScriptMetadataServer::new(metadata_service))
+        // serve
         .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ()))
         .map(|res| {
             info!("VM server is shutted down");
