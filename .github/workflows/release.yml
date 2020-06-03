@@ -65,8 +65,16 @@ jobs:
 
     - name: Archive
       # if: matrix.os != 'windows-latest'
-      run: |
-        zip --junk-paths dvm-${{ runner.os }}.zip LICENSE README.md target/release/dvm target/release/compiler target/release/stdlib-builder
+      run: >
+        zip --junk-paths dvm-${{ runner.os }}.zip
+        LICENSE README.md
+        target/release/dvm
+        target/release/compiler
+        target/release/stdlib-builder
+        target/release/moveс
+        target/release/status-table
+        target/release/stdlib-builder
+
     # - name: Archive (win)
     #   if: matrix.os == 'windows-latest'
     #   uses: papeloto/action-zip@v1
