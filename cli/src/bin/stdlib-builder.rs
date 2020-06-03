@@ -7,6 +7,7 @@ use anyhow::Error;
 use std::collections::HashMap;
 
 #[derive(StructOpt)]
+#[structopt(name = "stdlib-builder")]
 struct Opts {
     /// Path to the directory with the standard library.
     #[structopt()]
