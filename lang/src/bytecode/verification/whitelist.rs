@@ -123,21 +123,21 @@ pub mod tests {
         let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a");
 
         let empty = include_str!("../../../tests/resources/empty.move");
-        let oracle = include_str!("../../../tests/resources/oracle.move");
+        let oracle = include_str!("../../../tests/resources/debug.move");
 
         let source = "
             script {
             use 0x0::Empty;
-            use 0x0::Oracle;
+            use 0x0::Debug;
 
             fun main() {
                 Empty::create();
-                Oracle::get_price(#\"USDBTC\");
+                Debug::print_stack_trace();
             }
             }
         ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["Empty".to_string(), "Oracle".to_string()]
+            AccountAddress::default() => vec!["Empty".to_string(), "Debug".to_string()]
         };
         let verifier = WhitelistVerifier::new(sender_address, vec![], whitelist);
 
@@ -218,25 +218,24 @@ pub mod tests {
     fn test_some_module_is_not_whitelisted() {
         let sender_address = make_address("0x646600000a6d43cfd2d2b999efbbf24b3c73409a");
         let empty = include_str!("../../../tests/resources/empty.move");
-        let oracle = include_str!("../../../tests/resources/oracle.move");
+        let oracle = include_str!("../../../tests/resources/debug.move");
 
         let source = "
                  script {
                  use 0x0::Empty;
-                 use 0x0::Oracle;
+                 use 0x0::Debug;
 
                 fun main() {
                     Empty::create();
-                    Oracle::get_price(#\"USDBTC\");
+                    Debug::print_stack_trace();
                 }
                 }
             ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["Oracle".to_string()]
+            AccountAddress::default() => vec!["Debug".to_string()]
         };
         let core = AccountAddress::default();
-        let verifier =
-            WhitelistVerifier::new(sender_address, vec!["Oracle".to_string()], whitelist);
+        let verifier = WhitelistVerifier::new(sender_address, vec!["Debug".to_string()], whitelist);
         let verified_err = verify_source_code(
             source,
             vec![(empty, &core), (oracle, &core)],

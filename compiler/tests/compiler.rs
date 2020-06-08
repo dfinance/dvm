@@ -5,7 +5,6 @@ use libra::libra_vm::{
     access::ModuleAccess,
 };
 
-use dvm_compiler::preprocessor::{replace_u_literal, str_xxhash};
 use dvm_compiler::Compiler;
 use anyhow::Error;
 
@@ -33,19 +32,6 @@ pub fn compile_script(
 
 pub fn make_address(address: &str) -> AccountAddress {
     AccountAddress::from_hex_literal(address).unwrap()
-}
-
-#[test]
-fn test_u_literal() {
-    assert_eq!(
-        replace_u_literal("Oracle.get_price(#\"USD\") + Oracle.get_price(#\"BTC\") = #\"USDBTC\"",),
-        format!(
-            "Oracle.get_price({}) + Oracle.get_price({}) = {}",
-            str_xxhash("usd"),
-            str_xxhash("btc"),
-            str_xxhash("usdbtc")
-        )
-    )
 }
 
 #[test]

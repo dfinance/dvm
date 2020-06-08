@@ -4,10 +4,17 @@ use libra::libra_types;
 use libra_types::account_address::AccountAddress;
 use dvm_test_kit::*;
 use libra::move_vm_natives::oracle;
-use compiler::preprocessor::str_xxhash;
 use runtime::move_vm::{U64Store, AddressStore};
 use libra::lcs;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
+use twox_hash::XxHash64;
+use std::hash::Hasher;
+
+fn str_xxhash(ticker: &str) -> u64 {
+    let mut hash = XxHash64::default();
+    Hasher::write(&mut hash, ticker.as_bytes());
+    Hasher::finish(&hash)
+}
 
 #[test]
 fn test_oracle() {
@@ -20,14 +27,16 @@ fn test_oracle() {
         .insert(oracle::make_path(str_xxhash("usdbtc")).unwrap(), price_buff);
 
     test_kit.add_std_module(include_str!("resources/store.move"));
+    test_kit.add_std_module(include_str!("resources/currency.move"));
 
     let script = "
         script {
         use 0x0::Store;
+        use 0x0::Currency;
         use 0x0::Oracle;
 
         fun main() {
-            Store::store_u64(Oracle::get_price(#\"USDBTC\"));
+            Store::store_u64(Oracle::get_price<Currency::USD, Currency::BTC>());
         }
         }
     ";
@@ -42,10 +51,11 @@ fn test_oracle() {
     let script = "
         script {
         use 0x0::Store;
+        use 0x0::Currency;
         use 0x0::Oracle;
 
         fun main() {
-          Store::store_u64(Oracle::get_price(#\"USDxrp\"));
+          Store::store_u64(Oracle::get_price<Currency::USD, Currency::ETH>());
         }
         }
     ";
