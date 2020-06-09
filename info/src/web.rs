@@ -61,7 +61,7 @@ impl Service<Request<Body>> for InfoService {
 
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         match (req.method(), req.uri().path()) {
-            (&Method::GET, "/metric") => future::ok(self.load_metric()),
+            (&Method::GET, "/metrics") => future::ok(self.load_metric()),
             (&Method::GET, "/health") => future::ok(self.check_health()),
             _ => future::ok(
                 Response::builder()
