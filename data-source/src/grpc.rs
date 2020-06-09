@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::thread::{self, JoinHandle};
 use std::sync::Arc;
 use std::time::Duration;
-use libra::{libra_types, libra_state_view};
+use libra::{libra_types, libra_state_view, move_vm_runtime};
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use anyhow::Error;
@@ -13,10 +13,10 @@ use dvm_net::api;
 use dvm_net::tonic;
 use dvm_net::prelude::*;
 use api::grpc::ds_grpc::{ds_service_client::DsServiceClient, DsAccessPath, ds_raw_response::ErrorCode};
-use libra::move_vm_state::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
 use libra_types::vm_error::{VMStatus, StatusCode};
 use crate::{DataSource, Clear};
+use move_vm_runtime::data_cache::RemoteCache;
 
 pub type ShutdownSig = tokio::sync::oneshot::Receiver<()>;
 

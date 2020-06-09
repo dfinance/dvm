@@ -20,6 +20,16 @@ pub fn cost_table() -> CostTable {
             MoveToSenderGeneric(StructDefInstantiationIndex::new(0)),
             GasCost::new(774, 1),
         ),
+        (
+            MoveTo(StructDefinitionIndex::new(0)),
+            /* MoveToSender + ReadRef == 774 + 51 == 825 */
+            GasCost::new(825, 1),
+        ),
+        (
+            MoveToGeneric(StructDefInstantiationIndex::new(0)),
+            /* MoveToSender + ReadRef == 774 + 51 == 825 */
+            GasCost::new(825, 1),
+        ),
         (GetTxnSenderAddress, GasCost::new(30, 1)),
         (
             MoveFrom(StructDefinitionIndex::new(0)),
@@ -125,6 +135,7 @@ pub fn cost_table() -> CostTable {
         ),
         (Nop, GasCost::new(10, 1)),
     ];
+
     instrs.sort_by_key(|cost| instruction_key(&cost.0));
     let native_table = (0..NUMBER_OF_NATIVE_FUNCTIONS)
         .map(|_| GasCost::new(0, 0))

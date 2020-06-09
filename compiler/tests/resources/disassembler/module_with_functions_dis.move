@@ -71,6 +71,8 @@ module Foo {
 
     native public fun return_vector<__G_1: copyable>(_arg_1: &__G_1): vector<__G_1>;
 
+    native public fun sig<__G_1>(_arg_1: &signer);
+
     native public fun vector_params<__G_1: copyable>(_arg_1: vector<__G_1>);
 
 }
