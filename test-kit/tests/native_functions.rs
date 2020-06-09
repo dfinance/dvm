@@ -1,14 +1,12 @@
 use dvm_test_kit::TestKit;
 use byteorder::{LittleEndian, ByteOrder};
-use libra::libra_types;
-use libra_types::account_address::AccountAddress;
 use dvm_test_kit::*;
 use libra::move_vm_natives::oracle;
 use runtime::move_vm::{U64Store, AddressStore};
 use libra::lcs;
-use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
 use twox_hash::XxHash64;
 use std::hash::Hasher;
+use dvm_net::api::grpc::vm_grpc::{VmArgs, VmTypeTag};
 
 fn str_xxhash(ticker: &str) -> u64 {
     let mut hash = XxHash64::default();
@@ -91,131 +89,6 @@ fn test_native_function() {
 }
 
 #[test]
-fn test_native_save_balance() {
-    let test_kit = TestKit::new();
-    test_kit.add_std_module(include_str!("resources/transaction.move"));
-    test_kit.add_std_module(include_str!("resources/store.move"));
-    test_kit.add_std_module(include_str!("resources/event.move"));
-    test_kit.add_std_module(include_str!("resources/account.move"));
-
-    let sender = AccountAddress::random();
-    let recipient = AccountAddress::random();
-
-    let send_script = "\
-        script {
-        use 0x0::Account;
-
-        fun main(coin_1_balance: u64, coin_2_balance: u64, addr: address) {
-            Account::save_coin<Account::Coin1>(coin_1_balance, addr);
-            Account::save_coin<Account::Coin2>(coin_2_balance, addr);
-        }
-        }
-    ";
-
-    let coin_1 = 13;
-    let coin_2 = 90;
-
-    let args = vec![
-        VmArgs {
-            r#type: VmTypeTag::U64 as i32,
-            value: coin_1.to_string(),
-        },
-        VmArgs {
-            r#type: VmTypeTag::U64 as i32,
-            value: coin_2.to_string(),
-        },
-        VmArgs {
-            r#type: VmTypeTag::Address as i32,
-            value: format!("0x{}", recipient),
-        },
-    ];
-    let res = test_kit.execute_script(send_script, meta(&sender), args);
-    test_kit.assert_success(&res);
-    test_kit.merge_result(&res);
-
-    let recipient_coin_1_script = "\
-        script {
-        use 0x0::Account;
-        use 0x0::Store;
-
-        fun main() {
-            Store::store_u64(Account::balance<Account::Coin1>());
-        }
-        }
-    ";
-    let res = test_kit.execute_script(recipient_coin_1_script, meta(&recipient), vec![]);
-    test_kit.assert_success(&res);
-    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
-    assert_eq!(coin_1, value.val);
-
-    let recipient_coin_2_script = "\
-        script {
-        use 0x0::Account;
-        use 0x0::Store;
-
-        fun main() {
-            Store::store_u64(Account::balance<Account::Coin2>());
-        }
-        }
-    ";
-    let res = test_kit.execute_script(recipient_coin_2_script, meta(&recipient), vec![]);
-    test_kit.assert_success(&res);
-    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
-    assert_eq!(coin_2, value.val);
-}
-
-#[test]
-fn test_native_save_account() {
-    let test_kit = TestKit::empty();
-    test_kit.add_std_module(include_str!("resources/transaction.move"));
-    test_kit.add_std_module(include_str!("resources/event.move"));
-    test_kit.add_std_module(include_str!("resources/account.move"));
-    test_kit.add_std_module(include_str!("resources/store.move"));
-
-    let create_account_script = "\
-        script {
-        use 0x0::Account;
-
-        fun main(t_value: u64, addr: address) {
-            Account::create_account(t_value, addr);
-        }
-        }
-    ";
-
-    let account = AccountAddress::random();
-
-    let t_value = 13;
-    let args = vec![
-        VmArgs {
-            r#type: VmTypeTag::U64 as i32,
-            value: t_value.to_string(),
-        },
-        VmArgs {
-            r#type: VmTypeTag::Address as i32,
-            value: format!("0x{}", account),
-        },
-    ];
-    let res = test_kit.execute_script(create_account_script, meta(&account), args);
-    test_kit.assert_success(&res);
-    test_kit.merge_result(&res);
-
-    let load_t = "\
-        script {
-        use 0x0::Account;
-        use 0x0::Store;
-
-        fun main() {
-            Store::store_u64(Account::get_t_value());
-        }
-        }
-    ";
-    let res = test_kit.execute_script(load_t, meta(&account), vec![]);
-    test_kit.assert_success(&res);
-    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
-    assert_eq!(t_value, value.val);
-}
-
-#[test]
 fn test_register_token_info() {
     let test_kit = TestKit::empty();
     test_kit.add_std_module(include_str!("resources/dfinance.move"));
@@ -230,7 +103,7 @@ fn test_register_token_info() {
         }
     ";
 
-    let account = AccountAddress::random();
+    let account = account("0x110");
 
     let t_value = 13;
     let args = vec![VmArgs {

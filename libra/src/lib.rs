@@ -2,7 +2,6 @@ pub extern crate move_lang;
 pub extern crate libra_crypto;
 pub extern crate language_e2e_tests;
 pub extern crate libra_vm;
-pub extern crate move_vm_state;
 pub extern crate move_core_types;
 pub extern crate bytecode_source_map;
 pub extern crate move_vm_types;

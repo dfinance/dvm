@@ -7,18 +7,18 @@ pub mod grpc;
 pub mod mock;
 pub mod wrappers;
 
-use libra::{libra_types, libra_state_view};
+use libra::{libra_types, libra_state_view, move_vm_runtime};
 use libra_types::write_set::WriteSet;
 use libra::move_core_types::language_storage::ModuleId;
 use libra_types::transaction::Module;
 use libra_types::access_path::AccessPath;
-use libra::move_vm_state::data_cache::RemoteCache;
 use libra_state_view::StateView;
 use anyhow::Error;
 
 pub use mock::MockDataSource;
 pub use wrappers::ModuleCache;
 pub use grpc::GrpcDataSource;
+use move_vm_runtime::data_cache::RemoteCache;
 
 pub trait DataSource: StateView + RemoteCache + Clear + Clone + Send + Sync + 'static {}
 

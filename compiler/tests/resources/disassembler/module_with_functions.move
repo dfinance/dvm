@@ -13,6 +13,7 @@ module Foo {
         e: T<V>,
      }
 
+     native public fun sig<T>(x: &signer);
      native public fun print<T>(x: &T);
      native public fun print_resource<T: resource>(x: &T);
      native public fun print_multiple_resource<T: resource, T1>(x: &T, x2: T1);
