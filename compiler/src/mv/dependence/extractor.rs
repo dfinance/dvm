@@ -81,44 +81,52 @@ impl DefinitionUses {
     }
 
     fn module(&mut self, module: &ModuleDefinition, address: AccountAddress) -> Result<()> {
-        self.uses(&module.uses)?;
+        for member in &module.members {
+            match member {
+                ModuleMember::Use(_use) => self.uses(_use)?,
+                ModuleMember::Function(func) => self.function(func)?,
+                ModuleMember::Struct(_struct) => {
+                    match &_struct.fields {
+                        StructFields::Defined(types) => {
+                            for (_, t) in types {
+                                self.s_type_usages(&t.value)?;
+                            }
+                        }
+                        StructFields::Native(_) => {
+                            //No-op
+                        }
+                    }
+                }
+                ModuleMember::Spec(_) => {
+                    // no-op
+                }
+            }
+        }
         self.modules.insert(ModuleId::new(
             address,
             Identifier::new(module.name.0.value.to_owned())?,
         ));
 
-        for st in &module.structs {
-            match &st.fields {
-                StructFields::Defined(types) => {
-                    for (_, t) in types {
-                        self.s_type_usages(&t.value)?;
-                    }
-                }
-                StructFields::Native(_) => {
-                    //No-op
-                }
-            }
-        }
-
-        for func in &module.functions {
-            self.function(func)?;
-        }
-
         Ok(())
     }
 
     fn script(&mut self, script: &Script) -> Result<()> {
-        self.uses(&script.uses)?;
+        for _use in &script.uses {
+            self.uses(_use)?;
+        }
         self.function(&script.function)
     }
 
-    fn uses(&mut self, uses: &[(ModuleIdent, Option<ModuleName>)]) -> Result<()> {
-        for (dep, _) in uses {
-            let ident = &dep.0.value;
-            let name = Identifier::new(ident.name.0.value.to_owned())?;
-            let address = AccountAddress::new(ident.address.clone().to_u8());
-            self.imports.insert(ModuleId::new(address, name));
-        }
+    fn uses(&mut self, _use: &Use) -> Result<()> {
+        let ident = match _use {
+            Use::Members(ident, _) => ident,
+            Use::Module(ident, _) => ident,
+        };
+
+        let ident = &ident.0.value;
+        let name = Identifier::new(ident.name.0.value.to_owned())?;
+        let address = AccountAddress::new(ident.address.clone().to_u8());
+        self.imports.insert(ModuleId::new(address, name));
         Ok(())
     }
 

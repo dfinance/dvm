@@ -2,26 +2,26 @@ use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
 use libra_types::transaction::TransactionStatus;
 use libra_types::{account_address::AccountAddress, transaction::Module};
 use libra_vm::CompiledModule;
-use move_vm_types::transaction_metadata::TransactionMetadata;
-use libra::move_core_types::gas_schedule::{GasAlgebra, GasPrice, GasUnits, CostTable};
+use libra::move_core_types::gas_schedule::{GasAlgebra, GasUnits, CostTable};
 use std::fmt;
 use libra_types::vm_error::{VMStatus, StatusCode};
 use libra_vm::errors::{vm_error, Location, VMResult};
 use libra_types::write_set::WriteSet;
 
 use libra_types::contract_event::ContractEvent;
-use libra::move_vm_state::execution_context::{ExecutionContext, TransactionExecutionContext};
 use libra::move_vm_types::values::Value;
 use ds::DataSource;
-use libra::move_vm_state::data_cache::BlockDataCache;
-use libra::move_vm_types::interpreter_context::InterpreterContext;
-use move_vm_runtime::{MoveVM, loader::ModuleCache};
+use move_vm_runtime::{loader::ModuleCache};
 use crate::gas_schedule;
 use libra::move_core_types::language_storage::TypeTag;
 use serde_derive::Deserialize;
 use libra_types::account_config::CORE_CODE_ADDRESS;
 use std::collections::HashMap;
 use move_vm_runtime::loader::ScriptCache;
+use move_vm_runtime::move_vm::MoveVM;
+use move_vm_runtime::data_cache::TransactionDataCache;
+use move_vm_types::gas_schedule::CostStrategy;
+use move_vm_types::data_store::DataStore;
 
 #[derive(Debug)]
 pub struct ExecutionMeta {
@@ -48,16 +48,6 @@ impl ExecutionMeta {
     }
 }
 
-impl Into<TransactionMetadata> for ExecutionMeta {
-    fn into(self) -> TransactionMetadata {
-        let mut tx_meta = TransactionMetadata::default();
-        tx_meta.sender = self.sender;
-        tx_meta.max_gas_amount = GasUnits::new(self.max_gas_amount);
-        tx_meta.gas_unit_price = GasPrice::new(self.gas_unit_price);
-        tx_meta
-    }
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExecutionResult {
     pub write_set: WriteSet,
@@ -68,19 +58,18 @@ pub struct ExecutionResult {
 
 impl ExecutionResult {
     fn new(
-        mut context: TransactionExecutionContext,
-        txn_data: TransactionMetadata,
+        mut data_cache: TransactionDataCache,
+        cost_strategy: CostStrategy,
+        txn_data: ExecutionMeta,
         result: VMResult<()>,
     ) -> VmResult {
-        let gas_used: u64 = txn_data
-            .max_gas_amount()
-            .sub(context.remaining_gas())
-            .mul(txn_data.gas_unit_price())
+        let gas_used = GasUnits::new(txn_data.max_gas_amount)
+            .sub(cost_strategy.remaining_gas())
             .get();
 
         Ok(ExecutionResult {
-            write_set: context.make_write_set()?,
-            events: context.events().to_vec(),
+            write_set: data_cache.make_write_set()?,
+            events: data_cache.event_data().to_vec(),
             gas_used,
             status: match result {
                 Ok(()) => TransactionStatus::from(VMStatus::new(StatusCode::EXECUTED)),
@@ -119,26 +108,16 @@ where
     }
 
     /// Creates cache for script execution.
-    fn make_data_cache(&self) -> BlockDataCache {
-        BlockDataCache::new(&self.ds)
-    }
-
-    /// Creates execution context.
-    fn make_execution_context<'a>(
-        &self,
-        meta: &TransactionMetadata,
-        cache: &'a BlockDataCache,
-    ) -> TransactionExecutionContext<'a> {
-        TransactionExecutionContext::new(meta.max_gas_amount, cache)
+    fn make_data_cache(&self) -> TransactionDataCache {
+        TransactionDataCache::new(&self.ds)
     }
 
     pub fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
-        let cache = self.make_data_cache();
-        let meta = meta.into();
-        let mut context = self.make_execution_context(&meta, &cache);
+        let mut cache = self.make_data_cache();
+        let cost_strategy =
+            CostStrategy::transaction(&self.cost_table, GasUnits::new(meta.max_gas_amount));
 
-        let module = module.into_inner();
-        let res = CompiledModule::deserialize(&module).and_then(|compiled_module| {
+        let res = CompiledModule::deserialize(module.code()).and_then(|compiled_module| {
             let module_id = compiled_module.self_id();
             if meta.sender != *module_id.address() {
                 return Err(vm_error(
@@ -153,33 +132,34 @@ where
                 *loader.scripts.lock().unwrap() = ScriptCache::new();
                 *loader.libra_cache.lock().unwrap() = HashMap::new();
                 *loader.module_cache.lock().unwrap() = ModuleCache::new();
-            } else if InterpreterContext::exists_module(&context, &module_id) {
+            } else if cache.exists_module(&module_id) {
                 return Err(vm_error(
                     Location::default(),
                     StatusCode::DUPLICATE_MODULE_NAME,
                 ));
             }
-            InterpreterContext::publish_module(&mut context, module_id, module)
+            cache.publish_module(module_id, module.code)
         });
 
-        ExecutionResult::new(context, meta, res)
+        ExecutionResult::new(cache, cost_strategy, meta, res)
     }
 
     pub fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult {
-        let cache = self.make_data_cache();
-        let meta = meta.into();
-        let mut context = self.make_execution_context(&meta, &cache);
+        let mut cache = self.make_data_cache();
 
         let (script, args, type_args) = script.into_inner();
+        let mut cost_strategy =
+            CostStrategy::transaction(&self.cost_table, GasUnits::new(meta.max_gas_amount));
+
         let res = self.vm.execute_script(
             script,
-            &self.cost_table,
-            &mut context,
-            &meta,
             type_args,
             args,
+            meta.sender,
+            &mut cache,
+            &mut cost_strategy,
         );
-        ExecutionResult::new(context, meta, res)
+        ExecutionResult::new(cache, cost_strategy, meta, res)
     }
 }
 

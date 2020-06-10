@@ -9,7 +9,7 @@ use runtime::move_vm::ExecutionMeta;
 use dvm_net::tonic::Request;
 
 use libra::{libra_types, libra_vm};
-use libra_types::transaction::{TransactionArgument, parse_as_transaction_argument};
+use libra_types::transaction::{TransactionArgument, parse_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
@@ -190,7 +190,7 @@ impl StateView for TestKit {
 
 pub fn parse_args(args: &[&str]) -> Vec<TransactionArgument> {
     args.iter()
-        .map(|arg| parse_as_transaction_argument(arg).unwrap())
+        .map(|arg| parse_transaction_argument(arg).unwrap())
         .collect()
 }
 

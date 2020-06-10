@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Mutex, Arc};
 use anyhow::Error;
-use libra::{libra_types, libra_state_view, libra_vm, move_vm_state};
-use move_vm_state::data_cache::RemoteCache;
+use libra::{libra_types, libra_state_view, libra_vm, move_vm_runtime};
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
 use libra_types::write_set::{WriteSet, WriteOp, WriteSetMut};
@@ -10,6 +9,7 @@ use libra_vm::errors::VMResult;
 use crate::{MergeWriteSet, DataSource, Clear};
 use libra_vm::CompiledModule;
 use libra::move_core_types::language_storage::ModuleId;
+use move_vm_runtime::data_cache::RemoteCache;
 
 #[derive(Debug, Clone, Default)]
 pub struct MockDataSource {
