@@ -6,6 +6,7 @@ address 0x0 {
 module Dfinance {
 
     use 0x0::Transaction;
+    use 0x0::Signer;
 
     resource struct T<Coin> {
         value: u128
@@ -54,9 +55,9 @@ module Dfinance {
     /// Work in progress. Make it public when register_token_info becomes native.
     /// Made private on purpose not to make a hole in chain security, though :resource
     /// constraint kinda-does the job and won't allow users to mint new 'real' coins
-    public fun tokenize<Token: resource>(total_supply: u128, decimals: u8, denom: vector<u8>): T<Token> {
+    public fun tokenize<Token: resource>(account: &signer, total_supply: u128, decimals: u8, denom: vector<u8>): T<Token> {
 
-        let owner = Transaction::sender();
+        let owner = Signer::address_of(account);
 
         // check if this token has never been registered
         Transaction::assert(!::exists<Info<Token>>(0x0), 1);
@@ -105,10 +106,10 @@ module Dfinance {
     }
 
     /// only 0x0 address and add denom descriptions, 0x0 holds information resource
-    public fun register_coin<Coin>(denom: vector<u8>, decimals: u8) {
-        assert_can_register_coin();
+    public fun register_coin<Coin>(account: &signer, denom: vector<u8>, decimals: u8) {
+        assert_can_register_coin(account);
 
-        move_to_sender<Info<Coin>>(Info {
+        move_to<Info<Coin>>(account, Info {
             denom,
             decimals,
 
@@ -119,8 +120,8 @@ module Dfinance {
     }
 
     /// check whether sender is 0x0, helper method
-    fun assert_can_register_coin() {
-        Transaction::assert(Transaction::sender() == 0x0, 1);
+    fun assert_can_register_coin(account: &signer) {
+        Transaction::assert(Signer::address_of(account) == 0x0, 1);
     }
 }
 }
