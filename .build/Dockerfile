@@ -13,7 +13,6 @@ ADD . .
 # run build
 RUN cargo build \
             --bin dvm \
-            --bin compiler \
             --bin stdlib-builder \
             --release
 # # tests are going on release workflow
@@ -29,7 +28,6 @@ RUN apt-get update -y && \
     apt-get install -y libssl1.1
 COPY ./lang/stdlib/ ./stdlib/
 COPY --from=build \
-    /opt/app/target/release/compiler \
     /opt/app/target/release/dvm \
     /opt/app/target/release/stdlib-builder \
     /opt/app/

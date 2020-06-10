@@ -77,6 +77,4 @@ jobs:
     # terminal signals
     - run: cargo build --all
     - name: SIGs handling
-      run: |
-        tests/test-shutdown.sh dvm
-        tests/test-shutdown.sh compiler
+      run: tests/test-shutdown.sh dvm
