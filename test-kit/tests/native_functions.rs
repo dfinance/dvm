@@ -6,6 +6,7 @@ use runtime::move_vm::{U64Store, AddressStore};
 use libra::lcs;
 use twox_hash::XxHash64;
 use std::hash::Hasher;
+use dvm_net::api::grpc::vm_grpc::{VmArgs, VmTypeTag};
 
 fn str_xxhash(ticker: &str) -> u64 {
     let mut hash = XxHash64::default();
@@ -85,4 +86,32 @@ fn test_native_function() {
     test_kit.assert_success(&res);
     let value: AddressStore = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
     assert_eq!(value.val, account_address);
+}
+
+#[test]
+fn test_register_token_info() {
+    let test_kit = TestKit::empty();
+    test_kit.add_std_module(include_str!("resources/dfinance.move"));
+
+    let script = "\
+        script {
+        use 0x0::Dfinance;
+
+        fun main(t_value: u64) {
+            Dfinance::store_info<Dfinance::SimpleCoin>(t_value);
+        }
+        }
+    ";
+
+    let account = account("0x110");
+
+    let t_value = 13;
+    let args = vec![VmArgs {
+        r#type: VmTypeTag::U64 as i32,
+        value: t_value.to_string(),
+    }];
+    let res = test_kit.execute_script(script, meta(&account), args);
+    test_kit.assert_success(&res);
+    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    assert_eq!(t_value, value.val);
 }
