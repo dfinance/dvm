@@ -8,7 +8,7 @@ use dvm_net::{tonic, api};
 use tonic::{Request, Response, Status};
 
 use lang::{stdlib::build_std};
-use compiler::{Compiler, preprocessor::str_xxhash};
+use compiler::Compiler;
 
 use data_source::MockDataSource;
 use api::grpc::vm_grpc::{CompilationResult, SourceFile};
@@ -76,9 +76,9 @@ async fn test_compile_script() {
 async fn test_compile_script_with_dependencies() {
     let source_text = "
             script {
-            use 0x0::Oracle;
+            use 0x0::Time;
             fun main() {
-                Oracle::get_price(#\"USDBTC\");
+                Time::now();
             }
             }
         ";
@@ -101,7 +101,6 @@ async fn test_compile_script_with_dependencies() {
     assert_eq!(
         compiled_script.code().code,
         vec![
-            Bytecode::LdU64(str_xxhash("usdbtc")),
             Bytecode::Call(FunctionHandleIndex(0)),
             Bytecode::Pop,
             Bytecode::Ret
@@ -113,7 +112,7 @@ async fn test_compile_script_with_dependencies() {
         compiled_script
             .identifier_at(imported_module_handle.name)
             .to_string(),
-        "Oracle"
+        "Time"
     );
 }
 
