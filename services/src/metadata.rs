@@ -27,6 +27,16 @@ impl VmScriptMetadata for MetadataService {
                 SignatureToken::U8 => VmTypeTag::U8,
                 SignatureToken::U64 => VmTypeTag::U64,
                 SignatureToken::U128 => VmTypeTag::U128,
+                SignatureToken::Reference(reference) => {
+                    if reference.as_ref() == &SignatureToken::Signer {
+                        // signer is not explicit parameter. Ignore it.
+                        continue;
+                    } else {
+                        return Err(Status::unimplemented(
+                            "Unsupported main() signature. Unexpected reference type.",
+                        ));
+                    }
+                }
                 _ => return Err(Status::unimplemented("Unsupported main() signature")),
             };
             arg_types.push(tag)
