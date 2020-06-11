@@ -33,10 +33,33 @@ async fn test_no_arguments_for_script() {
 }
 
 #[tokio::test]
+async fn test_no_arguments_for_script_with_signer() {
+    let source_text = r"
+            script {
+            fun main(_account: &signer) {
+            }
+            }
+        ";
+    let compiler = Compiler::new(MockDataSource::new());
+    let script_bytecode = compiler
+        .compile(source_text, Some(AccountAddress::random()))
+        .unwrap();
+    let metadata_service = MetadataService::default();
+    let request = Request::new(VmScript::new(script_bytecode));
+    let arguments = metadata_service
+        .get_signature(request)
+        .await
+        .unwrap()
+        .into_inner()
+        .arguments;
+    assert!(arguments.is_empty());
+}
+
+#[tokio::test]
 async fn test_multiple_arguments_for_move_script() {
     let source_text = r"
             script {
-            fun main(_recipient: address, _amount: u128, _denom: vector<u8>) {
+            fun main(_account: &signer, _recipient: address, _amount: u128, _denom: vector<u8>) {
             }
             }
         ";
