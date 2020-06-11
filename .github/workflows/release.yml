@@ -71,7 +71,7 @@ jobs:
         target/release/dvm
         target/release/compiler
         target/release/stdlib-builder
-        target/release/moveс
+        target/release/movec
         target/release/status-table
         target/release/stdlib-builder
 
