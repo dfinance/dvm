@@ -20,9 +20,10 @@ fn test_oracle() {
     let price = 13;
     let mut price_buff = vec![0; 8];
     LittleEndian::write_u64(&mut price_buff, price);
-    test_kit
-        .data_source()
-        .insert(oracle::make_path(str_xxhash("usdbtc")).unwrap(), price_buff);
+    test_kit.data_source().insert(
+        oracle::make_path(str_xxhash("usd_btc")).unwrap(),
+        price_buff,
+    );
 
     test_kit.add_std_module(include_str!("resources/store.move"));
     test_kit.add_std_module(include_str!("resources/currency.move"));
