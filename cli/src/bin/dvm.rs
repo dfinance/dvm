@@ -89,7 +89,8 @@ async fn main_internal(options: Options) -> Result<()> {
     // data-source client
     let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
         .expect("Unable to instantiate GrpcDataSource.");
-    let ds = ModuleCache::new(ds, MODULE_CACHE);
+    // XXX: temporary disabled cache:
+    // let ds = ModuleCache::new(ds, MODULE_CACHE);
     // vm services
     let service = VmService::new(ds.clone());
     // comp services
