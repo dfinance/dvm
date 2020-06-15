@@ -69,7 +69,7 @@ jobs:
         zip --junk-paths dvm-${{ runner.os }}.zip
         LICENSE README.md
         target/release/dvm
-        target/release/moveс
+        target/release/movec
         target/release/status-table
         target/release/stdlib-builder
 

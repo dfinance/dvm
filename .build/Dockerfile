@@ -12,7 +12,7 @@ ADD . .
 # run build
 RUN cargo build \
             --bin dvm \
-            --bin moveс \
+            --bin movec \
             --bin status-table \
             --bin stdlib-builder \
             --release
@@ -26,7 +26,7 @@ RUN apt-get update -y && \
 COPY ./lang/stdlib/ ./stdlib/
 COPY --from=build \
     /opt/app/target/release/dvm \
-    /opt/app/target/release/moveс \
+    /opt/app/target/release/movec \
     /opt/app/target/release/status-table \
     /opt/app/target/release/stdlib-builder \
     /opt/app/
