@@ -20,13 +20,13 @@ use api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
 use api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
 use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
 use dvm_net::api::grpc::vm_grpc::vm_service_server::VmServiceServer;
-use data_source::{GrpcDataSource, ModuleCache};
+use data_source::{GrpcDataSource /* ModuleCache */};
 use anyhow::Result;
 use services::vm::VmService;
 use dvm_cli::config::*;
 use dvm_cli::init;
 
-const MODULE_CACHE: usize = 1000;
+// const MODULE_CACHE: usize = 1000;
 
 /// Definance Virtual Machine
 ///  combined with Move compilation server
@@ -71,11 +71,16 @@ fn main() -> Result<()> {
 #[tokio::main]
 async fn main_internal(options: Options) -> Result<()> {
     let (serv_term_tx, serv_term_rx) = futures::channel::oneshot::channel();
-    let (ds_term_tx, ds_term_rx) = tokio::sync::oneshot::channel();
+    let (ds1_term_tx, ds1_term_rx) = tokio::sync::oneshot::channel();
+    let (ds2_term_tx, ds2_term_rx) = tokio::sync::oneshot::channel();
     let sigterm = dvm_cli::init_sigterm_handler_fut(move || {
         // shutdown DS
-        match ds_term_tx.send(()) {
-            Ok(_) => info!("shutting down DS client"),
+        match ds1_term_tx.send(()) {
+            Ok(_) => info!("shutting down DS(VM) client"),
+            Err(err) => error!("unable to send sig into the DS client: {:?}", err),
+        }
+        match ds2_term_tx.send(()) {
+            Ok(_) => info!("shutting down DS(C) client"),
             Err(err) => error!("unable to send sig into the DS client: {:?}", err),
         }
 
@@ -87,14 +92,16 @@ async fn main_internal(options: Options) -> Result<()> {
     });
 
     // data-source client
-    let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
+    let ds1 = GrpcDataSource::new(options.ds.clone(), Some(ds1_term_rx))
+        .expect("Unable to instantiate GrpcDataSource.");
+    let ds2 = GrpcDataSource::new(options.ds, Some(ds2_term_rx))
         .expect("Unable to instantiate GrpcDataSource.");
     // XXX: temporary disabled cache:
     // let ds = ModuleCache::new(ds, MODULE_CACHE);
     // vm services
-    let service = VmService::new(ds.clone());
+    let service = VmService::new(ds1);
     // comp services
-    let compiler_service = CompilerService::new(Compiler::new(ds));
+    let compiler_service = CompilerService::new(Compiler::new(ds2));
     let metadata_service = MetadataService::default();
 
     // spawn the signal-router:
