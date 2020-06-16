@@ -41,11 +41,15 @@ macro_rules! store {
 }
 
 /// Encode metrics.
-pub fn encode_metrics(metrics: Metrics, metrics_list: &[&str], system_metrics: bool) -> String {
+pub fn encode_metrics(
+    system_metrics: Option<SysMetrics>,
+    metrics: Metrics,
+    metrics_list: &[&str],
+) -> String {
     let mut buf = String::new();
 
-    if system_metrics {
-        encode_sys_metrics(&mut buf, &metrics.system_metrics);
+    if let Some(sys_metrics) = system_metrics {
+        encode_sys_metrics(&mut buf, &sys_metrics);
         buf.push('\n');
     }
 

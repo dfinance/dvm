@@ -8,6 +8,7 @@ use std::net::SocketAddr;
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
 use crate::metrics::prometheus::encode_metrics;
 use crate::heartbeat::HeartRateMonitor;
+use crate::metrics::live_time::get_sys_metrics;
 
 /// Instruction web service.
 #[derive(Debug)]
@@ -21,6 +22,7 @@ impl InfoService {
     fn load_metric(&mut self) -> Response<Body> {
         let metrics = self.metric_collector.get_metrics();
         let prometheus = encode_metrics(
+            Some(get_sys_metrics()),
             metrics,
             &[
                 "ds_access",
@@ -30,7 +32,6 @@ impl InfoService {
                 "publish_module",
                 "execute_script",
             ],
-            true,
         );
 
         Response::builder()

@@ -1,27 +1,22 @@
-use crate::metrics::live_time::{SysMetrics, ExecutionData};
+use crate::metrics::live_time::ExecutionData;
 use std::collections::HashMap;
 use serde_derive::Serialize;
 
 /// Application metrics;
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
 pub struct Metrics {
-    pub system_metrics: SysMetrics,
     pub execution_metrics: HashMap<&'static str, ExecutionMetric>,
 }
 
 impl Metrics {
     /// Calculate metrics based on a list of executions.
-    pub fn calculate(
-        system_metrics: SysMetrics,
-        app_metric: HashMap<&'static str, Vec<ExecutionData>>,
-    ) -> Metrics {
+    pub fn calculate(app_metric: HashMap<&'static str, Vec<ExecutionData>>) -> Metrics {
         let action_metrics = app_metric
             .into_iter()
             .map(|(name, metrics)| (name, ExecutionMetric::calculate(metrics)))
             .collect();
 
         Metrics {
-            system_metrics,
             execution_metrics: action_metrics,
         }
     }
@@ -129,18 +124,15 @@ impl ExecutionMetric {
 
 #[cfg(test)]
 mod test {
-    use crate::metrics::live_time::{get_sys_metrics, ExecutionData, ExecutionResult};
+    use crate::metrics::live_time::{ExecutionData, ExecutionResult};
     use std::collections::HashMap;
     use crate::metrics::metric::{Percentiles, ExecutionMetric, Average, Metrics};
 
     #[test]
     fn test_empty_metrics_calculation() {
-        let sys = get_sys_metrics();
-
         assert_eq!(
-            Metrics::calculate(sys.clone(), HashMap::new()),
+            Metrics::calculate(HashMap::new()),
             Metrics {
-                system_metrics: sys.clone(),
                 execution_metrics: Default::default(),
             }
         );
@@ -150,9 +142,8 @@ mod test {
         let mut expected = HashMap::new();
         expected.insert("test", Default::default());
         assert_eq!(
-            Metrics::calculate(sys.clone(), m),
+            Metrics::calculate(m),
             Metrics {
-                system_metrics: sys,
                 execution_metrics: expected,
             }
         );

@@ -1,4 +1,4 @@
-use crate::metrics::live_time::{STORE_METRICS, drain_action_metrics, get_sys_metrics};
+use crate::metrics::live_time::{STORE_METRICS, drain_action_metrics};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use std::thread;
@@ -9,8 +9,14 @@ use crate::task::FixedDelayDemon;
 /// Metrics collector.
 #[derive(Debug, Clone)]
 pub struct MetricsCollector {
+    inner: Arc<MetricsInner>,
+}
+
+/// Metrics collector state.
+#[derive(Debug)]
+struct MetricsInner {
     metrics: Arc<RwLock<Metrics>>,
-    task: Arc<FixedDelayDemon>,
+    task: FixedDelayDemon,
 }
 
 impl MetricsCollector {
@@ -21,21 +27,20 @@ impl MetricsCollector {
         let metrics = Arc::new(RwLock::new(Default::default()));
         let task = MetricsCollector::start_collector(interval, metrics.clone());
         MetricsCollector {
-            metrics,
-            task: Arc::new(task),
+            inner: Arc::new(MetricsInner { metrics, task }),
         }
     }
 
     /// Get current metrics.
     pub fn get_metrics(&self) -> Metrics {
-        self.metrics.read().unwrap().clone()
+        self.inner.metrics.read().unwrap().clone()
     }
 
     /// Start collecting process.
     fn start_collector(interval: Duration, metrics: Arc<RwLock<Metrics>>) -> FixedDelayDemon {
         FixedDelayDemon::spawn(
             move || {
-                let new_metric = Metrics::calculate(get_sys_metrics(), drain_action_metrics());
+                let new_metric = Metrics::calculate(drain_action_metrics());
                 *metrics.write().unwrap() = new_metric;
                 thread::sleep(interval);
             },
@@ -44,7 +49,7 @@ impl MetricsCollector {
     }
 }
 
-impl Drop for MetricsCollector {
+impl Drop for MetricsInner {
     fn drop(&mut self) {
         STORE_METRICS.store(false, Ordering::Relaxed);
     }

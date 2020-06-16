@@ -1,4 +1,4 @@
-use std::sync::{RwLock, Mutex};
+use std::sync::RwLock;
 use std::collections::HashMap;
 use std::{thread, process, panic};
 use std::thread::ThreadId;
@@ -12,8 +12,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 /// Recorded metrics for the current countdown.
 pub(crate) static LIVE_METRICS: Lazy<RwLock<Metrics>> =
     Lazy::new(|| RwLock::new(Metrics::default()));
-/// System state.
-pub(crate) static SYSTEM: Lazy<Mutex<System>> = Lazy::new(|| Mutex::new(System::default()));
 /// Save metrics flag.
 pub(crate) static STORE_METRICS: AtomicBool = AtomicBool::new(false);
 
@@ -109,10 +107,8 @@ pub fn get_action_metrics(name: &'static str) -> Vec<ExecutionData> {
 }
 
 pub fn get_sys_metrics() -> SysMetrics {
-    let mut sys = SYSTEM.lock().unwrap();
-    let pid = process::id() as i32;
-    sys.refresh_process(pid);
-    let process = sys.get_process(pid).unwrap();
+    let sys = System::default();
+    let process = sys.get_process(process::id() as i32).unwrap();
     SysMetrics {
         cpu_usage: process.cpu_usage,
         memory: process.memory,
