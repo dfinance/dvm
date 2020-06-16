@@ -1,13 +1,16 @@
 name: Integration Tests
 on:
   push:
+    tags:
+    - "**"
     branches:
     - master
     - release-*
+    - inegration-test**
 
 jobs:
   tests:
-    name: Integration Tests
+    name: Tests DVM
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -77,4 +80,111 @@ jobs:
     # terminal signals
     - run: cargo build --all
     - name: SIGs handling
-      run: tests/test-shutdown.sh dvm
+      run: |
+        tests/test-shutdown.sh dvm
+        tests/test-shutdown.sh compiler
+
+
+  with-node:
+    name: Tests DVM with Node
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - macos-latest
+        - ubuntu-latest
+
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      CARGO_INCREMENTAL: 1
+      RUSTUP_MAX_RETRIES: 10
+      CARGO_NET_RETRY: 10
+
+    steps:
+    # usage:
+    # ${{ steps.VARS.outputs.NODE_REPO }}
+    - name: Setup VARs
+      id: VARS
+      run: |
+        # options: "docker" or path to binary "dvm"
+        echo ::set-output name=DNODE_TESTS_USE::"dvm"
+        echo ::set-output name=DVM_BIN::${{ github.workspace }}/target/debug
+        echo ::set-output name=NODE_REPO::dfinance/dnode
+        echo ::set-output name=NODE_REPO_PATH_REL::go/src/github.com/dfinance/dnode
+        echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dnode
+        echo ::set-output name=GOPATH::${{ github.workspace }}/go
+
+    #
+    # VM
+    #
+    - name: Checkout DVM
+      uses: actions/checkout@v2
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        components: rustfmt
+
+    - if: matrix.os == 'ubuntu-latest'
+      run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+    - name: Build DVM
+      run: cargo build --all
+
+    - name: Add DVM into PATH
+      run: |
+        echo "::add-path::${{ steps.VARS.outputs.DVM_BIN }}"
+
+
+    #
+    # Node
+    #
+    - name: Checkout DNode
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ steps.VARS.outputs.NODE_REPO }}
+        submodules: true
+        ref: master
+        path: ${{ steps.VARS.outputs.NODE_REPO_PATH }}
+
+    - name: Set GOPATH
+      run: |
+        echo "::set-env name=GOPATH::${{ steps.VARS.outputs.GOPATH }}"
+        echo "::add-path::${{ steps.VARS.outputs.GOPATH }}/bin"
+
+    - name: Install Go 1.14.1
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.14.1
+      id: go
+
+    - name: Get dependencies
+      run: |
+        cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
+        go mod download
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
+    - name: Make binaries for integration tests
+      run: |
+        cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
+        make
+
+    - name: Run INTEG tests
+      run: |
+        cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
+        go test -v ./... --tags=integ
+      env:
+        # TODO: fix me
+        DNODE_TESTS_USE: ${{ steps.VARS.outputs.DNODE_TESTS_USE }}
