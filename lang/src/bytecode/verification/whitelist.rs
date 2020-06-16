@@ -81,6 +81,7 @@ pub mod tests {
     use compiler::Compiler;
     use anyhow::Error;
     use ds::MockDataSource;
+    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
     pub fn compile(
         source: &str,
@@ -127,8 +128,8 @@ pub mod tests {
 
         let source = "
             script {
-            use 0x0::Empty;
-            use 0x0::Debug;
+            use 0x1::Empty;
+            use 0x1::Debug;
 
             fun main() {
                 Empty::create();
@@ -137,11 +138,11 @@ pub mod tests {
             }
         ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["Empty".to_string(), "Debug".to_string()]
+            CORE_CODE_ADDRESS => vec!["Empty".to_string(), "Debug".to_string()]
         };
         let verifier = WhitelistVerifier::new(sender_address, vec![], whitelist);
 
-        let core = AccountAddress::default();
+        let core = CORE_CODE_ADDRESS;
         verify_source_code(
             source,
             vec![(empty, &core), (oracle, &core)],
@@ -222,8 +223,8 @@ pub mod tests {
 
         let source = "
                  script {
-                 use 0x0::Empty;
-                 use 0x0::Debug;
+                 use 0x1::Empty;
+                 use 0x1::Debug;
 
                 fun main() {
                     Empty::create();
@@ -232,9 +233,9 @@ pub mod tests {
                 }
             ";
         let whitelist = hashmap! {
-            AccountAddress::default() => vec!["Debug".to_string()]
+            CORE_CODE_ADDRESS => vec!["Debug".to_string()]
         };
-        let core = AccountAddress::default();
+        let core = CORE_CODE_ADDRESS;
         let verifier = WhitelistVerifier::new(sender_address, vec!["Debug".to_string()], whitelist);
         let verified_err = verify_source_code(
             source,
@@ -245,7 +246,7 @@ pub mod tests {
         .unwrap_err();
         assert_eq!(
             verified_err.to_string(),
-            "Module 0000000000000000000000000000000000000000.Empty is not whitelisted"
+            "Module 0000000000000000000000000000000000000001.Empty is not whitelisted"
         );
     }
 }

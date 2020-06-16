@@ -1,8 +1,8 @@
-address 0x0 {
+address 0x1 {
 
 module Account {
-    use 0x0::Transaction;
-    use 0x0::Event;
+    use 0x1::Transaction;
+    use 0x1::Event;
 
     resource struct T1<CoinType> { value: u64 }
 

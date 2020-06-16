@@ -43,7 +43,7 @@ impl ExecutionMeta {
         ExecutionMeta {
             max_gas_amount: 1_000_000,
             gas_unit_price: 1,
-            sender: Default::default(),
+            sender: CORE_CODE_ADDRESS,
         }
     }
 }

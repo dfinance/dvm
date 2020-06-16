@@ -27,6 +27,7 @@ use compiler::Compiler;
 pub use genesis::genesis_write_set;
 use anyhow::Error;
 use libra_types::write_set::WriteSet;
+use libra_types::account_config::CORE_CODE_ADDRESS;
 
 // TODO: [REF] rename to api_grpc
 pub mod compiled_protos {
@@ -99,7 +100,7 @@ impl TestKit {
     pub fn add_std_module(&self, code: &str) {
         let module = self
             .compiler
-            .compile(code, Some(AccountAddress::default()))
+            .compile(code, Some(CORE_CODE_ADDRESS))
             .unwrap();
 
         let id = CompiledModule::deserialize(&module).unwrap().self_id();

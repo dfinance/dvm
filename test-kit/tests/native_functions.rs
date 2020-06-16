@@ -30,9 +30,9 @@ fn test_oracle() {
 
     let script = "
         script {
-        use 0x0::Store;
-        use 0x0::Currency;
-        use 0x0::Oracle;
+        use 0x1::Store;
+        use 0x1::Currency;
+        use 0x1::Oracle;
 
         fun main() {
             Store::store_u64(Oracle::get_price<Currency::USD, Currency::BTC>());
@@ -49,9 +49,9 @@ fn test_oracle() {
 
     let script = "
         script {
-        use 0x0::Store;
-        use 0x0::Currency;
-        use 0x0::Oracle;
+        use 0x1::Store;
+        use 0x1::Currency;
+        use 0x1::Oracle;
 
         fun main() {
           Store::store_u64(Oracle::get_price<Currency::USD, Currency::ETH>());
@@ -72,11 +72,10 @@ fn test_native_function() {
 
     let script = "
         script {
-        use 0x0::Store;
-        use 0x0::Transaction;
+        use 0x1::Store;
 
         fun main() {
-            Store::store_address(Transaction::sender());
+            Store::store_address(0x110);
         }
         }
     ";
@@ -96,7 +95,7 @@ fn test_register_token_info() {
 
     let script = "\
         script {
-        use 0x0::Dfinance;
+        use 0x1::Dfinance;
 
         fun main(t_value: u64) {
             Dfinance::store_info<Dfinance::SimpleCoin>(t_value);

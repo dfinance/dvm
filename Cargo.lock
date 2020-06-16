@@ -17,56 +17,55 @@ checksum = "567b077b825e468cc974f0020d4082ee6e03132512f207ef1a02fd5d00d1f32d"
 
 [[package]]
 name = "aead"
-version = "0.2.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cf01b9b56e767bb57b94ebf91a58b338002963785cdd7013e21c0d4679471e4"
+checksum = "3672ba0d12aaf256aabcdab516ebed87b5cec4b602316d7a3035fac9b7a9567b"
 dependencies = [
- "generic-array 0.12.3",
+ "generic-array 0.14.2",
 ]
 
 [[package]]
 name = "aes"
-version = "0.3.2"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54eb1d8fe354e5fc611daf4f2ea97dd45a765f4f1e4512306ec183ae2e8f20c9"
+checksum = "f7001367fde4c768a19d1029f0a8be5abd9308e1119846d5bd9ad26297b8faf5"
 dependencies = [
  "aes-soft",
  "aesni",
- "block-cipher-trait",
+ "block-cipher",
 ]
 
 [[package]]
 name = "aes-gcm"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "834a6bda386024dbb7c8fc51322856c10ffe69559f972261c868485f5759c638"
+checksum = "86f5007801316299f922a6198d1d09a0bae95786815d066d5880d13f7c45ead1"
 dependencies = [
  "aead",
  "aes",
- "block-cipher-trait",
+ "block-cipher",
  "ghash",
- "subtle 2.2.3",
- "zeroize",
+ "subtle",
 ]
 
 [[package]]
 name = "aes-soft"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfd7e7ae3f9a1fb5c03b389fc6bb9a51400d0c13053f0dca698c832bfd893a0d"
+checksum = "4925647ee64e5056cf231608957ce7c81e12d6d6e316b9ce1404778cc1d35fa7"
 dependencies = [
- "block-cipher-trait",
+ "block-cipher",
  "byteorder",
  "opaque-debug",
 ]
 
 [[package]]
 name = "aesni"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f70a6b5f971e473091ab7cfb5ffac6cde81666c4556751d8d5620ead8abf100"
+checksum = "d050d39b0b7688b3a3254394c3e30a9d66c41dcf9b05b0e2dbdc623f6505d264"
 dependencies = [
- "block-cipher-trait",
+ "block-cipher",
  "opaque-debug",
 ]
 
@@ -203,9 +202,9 @@ checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
 
 [[package]]
 name = "base64"
-version = "0.12.1"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53d1ccbaf7d9ec9537465a97bf19edc1a4e158ecb49fc16178202238c569cc42"
+checksum = "e223af0dc48c96d4f8342ec01a4974f139df863896b316681efd36742f22cc67"
 
 [[package]]
 name = "bech32"
@@ -256,12 +255,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "block-cipher-trait"
-version = "0.6.2"
+name = "block-buffer"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c924d49bd09e7c06003acda26cd9742e796e34282ec6c1189404dee0c1f4774"
+checksum = "dbcf92448676f82bb7a334c58bbce8b0d43580fb5362a9d608b18879d12a3d31"
 dependencies = [
- "generic-array 0.12.3",
+ "block-padding",
+ "byte-tools",
+ "byteorder",
+ "generic-array 0.14.2",
+]
+
+[[package]]
+name = "block-cipher"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa136449e765dc7faa244561ccae839c394048667929af599b5d931ebe7b7f10"
+dependencies = [
+ "generic-array 0.14.2",
 ]
 
 [[package]]
@@ -276,7 +287,7 @@ dependencies = [
 [[package]]
 name = "borrow-graph"
 version = "0.0.1"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-workspace-hack",
  "mirai-annotations",
@@ -307,7 +318,7 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 [[package]]
 name = "bytecode-source-map"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -324,7 +335,7 @@ dependencies = [
 [[package]]
 name = "bytecode-verifier"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -458,20 +469,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "compiled-stdlib"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
+dependencies = [
+ "anyhow",
+ "bytecode-verifier",
+ "include_dir",
+ "libra-canonical-serialization",
+ "libra-crypto",
+ "libra-types",
+ "libra-workspace-hack",
+ "once_cell",
+ "sha2 0.9.0",
+ "stdlib",
+ "vm",
+]
+
+[[package]]
 name = "compiler"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
  "bytecode-verifier",
+ "compiled-stdlib",
  "ir-to-bytecode",
  "libra-canonical-serialization",
  "libra-types",
  "libra-workspace-hack",
  "move-ir-types",
  "serde_json",
- "stdlib",
  "structopt",
  "vm",
 ]
@@ -592,12 +621,12 @@ checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
 name = "crypto-mac"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4434400df11d95d556bac068ddfedd482915eb18fe8bea89bc80b6e4b1c179e5"
+checksum = "b584a330336237c1eecd3e94266efb216c56ed91225d634cb2991c5f3fd1aeab"
 dependencies = [
- "generic-array 0.12.3",
- "subtle 1.0.0",
+ "generic-array 0.14.2",
+ "subtle",
 ]
 
 [[package]]
@@ -615,17 +644,17 @@ version = "2.0.0"
 source = "git+https://github.com/novifinancial/curve25519-dalek.git?branch=fiat2#05d0dff946fe37679c763fe1bac82890a901e841"
 dependencies = [
  "byteorder",
- "digest",
+ "digest 0.8.1",
  "fiat-crypto",
  "rand_core 0.5.1",
- "subtle 2.2.3",
+ "subtle",
  "zeroize",
 ]
 
 [[package]]
 name = "datatest-stable"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-workspace-hack",
  "regex",
@@ -637,7 +666,7 @@ dependencies = [
 [[package]]
 name = "debug-interface"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "libra-logger",
@@ -677,9 +706,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "digest"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
+dependencies = [
+ "generic-array 0.14.2",
+]
+
+[[package]]
 name = "docgen"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -687,7 +725,7 @@ dependencies = [
  "itertools 0.9.0",
  "libra-workspace-hack",
  "log 0.4.8",
- "num",
+ "num 0.3.0",
  "once_cell",
  "regex",
  "serde",
@@ -925,7 +963,7 @@ dependencies = [
  "curve25519-dalek",
  "rand 0.7.3",
  "serde",
- "sha2",
+ "sha2 0.8.2",
 ]
 
 [[package]]
@@ -1185,6 +1223,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "generic-array"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac746a5f3bbfdadd6106868134545e684693d54d9d44f6e9588a7d54af0bf980"
+dependencies = [
+ "typenum",
+ "version_check 0.9.2",
+]
+
+[[package]]
 name = "get_if_addrs"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1219,9 +1267,9 @@ dependencies = [
 
 [[package]]
 name = "ghash"
-version = "0.2.3"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f0930ed19a7184089ea46d2fedead2f6dc2b674c5db4276b7da336c7cd83252"
+checksum = "d6e27f0689a6e15944bdce7e45425efb87eaa8ab0c6e87f11d0987a9133e2531"
 dependencies = [
  "polyval",
 ]
@@ -1296,13 +1344,13 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed18eb2459bf1a09ad2d6b1547840c3e5e62882fa09b9a6a20b1de8e3228848f"
 dependencies = [
- "base64 0.12.1",
+ "base64 0.12.2",
  "bitflags",
  "bytes",
  "headers-core",
  "http",
  "mime 0.3.16",
- "sha-1",
+ "sha-1 0.8.2",
  "time",
 ]
 
@@ -1353,12 +1401,12 @@ checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
 
 [[package]]
 name = "hmac"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
+checksum = "b87b580bd66811cc2324a27f3587de707cacf7525b96dca8122f7493e6cce0da"
 dependencies = [
  "crypto-mac",
- "digest",
+ "digest 0.9.0",
 ]
 
 [[package]]
@@ -1548,7 +1596,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -1567,7 +1615,7 @@ dependencies = [
 [[package]]
 name = "ir-to-bytecode-syntax"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -1639,10 +1687,11 @@ dependencies = [
 [[package]]
 name = "language-e2e-tests"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
+ "compiled-stdlib",
  "compiler",
  "libra-canonical-serialization",
  "libra-config",
@@ -1661,7 +1710,6 @@ dependencies = [
  "proptest",
  "proptest-derive",
  "rand 0.7.3",
- "stdlib",
  "transaction-builder",
  "vm",
  "vm-genesis",
@@ -1682,7 +1730,7 @@ checksum = "9457b06509d27052635f90d6466700c65095fdf75409b3fbdd903e988b886f49"
 [[package]]
 name = "libra-canonical-serialization"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-workspace-hack",
  "serde",
@@ -1692,7 +1740,7 @@ dependencies = [
 [[package]]
 name = "libra-config"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "get_if_addrs",
@@ -1708,20 +1756,20 @@ dependencies = [
  "mirai-annotations",
  "rand 0.7.3",
  "serde",
+ "serde_yaml",
  "thiserror",
- "toml",
 ]
 
 [[package]]
 name = "libra-crypto"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "aes-gcm",
  "anyhow",
  "bytes",
  "curve25519-dalek",
- "digest",
+ "digest 0.9.0",
  "ed25519-dalek",
  "hex",
  "hmac",
@@ -1738,7 +1786,7 @@ dependencies = [
  "serde",
  "serde-name",
  "serde_bytes",
- "sha2",
+ "sha2 0.9.0",
  "sha3",
  "thiserror",
  "tiny-keccak",
@@ -1748,7 +1796,7 @@ dependencies = [
 [[package]]
 name = "libra-crypto-derive"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-workspace-hack",
  "proc-macro2 1.0.18",
@@ -1759,7 +1807,7 @@ dependencies = [
 [[package]]
 name = "libra-logger"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "chrono",
  "env_logger",
@@ -1773,7 +1821,7 @@ dependencies = [
 [[package]]
 name = "libra-metrics"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "futures",
@@ -1789,7 +1837,7 @@ dependencies = [
 [[package]]
 name = "libra-network-address"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-canonical-serialization",
  "libra-crypto",
@@ -1804,7 +1852,7 @@ dependencies = [
 [[package]]
 name = "libra-nibble"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-workspace-hack",
  "serde",
@@ -1813,7 +1861,7 @@ dependencies = [
 [[package]]
 name = "libra-proptest-helpers"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "crossbeam",
  "libra-workspace-hack",
@@ -1824,7 +1872,7 @@ dependencies = [
 [[package]]
 name = "libra-state-view"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "libra-types",
@@ -1834,7 +1882,7 @@ dependencies = [
 [[package]]
 name = "libra-temppath"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "hex",
  "libra-workspace-hack",
@@ -1844,7 +1892,7 @@ dependencies = [
 [[package]]
 name = "libra-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1874,7 +1922,7 @@ dependencies = [
 [[package]]
 name = "libra-vm"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "debug-interface",
  "libra-canonical-serialization",
@@ -1898,7 +1946,7 @@ dependencies = [
 [[package]]
 name = "libra-workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "bytes",
  "cc",
@@ -1907,10 +1955,16 @@ dependencies = [
  "num-traits",
  "petgraph",
  "serde",
- "sha-1",
- "subtle 2.2.3",
+ "sha-1 0.9.0",
+ "subtle",
  "syn 1.0.31",
 ]
+
+[[package]]
+name = "linked-hash-map"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8dd5a6d5999d9907cda8ed67bbd137d3af8085216c2ac62de5be860bd41f304a"
 
 [[package]]
 name = "log"
@@ -2107,7 +2161,7 @@ checksum = "258c143ddb5105becc4834f66d0b0ad3d3205d07cb3efc3236f33f623dd07b16"
 [[package]]
 name = "move-core-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "hex",
@@ -2127,7 +2181,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "codespan 0.8.0",
@@ -2142,7 +2196,7 @@ dependencies = [
 [[package]]
 name = "move-lang"
 version = "0.0.1"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "borrow-graph",
@@ -2169,7 +2223,7 @@ dependencies = [
 [[package]]
 name = "move-prover"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -2185,7 +2239,7 @@ dependencies = [
  "log 0.4.8",
  "move-ir-types",
  "move-lang",
- "num",
+ "num 0.3.0",
  "once_cell",
  "pretty",
  "regex",
@@ -2200,7 +2254,7 @@ dependencies = [
 [[package]]
 name = "move-vm-natives"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "bit-vec",
  "byteorder",
@@ -2211,7 +2265,7 @@ dependencies = [
  "move-core-types",
  "move-vm-types",
  "once_cell",
- "sha2",
+ "sha2 0.9.0",
  "twox-hash",
  "vm",
 ]
@@ -2219,7 +2273,7 @@ dependencies = [
 [[package]]
 name = "move-vm-runtime"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "bytecode-verifier",
  "libra-crypto",
@@ -2237,7 +2291,7 @@ dependencies = [
 [[package]]
 name = "move-vm-types"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-canonical-serialization",
  "libra-crypto",
@@ -2248,7 +2302,7 @@ dependencies = [
  "move-core-types",
  "once_cell",
  "serde",
- "sha2",
+ "sha2 0.9.0",
  "vm",
 ]
 
@@ -2336,11 +2390,25 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8536030f9fea7127f841b45bb6243b27255787fb4eb83958aa1ef9d2fdc0c36"
 dependencies = [
- "num-bigint",
- "num-complex",
+ "num-bigint 0.2.6",
+ "num-complex 0.2.4",
  "num-integer",
  "num-iter",
- "num-rational",
+ "num-rational 0.2.4",
+ "num-traits",
+]
+
+[[package]]
+name = "num"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab3e176191bc4faad357e3122c4747aa098ac880e88b168f106386128736cf4a"
+dependencies = [
+ "num-bigint 0.3.0",
+ "num-complex 0.3.0",
+ "num-integer",
+ "num-iter",
+ "num-rational 0.3.0",
  "num-traits",
 ]
 
@@ -2356,12 +2424,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7f3fc75e3697059fb1bc465e3d8cca6cf92f56854f201158b3f9c77d5a3cfa0"
+dependencies = [
+ "autocfg 1.0.0",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-complex"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6b19411a9719e753aff12e5187b74d60d3dc449ec3f4dc21e3989c3f554bc95"
 dependencies = [
  "autocfg 1.0.0",
+ "num-traits",
+]
+
+[[package]]
+name = "num-complex"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b05ad05bd8977050b171b3f6b48175fea6e0565b7981059b486075e1026a9fb5"
+dependencies = [
  "num-traits",
 ]
 
@@ -2393,7 +2481,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c000134b5dbf44adc5cb772486d335293351644b801551abe8f75c84cfa4aef"
 dependencies = [
  "autocfg 1.0.0",
- "num-bigint",
+ "num-bigint 0.2.6",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-rational"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5b4d7360f362cfb50dde8143501e6940b22f644be75a4cc90b2d81968908138"
+dependencies = [
+ "autocfg 1.0.0",
+ "num-bigint 0.3.0",
  "num-integer",
  "num-traits",
 ]
@@ -2410,7 +2510,7 @@ dependencies = [
 [[package]]
 name = "num-variants"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "libra-workspace-hack",
  "proc-macro2 1.0.18",
@@ -2542,7 +2642,7 @@ checksum = "54be6e404f5317079812fc8f9f5279de376d8856929e21c184ecf6bbd692a11d"
 dependencies = [
  "maplit",
  "pest",
- "sha-1",
+ "sha-1 0.8.2",
 ]
 
 [[package]]
@@ -2634,9 +2734,9 @@ checksum = "05da548ad6865900e60eaba7f589cc0783590a92e940c26953ff81ddbab2d677"
 
 [[package]]
 name = "polyval"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ec3341498978de3bfd12d1b22f1af1de22818f5473a11e8a6ef997989e3a212"
+checksum = "d9a50142b55ab3ed0e9f68dfb3709f1d90d29da24e91033f28b96330643107dc"
 dependencies = [
  "cfg-if",
  "universal-hash",
@@ -2752,7 +2852,7 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "log 0.4.8",
- "num",
+ "num 0.2.1",
  "serde",
  "serde_json",
 ]
@@ -3050,10 +3150,11 @@ dependencies = [
 
 [[package]]
 name = "rayon"
-version = "1.3.0"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db6ce3297f9c85e16621bb8cca38a06779ffc31bb8184e1be4bed2be4678a098"
+checksum = "62f02856753d04e03e26929f820d0a0a337ebe71f849801eea335d464b349080"
 dependencies = [
+ "autocfg 1.0.0",
  "crossbeam-deque",
  "either",
  "rayon-core",
@@ -3061,9 +3162,9 @@ dependencies = [
 
 [[package]]
 name = "rayon-core"
-version = "1.7.0"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08a89b46efaf957e52b18062fb2f4660f8b8a4dde1807ca002690868ef2c85a9"
+checksum = "e92e15d89083484e11353891f1af602cc661426deb9564c298b270c726973280"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-queue",
@@ -3140,7 +3241,7 @@ version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b82c9238b305f26f53443e3a4bc8528d64b8d0bee408ec949eb7bf5635ec680"
 dependencies = [
- "base64 0.12.1",
+ "base64 0.12.2",
  "bytes",
  "encoding_rs",
  "futures-core",
@@ -3429,13 +3530,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_yaml"
+version = "0.8.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae3e2dd40a7cdc18ca80db804b7f461a39bb721160a85c9a1fa30134bf3c02a5"
+dependencies = [
+ "dtoa",
+ "linked-hash-map",
+ "serde",
+ "yaml-rust",
+]
+
+[[package]]
 name = "sha-1"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7d94d0bede923b3cea61f3f1ff57ff8cdfd77b400fb8f9998949e0cf04163df"
 dependencies = [
- "block-buffer",
- "digest",
+ "block-buffer 0.7.3",
+ "digest 0.8.1",
+ "fake-simd",
+ "opaque-debug",
+]
+
+[[package]]
+name = "sha-1"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59520a294fcfdaff2ce8276dc1bdc6170b97abe8043560f70178222e611242fc"
+dependencies = [
+ "block-buffer 0.8.0",
+ "digest 0.9.0",
  "fake-simd",
  "opaque-debug",
 ]
@@ -3446,21 +3571,33 @@ version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a256f46ea78a0c0d9ff00077504903ac881a1dafdc20da66545699e7776b3e69"
 dependencies = [
- "block-buffer",
- "digest",
+ "block-buffer 0.7.3",
+ "digest 0.8.1",
+ "fake-simd",
+ "opaque-debug",
+]
+
+[[package]]
+name = "sha2"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72377440080fd008550fe9b441e854e43318db116f90181eef92e9ae9aedab48"
+dependencies = [
+ "block-buffer 0.8.0",
+ "digest 0.9.0",
  "fake-simd",
  "opaque-debug",
 ]
 
 [[package]]
 name = "sha3"
-version = "0.8.2"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd26bc0e7a2e3a7c959bc494caf58b72ee0c71d67704e9520f736ca7e4853ecf"
+checksum = "b859cf80317bb4ab6b29422f3d77de357ef60a0e0b3dedf28469d2b11d098968"
 dependencies = [
- "block-buffer",
+ "block-buffer 0.8.0",
  "byte-tools",
- "digest",
+ "digest 0.9.0",
  "keccak",
  "opaque-debug",
 ]
@@ -3539,7 +3676,7 @@ dependencies = [
 [[package]]
 name = "spec-lang"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytecode-source-map",
@@ -3553,7 +3690,7 @@ dependencies = [
  "move-core-types",
  "move-ir-types",
  "move-lang",
- "num",
+ "num 0.3.0",
  "regex",
  "vm",
 ]
@@ -3573,7 +3710,7 @@ checksum = "dba1a27d3efae4351c8051072d619e3ade2820635c3958d826bfea39d59b54c8"
 [[package]]
 name = "stackless-bytecode-generator"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "borrow-graph",
  "bytecode-verifier",
@@ -3582,7 +3719,7 @@ dependencies = [
  "libra-types",
  "libra-workspace-hack",
  "move-core-types",
- "num",
+ "num 0.3.0",
  "spec-lang",
  "vm",
 ]
@@ -3590,13 +3727,12 @@ dependencies = [
 [[package]]
 name = "stdlib"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
  "clap",
  "datatest-stable",
- "include_dir",
  "libra-canonical-serialization",
  "libra-crypto",
  "libra-types",
@@ -3604,8 +3740,8 @@ dependencies = [
  "log 0.4.8",
  "move-lang",
  "move-prover",
- "once_cell",
  "rayon",
+ "sha2 0.9.0",
  "vm",
 ]
 
@@ -3617,9 +3753,9 @@ checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
 
 [[package]]
 name = "structopt"
-version = "0.3.14"
+version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "863246aaf5ddd0d6928dfeb1a9ca65f505599e4e1b399935ef7e75107516b4ef"
+checksum = "de2f5e239ee807089b62adce73e48c625e0ed80df02c7ab3f068f5db5281065c"
 dependencies = [
  "clap",
  "lazy_static",
@@ -3628,9 +3764,9 @@ dependencies = [
 
 [[package]]
 name = "structopt-derive"
-version = "0.4.7"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d239ca4b13aee7a2142e6795cbd69e457665ff8037aed33b3effdc430d2f927a"
+checksum = "510413f9de616762a4fbeab62509bf15c729603b72d7cd71280fbca431b1c118"
 dependencies = [
  "heck",
  "proc-macro-error",
@@ -3638,12 +3774,6 @@ dependencies = [
  "quote 1.0.7",
  "syn 1.0.31",
 ]
-
-[[package]]
-name = "subtle"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d67a5a62ba6e01cb2192ff309324cb4875d0c451d55fe2319433abe7a05a8ee"
 
 [[package]]
 name = "subtle"
@@ -3739,18 +3869,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.19"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b13f926965ad00595dd129fa12823b04bbf866e9085ab0a5f2b05b850fbfc344"
+checksum = "7dfdd070ccd8ccb78f4ad66bf1982dc37f620ef696c6b5028fe2ed83dd3d0d08"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.19"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "893582086c2f98cde18f906265a65b5030a074b1046c674ae898be6519a7f479"
+checksum = "bd80fc12f73063ac132ac92aceea36734f04a1d93c1240c6944e23a3b8841793"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.7",
@@ -4143,15 +4273,15 @@ dependencies = [
 [[package]]
 name = "transaction-builder"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
+ "compiled-stdlib",
  "libra-canonical-serialization",
  "libra-config",
  "libra-types",
  "libra-workspace-hack",
  "mirai-annotations",
  "move-core-types",
- "stdlib",
  "vm",
 ]
 
@@ -4175,7 +4305,7 @@ dependencies = [
  "input_buffer",
  "log 0.4.8",
  "rand 0.7.3",
- "sha-1",
+ "sha-1 0.8.2",
  "url",
  "utf-8",
 ]
@@ -4287,12 +4417,12 @@ checksum = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
 
 [[package]]
 name = "universal-hash"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df0c900f2f9b4116803415878ff48b63da9edb268668e08cf9292d7503114a01"
+checksum = "8326b2c654932e3e4f9196e69d08fdf7cfd718e1dc6f66b347e6024a0c961402"
 dependencies = [
- "generic-array 0.12.3",
- "subtle 2.2.3",
+ "generic-array 0.14.2",
+ "subtle",
 ]
 
 [[package]]
@@ -4362,7 +4492,7 @@ checksum = "b5a972e5669d67ba988ce3dc826706fb0a8b01471c088cb0b6110b805cc36aed"
 [[package]]
 name = "vm"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -4379,10 +4509,11 @@ dependencies = [
 [[package]]
 name = "vm-genesis"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/libra.git?branch=09.06.2020#cbec1544981ae6466fbaa1a3f2815a026f1028e8"
+source = "git+https://github.com/dfinance/libra.git?branch=16.06.2020#afc5c2338d2b4c67a9babbaa880047c53d30f430"
 dependencies = [
  "anyhow",
  "bytecode-verifier",
+ "compiled-stdlib",
  "libra-canonical-serialization",
  "libra-config",
  "libra-crypto",
@@ -4396,7 +4527,6 @@ dependencies = [
  "move-vm-types",
  "once_cell",
  "rand 0.7.3",
- "stdlib",
  "transaction-builder",
  "vm",
 ]
@@ -4636,6 +4766,15 @@ dependencies = [
  "curve25519-dalek",
  "rand_core 0.5.1",
  "zeroize",
+]
+
+[[package]]
+name = "yaml-rust"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39f0c922f1a334134dc2f7a8b67dc5d25f0735263feec974345ff706bcf20b0d"
+dependencies = [
+ "linked-hash-map",
 ]
 
 [[package]]

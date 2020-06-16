@@ -1,14 +1,13 @@
-address 0x0 {
+address 0x1 {
 
 /// Account is the access point for assets flow. It holds withdraw-deposit handlers
 /// for generic currency <Token>. It also stores log of sent and received events
 /// for every account.
 module Account {
 
-    use 0x0::Transaction;
-    use 0x0::Dfinance;
-    use 0x0::Signer;
-    use 0x0::Event;
+    use 0x1::Dfinance;
+    use 0x1::Signer;
+    use 0x1::Event;
 
     /// holds account data, currently, only events
     resource struct T {
@@ -42,11 +41,11 @@ module Account {
     }
 
     public fun has_balance<Token>(payee: address): bool {
-        ::exists<Balance<Token>>(payee)
+        exists<Balance<Token>>(payee)
     }
 
-    public fun exists(payee: address): bool {
-        ::exists<T>(payee)
+    public fun has_account(payee: address): bool {
+        exists<T>(payee)
     }
 
     public fun balance<Token>(account: &signer): u128 acquires Balance {
@@ -127,7 +126,7 @@ module Account {
         metadata: vector<u8>
     ) acquires T, Balance {
         let amount = Dfinance::value(&to_deposit);
-        Transaction::assert(amount > 0, 7);
+        assert(amount > 0, 7);
 
         let denom = Dfinance::denom<Token>();
         let sender_acc = borrow_global_mut<T>(Signer::address_of(sender));
@@ -148,7 +147,7 @@ module Account {
             create_balance<Token>(payee);
         };
 
-        if (!exists(payee)) {
+        if (!has_account(payee)) {
             create_account(payee);
         };
 

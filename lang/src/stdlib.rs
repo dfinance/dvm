@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use ds::MockDataSource;
 use include_dir::Dir;
 use compiler::Compiler;
+use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 static STDLIB_DIR: Dir = include_dir!("stdlib");
 
@@ -23,7 +24,7 @@ impl Default for Stdlib {
 pub fn build_external_std(stdlib: Stdlib) -> Result<WriteSet, Error> {
     let ds = MockDataSource::new();
     let compiler = Compiler::new(ds.clone());
-    let modules = compiler.compile_source_map(stdlib.modules, Some(AccountAddress::default()))?;
+    let modules = compiler.compile_source_map(stdlib.modules, Some(CORE_CODE_ADDRESS))?;
 
     for module in modules {
         ds.publish_module(module.1)?;

@@ -7,6 +7,7 @@ use libra::libra_vm::{
 
 use dvm_compiler::Compiler;
 use anyhow::Error;
+use libra::libra_types::account_config::CORE_CODE_ADDRESS;
 
 pub fn compile(
     source: &str,
@@ -118,7 +119,7 @@ fn test_parse_script_with_bech32_addresses() {
             dep,
             &make_address("0xde5f86ce8ad7944f272d693cb4625a955b610150"),
         )],
-        &AccountAddress::default(),
+        &CORE_CODE_ADDRESS,
     )
     .unwrap();
 
@@ -161,7 +162,7 @@ fn test_parse_module_with_bech32_addresses() {
             dep,
             &make_address("0xde5f86ce8ad7944f272d693cb4625a955b610150"),
         )],
-        &AccountAddress::default(),
+        &CORE_CODE_ADDRESS,
     )
     .unwrap();
     let main_module = CompiledModule::deserialize(&main_module).unwrap();
@@ -195,7 +196,7 @@ fn test_build_move() {
                 fun main() {}
             }
             ",
-            Some(AccountAddress::default()),
+            Some(CORE_CODE_ADDRESS),
         )
         .unwrap();
 }

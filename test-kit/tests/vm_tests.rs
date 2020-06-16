@@ -4,6 +4,7 @@ use dvm_test_kit::*;
 use runtime::move_vm::{U64Store, AddressStore, VectorU8Store};
 use libra::lcs;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
+use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 #[test]
 fn test_address_as_argument() {
@@ -12,7 +13,7 @@ fn test_address_as_argument() {
 
     let script = "
         script {
-        use 0x0::Store;
+        use 0x1::Store;
 
         fun main(addr: address) {
             Store::store_address(addr);
@@ -38,7 +39,7 @@ fn test_vector_as_argument() {
 
     let script = "
         script {
-        use 0x0::Store;
+        use 0x1::Store;
 
         fun main(vec: vector<u8>) {
             Store::store_vector_u8(vec);
@@ -65,8 +66,8 @@ fn test_update_std_module() {
 
     let load_foo = "\
         script {
-        use 0x0::Foo;
-        use 0x0::Store;
+        use 0x1::Foo;
+        use 0x1::Store;
 
         fun main() {
             Store::store_u64(Foo::foo());
@@ -80,7 +81,7 @@ fn test_update_std_module() {
 
     let res = test_kit.publish_module(
         "module Foo{ public fun foo(): u64 {2}}",
-        meta(&AccountAddress::default()),
+        meta(&CORE_CODE_ADDRESS),
     );
     test_kit.assert_success(&res);
     test_kit.merge_result(&res);
@@ -88,8 +89,8 @@ fn test_update_std_module() {
 
     let load_foo = "\
         script {
-        use 0x0::Foo;
-        use 0x0::Store;
+        use 0x1::Foo;
+        use 0x1::Store;
 
         fun main() {
             Store::store_u64(Foo::foo());
