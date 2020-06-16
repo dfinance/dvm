@@ -3,6 +3,7 @@
 #[macro_use]
 pub extern crate log;
 pub mod config;
+pub mod info_service;
 pub mod logging;
 
 use config::*;

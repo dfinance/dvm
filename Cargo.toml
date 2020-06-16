@@ -9,4 +9,5 @@ members = [
     "net",
     "cli",
     "compiler",
+    "info",
 ]

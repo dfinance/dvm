@@ -195,7 +195,7 @@ pub fn parse_args(args: &[&str]) -> Vec<TransactionArgument> {
 }
 
 pub fn meta(addr: &AccountAddress) -> ExecutionMeta {
-    ExecutionMeta::new(std::u64::MAX, 1, *addr)
+    ExecutionMeta::new(500_000, 1, *addr)
 }
 
 pub fn addr(addr: &AccountAddress) -> String {

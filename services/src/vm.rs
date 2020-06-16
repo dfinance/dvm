@@ -20,9 +20,14 @@ use api::grpc::vm_grpc::{
 use api::grpc::vm_grpc::vm_service_server::VmService as GrpcVmService;
 use libra::move_vm_types::values::Value;
 use data_source::DataSource;
+use info::metrics::meter::ScopeMeter;
+use info::metrics::live_time::ExecutionResult as ActionResult;
+use info::heartbeat::HeartRateMonitor;
 
+/// Virtual machine service.
 pub struct VmService<D: DataSource> {
     vm: Dvm<D>,
+    hrm: Option<HeartRateMonitor>,
 }
 
 unsafe impl<D> Send for VmService<D> where D: DataSource {}
@@ -33,18 +38,52 @@ impl<D> VmService<D>
 where
     D: DataSource,
 {
-    pub fn new(view: D) -> VmService<D> {
-        VmService { vm: Dvm::new(view) }
+    /// Creates a new virtual machine service with the given data source and request interval counter.
+    pub fn new(view: D, hrm: Option<HeartRateMonitor>) -> VmService<D> {
+        VmService {
+            vm: Dvm::new(view),
+            hrm,
+        }
     }
 
+    /// Execute contract.
     pub fn execute_contract(&self, contract: VmContract, _options: u64) -> VmExecuteResponse {
-        vm_result_to_execute_response(Contract::try_from(contract).and_then(|contract| {
-            match contract.code {
-                Code::Module(code) => self.vm.publish_module(contract.meta, code),
-                Code::Script(script) => self.vm.execute_script(contract.meta, script),
-            }
-        }))
+        let meter = ScopeMeter::new(execution_name(&contract));
+        let response =
+            vm_result_to_execute_response(Contract::try_from(contract).and_then(|contract| {
+                match contract.code {
+                    Code::Module(code) => self.vm.publish_module(contract.meta, code),
+                    Code::Script(script) => self.vm.execute_script(contract.meta, script),
+                }
+            }));
+
+        store_metric(response, meter)
     }
+}
+
+/// Return task name by contract type.
+fn execution_name(contract: &VmContract) -> &'static str {
+    match ContractType::from_i32(contract.contract_type) {
+        Some(ContractType::Module) => "publish_module",
+        Some(ContractType::Script) => "execute_script",
+        None => "unknown_vm_task",
+    }
+}
+
+/// Store execution result to 'scope_meter'.
+fn store_metric(result: VmExecuteResponse, mut scope_meter: ScopeMeter) -> VmExecuteResponse {
+    let status = result
+        .status_struct
+        .as_ref()
+        .map(|status| status.major_status)
+        .unwrap_or(0);
+    scope_meter.set_result(ActionResult::new(
+        result.status == 1, // 1 == Keep
+        status,
+        result.gas_used,
+    ));
+
+    result
 }
 
 #[tonic::async_trait]
@@ -63,6 +102,11 @@ where
             .into_iter()
             .map(|contract| self.execute_contract(contract, options))
             .collect();
+
+        if let Some(hrm) = &self.hrm {
+            hrm.beat();
+        }
+
         Ok(Response::new(VmExecuteResponses { executions }))
     }
 }

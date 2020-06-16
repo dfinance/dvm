@@ -16,6 +16,8 @@ lang = { path = "../lang", package = "dvm-lang" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
 runtime = { path = "../runtime", package = "dvm-runtime" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
+info = { path = "../info", package = "dvm-info" }
+
 anyhow = "1.0"
 hex = "=0.4.2"
 

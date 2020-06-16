@@ -4,8 +4,9 @@ extern crate anyhow;
 extern crate log;
 
 pub mod grpc;
+pub mod metrics;
 pub mod mock;
-pub mod wrappers;
+pub mod module_cache;
 
 use libra::{libra_types, libra_state_view, move_vm_runtime};
 use libra_types::write_set::WriteSet;
@@ -16,7 +17,8 @@ use libra_state_view::StateView;
 use anyhow::Error;
 
 pub use mock::MockDataSource;
-pub use wrappers::ModuleCache;
+pub use module_cache::ModuleCache;
+pub use metrics::DsMeter;
 pub use grpc::GrpcDataSource;
 use move_vm_runtime::data_cache::RemoteCache;
 

@@ -116,3 +116,26 @@ impl Drop for TempDir {
         }
     }
 }
+
+pub fn compile(code: &str, address: Option<AccountAddress>) -> Result<Vec<u8>> {
+    let compiler = Compiler::new(ZeroStateView);
+    compiler.compile(code, address)
+}
+
+#[derive(Clone)]
+struct ZeroStateView;
+
+use libra::libra_types::access_path::AccessPath;
+impl StateView for ZeroStateView {
+    fn get(&self, _: &AccessPath) -> Result<Option<Vec<u8>>> {
+        Ok(None)
+    }
+
+    fn multi_get(&self, _: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>> {
+        Ok(vec![])
+    }
+
+    fn is_genesis(&self) -> bool {
+        false
+    }
+}
