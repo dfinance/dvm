@@ -1,7 +1,7 @@
 use libra::libra_state_view::StateView;
 use libra::libra_types::access_path::AccessPath;
 use anyhow::Error;
-use libra::move_vm_state::data_cache::RemoteCache;
+use libra::move_vm_runtime::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
 use crate::{DataSource, Clear};
 use dvm_info::metrics::meter::ScopeMeter;
