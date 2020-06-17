@@ -1,6 +1,6 @@
 [package]
 name = "dvm-cli"
-version = "0.3.1"
+version = "0.4.0"
 authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
     "Dm. Yakushev <dmitryyakushev@wings.ai>",
