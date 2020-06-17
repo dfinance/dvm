@@ -123,7 +123,7 @@ dvm "http://[::1]:50051" "http://[::1]:50052"
 
 ### Compilation server
 
-DVM contains built-in Move compilation gRPC server.
+DVM has built-in Move compilation gRPC server.
 API described in [protobuf schemas][].
 
 
