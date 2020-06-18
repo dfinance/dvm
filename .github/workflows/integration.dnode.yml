@@ -1,89 +1,19 @@
-name: Integration Tests
+name: Dnode Integration Tests
 on:
   push:
-    tags:
-    - "**"
     branches:
-    - master
-    - release-*
     - "*"
+    tags:
+    - "inegrt/*"
+    - v[0-9]+.[0-9]+.[0-9]+*
+    # triggers on:
+    # v0.4.0
+    # inegrt/v0.4.0
+    # inegrt/2eb5775c9f2d7cb1d28174efb0cff4adb3e7d150
+    # inegrt/feature-DFI-411_dvm_integTest_launcher
+    # inegrt/master
 
 jobs:
-  tests:
-    name: Tests DVM
-    runs-on: ${{ matrix.os }}
-
-    defaults:
-      run:
-        shell: bash
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-        - macos-latest
-        - ubuntu-latest
-
-    env:
-      RUSTFLAGS: -D warnings
-      RUST_BACKTRACE: full
-      CARGO_INCREMENTAL: 1
-      RUSTUP_MAX_RETRIES: 10
-      CARGO_NET_RETRY: 10
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        profile: minimal
-        override: true
-        components: rustfmt
-
-    - if: matrix.os == 'ubuntu-latest'
-      run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
-
-    - name: Restore cargo cache from cache
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo
-        key: ${{ runner.os }}-cargo
-        restore-keys: |
-          ${{ runner.os }}-cargo
-
-    - name: Restore previous build from cache
-      uses: actions/cache@v1
-      with:
-        path: ${{ github.workspace }}/target/debug
-        key: ${{ runner.os }}-target-debug
-        restore-keys: |
-          ${{ runner.os }}-target-debug
-
-    # Sentry integration:
-    - name: Prepare ENV
-      run: echo "::set-env name=SENTRY_CROSS_RANDOM_TAG::$GITHUB_SHA-${{ runner.os }}"
-
-    - name: Panic & Check report
-      env:
-        SENTRY_HOST_URI: ${{ secrets.SENTRY_HOST }}
-        SENTRY_COMPANY_PROJECT: ${{ secrets.SENTRY_COMPANY_PROJECT }}
-        SENTRY_API_TOKEN: ${{ secrets.SENTRY_API_TOKEN }}
-        DVM_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        DVM_SENTRY_ENVIRONMENT: testing
-      run: |
-        cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests panic_sentry_integrity
-        curl -H "Authorization: Bearer ${SENTRY_API_TOKEN}" https://$SENTRY_HOST_URI/api/0/projects/$SENTRY_COMPANY_PROJECT/events/ 2>&1 | grep "$SENTRY_CROSS_RANDOM_TAG" 1>/dev/null
-
-    # terminal signals
-    - run: cargo build --all
-    - name: SIGs handling
-      run: |
-        tests/test-shutdown.sh dvm
-
-
   with-node:
     name: Tests DVM with Node
     runs-on: ${{ matrix.os }}
@@ -114,9 +44,29 @@ jobs:
       run: |
         echo ::set-output name=DVM_BIN::${{ github.workspace }}/target/debug
         echo ::set-output name=NODE_REPO::dfinance/dnode
-        echo ::set-output name=NODE_REPO_PATH_REL::go/src/github.com/dfinance/dnode
         echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dnode
         echo ::set-output name=GOPATH::${{ github.workspace }}/go
+
+    - name: Extract the version tag
+      id: version_tag
+      run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
+
+    # usage:
+    # ${{ steps.dnode_ref.outputs.value }}
+    - name: Extract the dnode repo ref from tag
+      id: dnode_ref
+      run: |
+        TAG_KIND=$(echo $GITHUB_REF | cut -d / -f 2)
+        TAG_FIRST=$(echo $GITHUB_REF | cut -d / -f 3)
+        TAG_LAST=${GITHUB_REF##*/}
+        # [[ "$TAG_FIRST" == "inegrt" ]] || { echo "::set-output name=value::$TAG_FIRST" && false } && ( echo "::set-output name=value::$TAG_LAST" )
+        [[ "$TAG_FIRST" == "inegrt" ]] && echo "::set-output name=value::$TAG_LAST"
+        [[ "$TAG_FIRST" == "inegrt" ]] || echo "::set-output name=value::$TAG_FIRST"
+        # fallback
+        # [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::master"
+        # TODO: uncomment ^ & rem next when ready:
+        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::feature-DFI-411_dvm_integTest_launcher"
+        true
 
     #
     # VM
@@ -136,22 +86,21 @@ jobs:
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
     - name: Build DVM
-      run: cargo build --all
+      run: cargo build --bin dvm
 
     - name: Add DVM into PATH
       run: |
         echo "::add-path::${{ steps.VARS.outputs.DVM_BIN }}"
 
-
     #
     # Node
     #
-    - name: Checkout DNode
+    - name: Checkout DNode ${{ steps.dnode_ref.outputs.value }}
       uses: actions/checkout@v2
       with:
         repository: ${{ steps.VARS.outputs.NODE_REPO }}
         submodules: true
-        ref: feature-DFI-411_dvm_integTest_launcher
+        ref: ${{ steps.dnode_ref.outputs.value }}
         path: ${{ steps.VARS.outputs.NODE_REPO_PATH }}
 
     - name: Set GOPATH
@@ -173,12 +122,13 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
-    - name: Make binaries for integration tests
+
+    - name: Make binaries
       run: |
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
         make
 
-    - name: Run INTEG tests
+    - name: Run tests
       run: |
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
         go test -v ./... --tags=integ

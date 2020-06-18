@@ -1,0 +1,75 @@
+name: Sentry Integration Tests
+on:
+  push:
+    branches:
+    - master
+    - release-*
+
+jobs:
+  tests:
+    name: Tests DVM
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - macos-latest
+        - ubuntu-latest
+
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      CARGO_INCREMENTAL: 1
+      RUSTUP_MAX_RETRIES: 10
+      CARGO_NET_RETRY: 10
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        components: rustfmt
+
+    - if: matrix.os == 'ubuntu-latest'
+      run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+    - name: Restore cargo cache from cache
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-cargo
+        restore-keys: |
+          ${{ runner.os }}-cargo
+
+    - name: Restore previous build from cache
+      uses: actions/cache@v1
+      with:
+        path: ${{ github.workspace }}/target/debug
+        key: ${{ runner.os }}-target-debug
+        restore-keys: |
+          ${{ runner.os }}-target-debug
+
+    # Sentry integration:
+    - name: Prepare ENV
+      run: echo "::set-env name=SENTRY_CROSS_RANDOM_TAG::$GITHUB_SHA-${{ runner.os }}"
+
+    - name: Panic & Check report
+      env:
+        SENTRY_HOST_URI: ${{ secrets.SENTRY_HOST }}
+        SENTRY_COMPANY_PROJECT: ${{ secrets.SENTRY_COMPANY_PROJECT }}
+        SENTRY_API_TOKEN: ${{ secrets.SENTRY_API_TOKEN }}
+        DVM_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        DVM_SENTRY_ENVIRONMENT: testing
+      run: |
+        cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests panic_sentry_integrity
+        curl -H "Authorization: Bearer ${SENTRY_API_TOKEN}" https://$SENTRY_HOST_URI/api/0/projects/$SENTRY_COMPANY_PROJECT/events/ 2>&1 | grep "$SENTRY_CROSS_RANDOM_TAG" 1>/dev/null
