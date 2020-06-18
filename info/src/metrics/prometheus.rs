@@ -124,7 +124,10 @@ fn encode_sys_metrics(buf: &mut String, metric: &SysMetrics) {
         "CPU used by the process",
     );
     buf.push_str(&pc.render_header());
-    buf.push_str(&pc.render_sample(None, metric.cpu_usage));
+    buf.push_str(&pc.render_sample(
+        Some(&[("service_name", "dvm"), ("host_name", &HOST_NAME)]),
+        metric.cpu_usage,
+    ));
 
     let pc = PrometheusMetric::new(
         "dvm_sys_info_memory",
@@ -132,7 +135,10 @@ fn encode_sys_metrics(buf: &mut String, metric: &SysMetrics) {
         "Memory used by the process (in kB).",
     );
     buf.push_str(&pc.render_header());
-    buf.push_str(&pc.render_sample(None, metric.memory));
+    buf.push_str(&pc.render_sample(
+        Some(&[("service_name", "dvm"), ("host_name", &HOST_NAME)]),
+        metric.memory,
+    ));
 
     let pc = PrometheusMetric::new(
         "dvm_sys_info_threads_count",
@@ -140,5 +146,8 @@ fn encode_sys_metrics(buf: &mut String, metric: &SysMetrics) {
         "Threads count.",
     );
     buf.push_str(&pc.render_header());
-    buf.push_str(&pc.render_sample(None, metric.threads_count));
+    buf.push_str(&pc.render_sample(
+        Some(&[("service_name", "dvm"), ("host_name", &HOST_NAME)]),
+        metric.threads_count,
+    ));
 }
