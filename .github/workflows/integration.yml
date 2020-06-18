@@ -82,7 +82,6 @@ jobs:
     - name: SIGs handling
       run: |
         tests/test-shutdown.sh dvm
-        tests/test-shutdown.sh compiler
 
 
   with-node:
