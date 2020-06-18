@@ -16,6 +16,7 @@ pub struct InfoServiceConfig {
     /// Metric refresh interval in seconds.
     #[clap(
         default_value = "5",
+        name = "seconds between updates",
         long = "metric-update-interval",
         verbatim_doc_comment
     )]
@@ -24,7 +25,8 @@ pub struct InfoServiceConfig {
     /// Maximum period between heartbeats. In seconds.
     #[clap(
         default_value = "5",
-        long = "max-heartbeat-interval",
+        name = "max seconds between heartbeats",
+        long = "heartbeat-interval-max",
         verbatim_doc_comment
     )]
     pub heartbeat_max_interval: u64,
@@ -32,7 +34,8 @@ pub struct InfoServiceConfig {
     /// The interval between ping requests to dvm. In seconds.
     #[clap(
         default_value = "4",
-        long = "heartbeat_stimulation_interval",
+        name = "seconds between heartbeats",
+        long = "heartbeat-pressure",
         verbatim_doc_comment
     )]
     pub heartbeat_stimulation_interval: u64,

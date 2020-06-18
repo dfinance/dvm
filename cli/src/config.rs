@@ -14,9 +14,12 @@ pub const MAX_LOG_VERBOSE: u8 = 4;
 
 #[derive(Debug, Default, Clone, Clap)]
 pub struct LoggingOptions {
-    /// Enables maximum verbosity logging mode.
-    pub verbose: bool,
+    /// Enables verbosity logging mode.
+    /// Sets level of verbosity, and can be used multiple times.
+    /// Overrides or extends values paased as the `--log` parameter or `DVM_LOG` environment variable.
+    /// To set maximum level of verbosity use `-vvvv`.
     #[clap(short, long, parse(from_occurrences), verbatim_doc_comment)]
+    pub verbose: u8,
 
     /// Log filters.
     /// The same as standard RUST_LOG environment variable.
