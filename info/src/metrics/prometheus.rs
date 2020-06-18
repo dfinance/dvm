@@ -3,6 +3,7 @@ use crate::metrics::live_time::SysMetrics;
 use prometheus_exporter_base::{PrometheusMetric, MetricType};
 use std::collections::HashMap;
 use once_cell::sync::Lazy;
+use sys_info::hostname;
 
 static METRIC_HEADER: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     let mut m = HashMap::new();
@@ -24,19 +25,38 @@ static METRIC_HEADER: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     );
     m.insert("total_gas", "Total gas used in the interval.");
     m.insert("percentile", "percentiles");
-    m.insert("average", "Average time.");
-    m.insert("standard_deviation", "Standard deviation");
-    m.insert("min_time", "Minimum time.");
-    m.insert("max_time", "Maximum time.");
+    m.insert("average", "Average time. (im milliseconds)");
+    m.insert(
+        "standard_deviation",
+        "Standard deviation. (im milliseconds)",
+    );
+    m.insert("min_time", "Minimum time. (im milliseconds)");
+    m.insert("max_time", "Maximum time. (im milliseconds)");
     m
 });
+static HOST_NAME: Lazy<String> = Lazy::new(|| hostname().unwrap_or_else(|_| "None".to_string()));
 
 macro_rules! store {
     ($buf:expr, $pm:expr, $metric_name:expr, $val:expr) => {
-        $buf.push_str(&$pm.render_sample(Some(&[("process", $metric_name)]), $val))
+        $buf.push_str(&$pm.render_sample(
+            Some(&[
+                ("service_name", "dvm"),
+                ("host_name", &HOST_NAME),
+                ("process", $metric_name),
+            ]),
+            $val,
+        ))
     };
     ($buf:expr, $pm:expr, $metric_name:expr, $name:expr, $p:expr, $val:expr) => {
-        $buf.push_str(&$pm.render_sample(Some(&[("process", $metric_name), ($name, $p)]), $val))
+        $buf.push_str(&$pm.render_sample(
+            Some(&[
+                ("service_name", "dvm"),
+                ("host_name", &HOST_NAME),
+                ("process", $metric_name),
+                ($name, $p),
+            ]),
+            $val,
+        ))
     };
 }
 
@@ -56,7 +76,8 @@ pub fn encode_metrics(
     let empty = ExecutionMetric::default();
 
     for (field, description) in METRIC_HEADER.iter() {
-        let pm = PrometheusMetric::new(field, MetricType::Gauge, description);
+        let counter_name = format!("dvm_{}", field);
+        let pm = PrometheusMetric::new(&counter_name, MetricType::Gauge, description);
         buf.push_str(&pm.render_header());
         for name in metrics_list {
             let metric = metrics.execution_metrics.get(name).unwrap_or(&empty);
@@ -98,7 +119,7 @@ pub fn encode_metrics(
 /// Encode system metrics.
 fn encode_sys_metrics(buf: &mut String, metric: &SysMetrics) {
     let pc = PrometheusMetric::new(
-        "sys_info_cpu_usage",
+        "dvm_sys_info_cpu_usage",
         MetricType::Gauge,
         "CPU used by the process",
     );
@@ -106,15 +127,15 @@ fn encode_sys_metrics(buf: &mut String, metric: &SysMetrics) {
     buf.push_str(&pc.render_sample(None, metric.cpu_usage));
 
     let pc = PrometheusMetric::new(
-        "sys_info_memory",
+        "dvm_sys_info_memory",
         MetricType::Gauge,
-        "Memory used by the process",
+        "Memory used by the process (in kB).",
     );
     buf.push_str(&pc.render_header());
     buf.push_str(&pc.render_sample(None, metric.memory));
 
     let pc = PrometheusMetric::new(
-        "sys_info_threads_count",
+        "dvm_sys_info_threads_count",
         MetricType::Gauge,
         "Threads count.",
     );
