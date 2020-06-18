@@ -227,7 +227,7 @@ pub struct VectorU8Store {
 #[cfg(test)]
 pub mod tests {
     use compiler::Compiler;
-    use lang::{stdlib::zero_sdt};
+    use lang::{stdlib::zero_std};
     use libra::{
         libra_types::{
             account_address::AccountAddress, transaction::Module, vm_error::StatusCode,
@@ -242,7 +242,7 @@ pub mod tests {
 
     #[test]
     fn test_publish_module() {
-        let ds = MockDataSource::with_write_set(zero_sdt());
+        let ds = MockDataSource::with_write_set(zero_std());
         let compiler = Compiler::new(ds.clone());
         let vm = Dvm::new(ds.clone());
         let account = AccountAddress::random();
@@ -276,7 +276,7 @@ pub mod tests {
 
     #[test]
     fn test_execute_script() {
-        let ds = MockDataSource::with_write_set(zero_sdt());
+        let ds = MockDataSource::with_write_set(zero_std());
         let compiler = Compiler::new(ds.clone());
         let vm = Dvm::new(ds.clone());
         let account = AccountAddress::random();

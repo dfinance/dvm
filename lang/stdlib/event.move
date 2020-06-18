@@ -54,16 +54,13 @@ module Event {
 
     // Emit an event with payload `msg` by using handle's key and counter. Will change the payload from vector<u8> to a
     // generic type parameter once we have generics.
-    public fun emit_event<T: copyable>(handle_ref: &mut EventHandle<T>, msg: T) {
-        let guid = *&handle_ref.guid;
-
-        write_to_event_store<T>(guid, handle_ref.counter, msg);
-        handle_ref.counter = handle_ref.counter + 1;
+    public fun emit_event<T: copyable>(_handle_ref: &mut EventHandle<T>, msg: T) {
+        emit<T>(msg);
     }
 
     // Native procedure that writes to the actual event stream in Event store
     // This will replace the "native" portion of EmitEvent bytecode
-    native fun write_to_event_store<T: copyable>(guid: vector<u8>, count: u64, msg: T);
+    native public fun emit<T: copyable>(msg: T);
 
     // Destroy a unique handle.
     public fun destroy_handle<T: copyable>(handle: EventHandle<T>) {

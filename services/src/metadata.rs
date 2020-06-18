@@ -31,7 +31,7 @@ impl VmScriptMetadata for MetadataService {
             let tag = match sign_type {
                 SignatureToken::Bool => VmTypeTag::Bool,
                 SignatureToken::Address => VmTypeTag::Address,
-                SignatureToken::Vector(_) => VmTypeTag::ByteArray,
+                SignatureToken::Vector(_) => VmTypeTag::Vector,
                 SignatureToken::U8 => VmTypeTag::U8,
                 SignatureToken::U64 => VmTypeTag::U64,
                 SignatureToken::U128 => VmTypeTag::U128,

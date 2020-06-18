@@ -83,7 +83,7 @@ pub fn build_std() -> WriteSet {
     build_external_std(Stdlib::default()).unwrap()
 }
 
-pub fn zero_sdt() -> WriteSet {
+pub fn zero_std() -> WriteSet {
     let ds = MockDataSource::new();
     ds.to_write_set().unwrap()
 }

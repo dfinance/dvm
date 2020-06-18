@@ -80,7 +80,7 @@ async fn test_multiple_arguments_for_move_script() {
         vec![
             VmTypeTag::Address as i32,
             VmTypeTag::U128 as i32,
-            VmTypeTag::ByteArray as i32
+            VmTypeTag::Vector as i32
         ]
     );
 }

@@ -6,30 +6,26 @@ pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
 use runtime::move_vm::ExecutionMeta;
-use dvm_net::tonic::Request;
 
 use libra::{libra_types, libra_vm};
-use libra_types::transaction::{TransactionArgument, parse_transaction_argument};
 use libra_types::access_path::AccessPath;
 use libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
-use crate::compiled_protos::vm_grpc::{
-    VmExecuteRequest, VmContract, VmExecuteResponses, VmArgs, VmValue, ContractType,
-};
 use crate::grpc_client::Client;
 use libra_vm::CompiledModule;
 use libra::libra_state_view::StateView;
 use data_source::MockDataSource;
 use lang::{
-    stdlib::{build_std, zero_sdt},
+    stdlib::{build_std, zero_std},
 };
 use compiler::Compiler;
 pub use genesis::genesis_write_set;
 use anyhow::Error;
 use libra_types::write_set::WriteSet;
 use libra_types::account_config::CORE_CODE_ADDRESS;
+use crate::compiled_protos::vm_grpc::{VmArgs, VmPublishModule, VmExecuteResponse};
+use dvm_net::api::grpc::vm_grpc::{VmExecuteScript, StructIdent};
 
-// TODO: [REF] rename to api_grpc
 pub mod compiled_protos {
     extern crate dvm_net;
 
@@ -40,6 +36,7 @@ pub const PORT_RANGE: Range<u32> = 3000..5000;
 
 pub type ArcMut<T> = Arc<Mutex<T>>;
 
+/// DVM test kit;
 pub struct TestKit {
     data_source: MockDataSource,
     client: Client,
@@ -54,14 +51,17 @@ impl Default for TestKit {
 }
 
 impl TestKit {
+    /// Creates a new test kit with stdlib.
     pub fn new() -> TestKit {
         Self::with_genesis(build_std())
     }
 
+    /// Creates a new test kit without stdlib.
     pub fn empty() -> Self {
-        Self::with_genesis(zero_sdt())
+        Self::with_genesis(zero_std())
     }
 
+    /// Creates a new test kit with given write set.
     pub fn with_genesis(ws: WriteSet) -> TestKit {
         let data_source = MockDataSource::with_write_set(ws);
         let server = Server::new(data_source.clone());
@@ -80,23 +80,18 @@ impl TestKit {
         }
     }
 
-    pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponses {
+    /// Publish module.
+    pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponse {
         let module = self.compiler.compile(code, Some(meta.sender)).unwrap();
-        let request = Request::new(VmExecuteRequest {
-            contracts: vec![VmContract {
-                address: addr(&meta.sender),
-                max_gas_amount: meta.max_gas_amount,
-                gas_unit_price: meta.gas_unit_price,
-                code: module,
-
-                contract_type: ContractType::Module as i32,
-                args: vec![],
-            }],
-            options: 0,
-        });
-        self.client.perform_request(request)
+        self.client.publish_module(VmPublishModule {
+            address: meta.sender.to_vec(),
+            max_gas_amount: meta.max_gas_amount,
+            gas_unit_price: meta.gas_unit_price,
+            code: module,
+        })
     }
 
+    /// Add std module to data source.
     pub fn add_std_module(&self, code: &str) {
         let module = self
             .compiler
@@ -107,56 +102,42 @@ impl TestKit {
         self.data_source.insert((&id).into(), module);
     }
 
+    /// Execute script.
     pub fn execute_script(
         &self,
         code: &str,
         meta: ExecutionMeta,
         args: Vec<VmArgs>,
-    ) -> VmExecuteResponses {
+        type_params: Vec<StructIdent>,
+    ) -> VmExecuteResponse {
         let code = self.compiler.compile(code, Some(meta.sender)).unwrap();
 
-        let request = Request::new(VmExecuteRequest {
-            contracts: vec![VmContract {
-                address: addr(&meta.sender),
-                max_gas_amount: meta.max_gas_amount,
-                gas_unit_price: meta.gas_unit_price,
-                code,
-                contract_type: ContractType::Script as i32,
-                args,
-            }],
-            options: 0,
-        });
-        self.client.perform_request(request)
+        self.client.execute_script(VmExecuteScript {
+            address: meta.sender.to_vec(),
+            max_gas_amount: meta.max_gas_amount,
+            gas_unit_price: meta.gas_unit_price,
+            code,
+            type_params,
+            args,
+        })
     }
 
-    pub fn assert_success(&self, res: &VmExecuteResponses) {
-        let errs: Vec<_> = res
-            .executions
-            .iter()
-            .filter(|exec| {
-                exec.status == 0 /*Discard*/ || exec.status_struct.as_ref().map(|v| v.major_status != 4001)
+    /// Asserts that a response is success.
+    pub fn assert_success(&self, res: &VmExecuteResponse) {
+        if res.status == 0
+            || res
+                .status_struct
+                .as_ref()
+                .map(|v| v.major_status != 4001)
                 .unwrap_or(false)
-            })
-            .map(|exec| format!("err: {:?}", exec.status_struct))
-            .collect();
-        if !errs.is_empty() {
-            panic!("Errors:[{}]", errs.join("\n"));
+        {
+            panic!("Error:[{:?}]", res.status_struct);
         }
     }
 
-    pub fn merge_result(&self, exec_resp: &VmExecuteResponses) {
-        exec_resp
-            .executions
-            .iter()
-            .for_each(|exec| self.merge_write_set(&exec.write_set));
-    }
-
-    pub fn data_source(&self) -> &MockDataSource {
-        &self.data_source
-    }
-
-    fn merge_write_set(&self, ws: &[VmValue]) {
-        ws.iter().for_each(|value| {
+    /// Merge execution result.
+    pub fn merge_result(&self, exec_resp: &VmExecuteResponse) {
+        exec_resp.write_set.iter().for_each(|value| {
             let path = value.path.as_ref().unwrap();
             let path = AccessPath::new(
                 AccountAddress::try_from(path.address.clone()).unwrap(),
@@ -172,6 +153,11 @@ impl TestKit {
                 _ => unreachable!(),
             }
         });
+    }
+
+    /// Returns mock data source.
+    pub fn data_source(&self) -> &MockDataSource {
+        &self.data_source
     }
 }
 
@@ -189,20 +175,12 @@ impl StateView for TestKit {
     }
 }
 
-pub fn parse_args(args: &[&str]) -> Vec<TransactionArgument> {
-    args.iter()
-        .map(|arg| parse_transaction_argument(arg).unwrap())
-        .collect()
-}
-
+/// Returns execution meta with given address.
 pub fn meta(addr: &AccountAddress) -> ExecutionMeta {
     ExecutionMeta::new(500_000, 1, *addr)
 }
 
-pub fn addr(addr: &AccountAddress) -> String {
-    format!("0x{}", addr)
-}
-
+/// Create a new account address from hex string.
 pub fn account(addr: &str) -> AccountAddress {
     AccountAddress::from_hex_literal(addr).unwrap()
 }

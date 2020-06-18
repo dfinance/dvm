@@ -10,7 +10,7 @@ edition = "2018"
 
 
 [dependencies]
-dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "master" }
+dvm-api = { git = "https://github.com/dfinance/dvm-proto.git", branch = "feature-DFI-214" }
 tokio = { version = "0.2", features = ["rt-threaded", "time", "stream", "fs", "macros", "uds"] }
 futures = { version = "0.3", default-features = false, features = ["alloc"] }
 tower = "0.3"
