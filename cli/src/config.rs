@@ -1,4 +1,4 @@
-use structopt::StructOpt;
+use clap::Clap;
 
 // rust env variables
 pub const RUST_LOG: &str = "RUST_LOG";
@@ -10,17 +10,19 @@ pub const DVM_DATA_SOURCE: &str = "DVM_DATA_SOURCE";
 pub const DVM_SENTRY_DSN: &str = "DVM_SENTRY_DSN";
 pub const DVM_SENTRY_ENV: &str = "DVM_SENTRY_ENVIRONMENT";
 
-#[derive(Debug, Default, StructOpt, Clone)]
+pub const MAX_LOG_VERBOSE: u8 = 4;
+
+#[derive(Debug, Default, Clone, Clap)]
 pub struct LoggingOptions {
     /// Enables maximum verbosity logging mode.
-    #[structopt(long = "verbose", short = "v")]
     pub verbose: bool,
+    #[clap(short, long, parse(from_occurrences), verbatim_doc_comment)]
 
     /// Log filters.
     /// The same as standard RUST_LOG environment variable.
     /// Possible values in verbosity ordering: error, warn, info, debug and trace.
     /// For complex filters see documentation: https://docs.rs/env_logger/#filtering-results
-    #[structopt(
+    #[clap(
         long = "log",
         env = DVM_LOG,
         default_value = "info,dvm=info,hyper=warn,mio=warn",
@@ -31,7 +33,7 @@ pub struct LoggingOptions {
     /// Log colors and other styles.
     /// The same as standard RUST_LOG_STYLE environment variable.
     /// Possible values in verbosity ordering: auto, always, never.
-    #[structopt(
+    #[clap(
         long = "log-color",
         env = DVM_LOG_STYLE,
         default_value = "auto",
@@ -40,17 +42,17 @@ pub struct LoggingOptions {
     pub log_style: String,
 }
 
-#[derive(Debug, Default, StructOpt, Clone)]
+#[derive(Debug, Default, Clone, Clap)]
 pub struct IntegrationsOptions {
     /// Optional key-uri, enables crash logging service integration.
     /// If value ommited, crash logging service will not be initialized.
-    #[structopt(name = "Sentry DSN", long = "sentry-dsn", env = DVM_SENTRY_DSN)]
+    #[clap(name = "Sentry DSN", long = "sentry-dsn", env = DVM_SENTRY_DSN)]
     #[cfg(feature = "sentry")]
     pub sentry_dsn: Option<sentry::internals::Dsn>,
 
     /// Sets the environment code to separate events from testnet and production. Optional.
     /// Works with Sentry integration.
-    #[structopt(name = "Sentry environment", long = "sentry-env", env = DVM_SENTRY_ENV)]
+    #[clap(name = "Sentry environment", long = "sentry-env", env = DVM_SENTRY_ENV)]
     #[cfg(feature = "sentry")]
     pub sentry_env: Option<String>,
 }
