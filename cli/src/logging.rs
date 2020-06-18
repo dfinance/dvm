@@ -188,10 +188,10 @@ fn rust_log_compat(rust_log: &str, rust_log_style: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // use std::env;
-    // use clap::Clap;
+    use std::env;
+    use clap::Clap;
 
-    // const DSN: &str = "https://foobar@test.test/0000000";
+    const DSN: &str = "https://foobar@test.test/0000000";
 
     #[test]
     fn parse_args_sentry() {
@@ -205,7 +205,7 @@ mod tests {
     fn parse_args_sentry_off() {
         env::remove_var(DVM_SENTRY_DSN);
         let args = Vec::<String>::with_capacity(0).into_iter();
-        let options = IntegrationsOptions::from_iter_safe(args);
+        let options = IntegrationsOptions::try_parse_from(args);
         assert!(options.is_ok());
         assert!(options.unwrap().sentry_dsn.is_none());
     }
@@ -213,7 +213,7 @@ mod tests {
     fn parse_args_sentry_on() {
         env::set_var(DVM_SENTRY_DSN, DSN);
         let args = Vec::<String>::with_capacity(0).into_iter();
-        let options = IntegrationsOptions::from_iter_safe(args);
+        let options = IntegrationsOptions::try_parse_from(args);
         assert!(options.is_ok());
 
         let options = options.unwrap();
@@ -224,7 +224,7 @@ mod tests {
     fn parse_args_sentry_override() {
         env::set_var(DVM_SENTRY_DSN, DSN);
         let args = ["", "--sentry-dsn", "https://0deedbeaf@test.test/0000000"].iter();
-        let options = IntegrationsOptions::from_iter_safe(args);
+        let options = IntegrationsOptions::try_parse_from(args);
         assert!(options.is_ok());
 
         let options = options.unwrap();
@@ -254,7 +254,6 @@ mod tests {
         assert!(log_filters_verbose_v(4).starts_with(&expected));
     }
 
-
     fn log_filters_verbose_v(v: u8) -> String {
         let opts = LoggingOptions {
             verbose: v,
@@ -263,7 +262,6 @@ mod tests {
         };
         log_filters_with_verbosity(&opts)
     }
-
 
     #[cfg(feature = "integrity-tests")]
     mod integrity {
