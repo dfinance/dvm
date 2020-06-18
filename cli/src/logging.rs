@@ -9,6 +9,7 @@ pub(crate) mod support_sentry {
     use sentry::integrations::env_logger::init as sentry_log_init;
 
     /// Create standard logger, init integrations such as with sentry.
+    /// At the end init Libra's logger.
     pub fn init(
         log: &LoggingOptions,
         integrations: &IntegrationsOptions,
@@ -37,6 +38,11 @@ pub(crate) mod support_sentry {
         result
     }
 
+    /// Init integration with Sentry:
+    /// - integrate logger
+    /// - register panic handler.
+    ///
+    /// Returns guard for panic handler and api-client.
     pub fn init_sentry(dsn: &Dsn, env: &Option<String>) -> ClientInitGuard {
         // back-compat to default env var:
         std::env::set_var("SENTRY_DSN", format!("{}", &dsn));
@@ -85,6 +91,7 @@ mod support_libra_logger {
     }
 }
 
+/// Try init `env_logger` and then Libra's logger.
 pub fn init_logging(opts: &LoggingOptions) -> Result<(), log::SetLoggerError> {
     logging_builder(opts).try_init().and_then(|_| {
         support_libra_logger::init();
@@ -92,6 +99,8 @@ pub fn init_logging(opts: &LoggingOptions) -> Result<(), log::SetLoggerError> {
     })
 }
 
+/// Create and preconfigure `env_logger::Builder` using `LoggingOptions`
+/// typically previously produced by arguments passed to cli.
 pub fn logging_builder(opts: &LoggingOptions) -> env_logger::Builder {
     use env_logger::{Builder, Target};
 
@@ -106,31 +115,57 @@ pub fn logging_builder(opts: &LoggingOptions) -> env_logger::Builder {
     builder
 }
 
+/// Produces log-level for all packages
+/// including `dvm`,
+/// excluding some third-party dependencies.
+/// ```skip
+/// 0     => Info,
+/// 1     => Debug,
+/// 2 | _ => Trace,
+/// ```
 fn log_level(level: u8) -> log::Level {
     use log::Level::*;
     match level {
         0 => Info,
         1 => Debug,
-        2 | _ => Trace,
+        _ => Trace,
     }
 }
 
+/// Produces log-level for third-party dependencies.
+/// ```skip
+/// 0 | 1 | 2 => Info,
+/// 3         => Debug,
+/// 4 | _     => Trace,
+/// ```
 fn log_level_deps(level: u8) -> log::Level {
     use log::Level::*;
     match level {
         0 | 1 | 2 => Info,
         3 => Debug,
-        4 | _ => Trace,
+        _ => Trace,
     }
 }
+
+/// Produces log-filters-string in standard `RUST_LOG`-format.
+/// The log-level getting from `log_level_deps`.
+///
+/// List of filters contains crates:
+/// - mio
+/// - hyper
+/// - reqwest
+/// - tokio
+/// - tokio_util
+/// - h2
 fn log_filters_deps_format(level: u8) -> String {
-    // mio=info,hyper=info,reqwest=info,tokio=info,tokio_util=info,h2=info
     format!(
         "mio={0:},hyper={0:},reqwest={0:},tokio={0:},tokio_util={0:},h2={0:}",
         log_level_deps(level)
     )
 }
 
+/// Produces log-filters-string in standard `RUST_LOG`-format
+/// depending on the passed `LoggingOptions` including number of verbosity reqs, e.g. `-vvvv`
 fn log_filters_with_verbosity(opts: &LoggingOptions) -> String {
     match opts.verbose {
         0 => opts.log_filters.to_string(),
@@ -141,13 +176,9 @@ fn log_filters_with_verbosity(opts: &LoggingOptions) -> String {
             log_filters_deps_format(opts.verbose)
         ),
     }
-    // if opts.verbose {
-    //     format!("{},trace", opts.log_filters)
-    // } else {
-    //     opts.log_filters.to_string()
-    // }
 }
 
+/// Set env vars `RUST_LOG` & `RUST_LOG_STYLE` for backward compatibility.
 fn rust_log_compat(rust_log: &str, rust_log_style: &str) {
     use std::env::set_var;
     set_var(RUST_LOG, rust_log);
@@ -157,10 +188,10 @@ fn rust_log_compat(rust_log: &str, rust_log_style: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
-    use clap::Clap;
+    // use std::env;
+    // use clap::Clap;
 
-    const DSN: &str = "https://foobar@test.test/0000000";
+    // const DSN: &str = "https://foobar@test.test/0000000";
 
     #[test]
     fn parse_args_sentry() {
@@ -172,44 +203,67 @@ mod tests {
     }
 
     fn parse_args_sentry_off() {
-        // env::remove_var(DVM_SENTRY_DSN);
-        // let args = Vec::<String>::with_capacity(0).into_iter();
-        // let options = IntegrationsOptions::from_iter_safe(args);
-        // assert!(options.is_ok());
-        // assert!(options.unwrap().sentry_dsn.is_none());
+        env::remove_var(DVM_SENTRY_DSN);
+        let args = Vec::<String>::with_capacity(0).into_iter();
+        let options = IntegrationsOptions::from_iter_safe(args);
+        assert!(options.is_ok());
+        assert!(options.unwrap().sentry_dsn.is_none());
     }
 
     fn parse_args_sentry_on() {
-        // env::set_var(DVM_SENTRY_DSN, DSN);
-        // let args = Vec::<String>::with_capacity(0).into_iter();
-        // let options = IntegrationsOptions::from_iter_safe(args);
-        // assert!(options.is_ok());
+        env::set_var(DVM_SENTRY_DSN, DSN);
+        let args = Vec::<String>::with_capacity(0).into_iter();
+        let options = IntegrationsOptions::from_iter_safe(args);
+        assert!(options.is_ok());
 
-        // let options = options.unwrap();
-        // assert!(options.sentry_dsn.is_some());
-        // assert_eq!("foobar", options.sentry_dsn.unwrap().public_key());
+        let options = options.unwrap();
+        assert!(options.sentry_dsn.is_some());
+        assert_eq!("foobar", options.sentry_dsn.unwrap().public_key());
     }
 
     fn parse_args_sentry_override() {
-        // env::set_var(DVM_SENTRY_DSN, DSN);
-        // let args = ["", "--sentry-dsn", "https://0deedbeaf@test.test/0000000"].iter();
-        // let options = IntegrationsOptions::from_iter_safe(args);
-        // assert!(options.is_ok());
+        env::set_var(DVM_SENTRY_DSN, DSN);
+        let args = ["", "--sentry-dsn", "https://0deedbeaf@test.test/0000000"].iter();
+        let options = IntegrationsOptions::from_iter_safe(args);
+        assert!(options.is_ok());
 
-        // let options = options.unwrap();
-        // assert!(options.sentry_dsn.is_some());
-        // assert_eq!("0deedbeaf", options.sentry_dsn.unwrap().public_key());
+        let options = options.unwrap();
+        assert!(options.sentry_dsn.is_some());
+        assert_eq!("0deedbeaf", options.sentry_dsn.unwrap().public_key());
+    }
+
+    const DEF_LOG_FILTERS: &str = "default";
+
+    #[test]
+    fn log_filters_verbose_0() {
+        let log_filters = log_filters_verbose_v(0);
+        assert_eq!(DEF_LOG_FILTERS, &log_filters);
     }
 
     #[test]
-    fn log_filters_verbose() {
+    fn log_filters_verbose_1() {
+        let log_filters = log_filters_verbose_v(1);
+        assert!(log_filters.starts_with(&format!("{},{}", DEF_LOG_FILTERS, log::Level::Debug)));
+    }
+
+    #[test]
+    fn log_filters_verbose_2() {
+        let expected = format!("{},{}", DEF_LOG_FILTERS, log::Level::Trace);
+        assert!(log_filters_verbose_v(2).starts_with(&expected));
+        assert!(log_filters_verbose_v(3).starts_with(&expected));
+        assert!(log_filters_verbose_v(4).starts_with(&expected));
+    }
+
+
+    fn log_filters_verbose_v(v: u8) -> String {
         let opts = LoggingOptions {
-            verbose: MAX_LOG_VERBOSE,
+            verbose: v,
+            log_filters: DEF_LOG_FILTERS.to_owned(),
             ..Default::default()
         };
-        let log_filters = log_filters_with_verbosity(&opts);
-        assert_eq!(",trace", &log_filters);
+        log_filters_with_verbosity(&opts)
     }
+
 
     #[cfg(feature = "integrity-tests")]
     mod integrity {
