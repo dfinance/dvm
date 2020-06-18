@@ -24,3 +24,4 @@ bytes = "0.5.4"
 tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
 prometheus_exporter_base = "0.30.4"
 structopt = "0.3"
+sys-info = "0.7.0"
