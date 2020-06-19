@@ -1,7 +1,7 @@
-address 0x0000000000000000000000000000000000000000 {
+address 0x0000000000000000000000000000000000000001 {
 
 module Foo {
-     use 0x0::Base as Base1;
+     use 0x1::Base as Base1;
      use 0x0101010101010101010101010101010101010101::Base;
 
      resource struct T<V: copyable> {g: V}

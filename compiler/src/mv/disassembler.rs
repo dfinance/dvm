@@ -13,13 +13,19 @@ use libra::libra_types::account_address::AccountAddress;
 const PHANTOM_RESOURCE_NAME: &str = "X_phantom_resource_X_";
 const GENERIC_PREFIX: &str = "__G_";
 
+/// Disassembler configuration.
 pub struct Config<'a> {
+    /// Phantom resource name.
+    /// Phantom resource is used for disassembling function body with a type parameter from an unknown module.
     phantom_resource_name: &'a str,
+    /// Generic name prefix.
     generic_prefix: &'a str,
+    /// Disassemble only module interface.
     only_interface: bool,
 }
 
 impl<'a> Config<'a> {
+    /// Create a new configuration.
     fn new(
         phantom_resource_name: &'a str,
         generic_template: &'a str,
@@ -670,6 +676,7 @@ mod tests {
     use ds::MockDataSource;
     use crate::embedded::Compiler;
     use crate::mv::disassembler::module_signature;
+    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
     #[test]
     pub fn test_module_signature() {
@@ -688,22 +695,18 @@ mod tests {
             compiler
                 .compile(
                     include_str!("../../tests/resources/disassembler/base_1.move"),
-                    Some(AccountAddress::default()),
+                    Some(CORE_CODE_ADDRESS),
                 )
                 .unwrap(),
         )
         .unwrap();
 
         for (source, dis) in test_set() {
-            let bytecode = compiler
-                .compile(source, Some(AccountAddress::default()))
-                .unwrap();
+            let bytecode = compiler.compile(source, Some(CORE_CODE_ADDRESS)).unwrap();
             let signature = module_signature(&bytecode).unwrap();
             assert_eq!(&signature.to_string(), dis);
 
-            let bytecode = compiler
-                .compile(dis, Some(AccountAddress::default()))
-                .unwrap();
+            let bytecode = compiler.compile(dis, Some(CORE_CODE_ADDRESS)).unwrap();
             let signature = module_signature(&bytecode).unwrap();
             assert_eq!(&signature.to_string(), dis);
         }

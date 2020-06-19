@@ -30,8 +30,8 @@ pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use libra::libra_types::account_address::AccountAddress;
     use crate::bytecode::verification::whitelist::tests::compile_script;
+    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
     #[test]
     fn test_trivial_script_is_accepted() {
@@ -40,7 +40,7 @@ mod tests {
             fun main() {}
             }
         ";
-        let compiled = compile_script(source, vec![], &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &CORE_CODE_ADDRESS);
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
@@ -53,7 +53,7 @@ mod tests {
             }
             }
         ";
-        let compiled = compile_script(source, vec![], &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &CORE_CODE_ADDRESS);
         validate_bytecode_instructions(&compiled).unwrap();
     }
 
@@ -63,7 +63,7 @@ mod tests {
 
         let source = r"
             script {
-            use 0x0::Empty;
+            use 0x1::Empty;
 
             fun main() {
                Empty::create();
@@ -72,8 +72,8 @@ mod tests {
         ";
         let compiled = compile_script(
             source,
-            vec![(empty, &AccountAddress::default())],
-            &AccountAddress::default(),
+            vec![(empty, &CORE_CODE_ADDRESS)],
+            &CORE_CODE_ADDRESS,
         );
         validate_bytecode_instructions(&compiled).unwrap();
     }
@@ -88,7 +88,7 @@ mod tests {
             }
             }
         ";
-        let compiled = compile_script(source, vec![], &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &CORE_CODE_ADDRESS);
         validate_bytecode_instructions(&compiled).unwrap_err();
     }
 
@@ -102,7 +102,7 @@ mod tests {
             }
             }
         ";
-        let compiled = compile_script(source, vec![], &AccountAddress::default());
+        let compiled = compile_script(source, vec![], &CORE_CODE_ADDRESS);
         validate_bytecode_instructions(&compiled).unwrap_err();
     }
 }

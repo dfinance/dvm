@@ -18,19 +18,29 @@ use std::collections::{HashMap, HashSet};
 use libra::move_core_types::language_storage::ModuleId;
 use termcolor::{StandardStream, ColorChoice, Buffer};
 use libra::libra_types::account_address::AccountAddress;
+use move_lang::name_pool::ConstPool;
 
+/// Move builder.
 pub struct Builder<'a, S: BytecodeSource> {
+    /// movec project directory.
     project_dir: &'a Path,
+    /// movec manifest.
     manifest: MoveToml,
+    /// Optional dependencies loader. If none is provided and code has external dependencies, compilation ends with a dependence not found error.
     loader: &'a Option<Loader<S>>,
+    /// Print error flag. If true, print compilation errors to stdout.
     print_err: bool,
+    /// Shutdown on error flag. If true, the process will exit with error code on compilation error.
     shutdown_on_err: bool,
+    /// Static name pool.
+    _name_pool: ConstPool,
 }
 
 impl<'a, S> Builder<'a, S>
 where
     S: BytecodeSource,
 {
+    /// Creates a new move builder.
     pub fn new(
         project_dir: &'a Path,
         manifest: MoveToml,
@@ -44,9 +54,11 @@ where
             loader,
             print_err,
             shutdown_on_err,
+            _name_pool: Default::default(),
         }
     }
 
+    /// Initializes directory layout.
     pub fn init_build_layout(&self) -> Result<()> {
         let temp_dir = self.temp_dir()?;
         if temp_dir.exists() {
@@ -77,6 +89,7 @@ where
         Ok(())
     }
 
+    /// Load dependencies for each source file.
     pub fn load_dependencies(&self, sources: &[PathBuf]) -> Result<HashMap<ModuleId, Vec<u8>>> {
         let address = self
             .address()?
@@ -97,6 +110,7 @@ where
         Ok(deps)
     }
 
+    /// Load dependencies tree.
     fn load_bytecode_tree(
         &self,
         bytecode: &[u8],
@@ -117,6 +131,7 @@ where
         Ok(())
     }
 
+    /// Disassembles dependencies.
     pub fn make_dependencies_as_source(
         &self,
         bytecode: HashMap<ModuleId, Vec<u8>>,
@@ -142,6 +157,7 @@ where
         Ok(path_list)
     }
 
+    /// Makes source map.
     pub fn make_source_map(&self) -> Result<Vec<PathBuf>> {
         fn add_source(sources: &mut Vec<PathBuf>, path: &Path) {
             for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
@@ -161,6 +177,7 @@ where
         Ok(source_list)
     }
 
+    /// Runs source preprocessor for each source file.
     pub fn preprocess_source_map(&self, source_map: Vec<PathBuf>) -> Result<Vec<PathBuf>> {
         let temp_src = self.temp_dir()?.join("src");
         if !temp_src.exists() {
@@ -211,6 +228,7 @@ where
         Ok(sources)
     }
 
+    /// Compile source list with dependencies.
     pub fn compile(
         &self,
         source_list: Vec<PathBuf>,
@@ -242,6 +260,7 @@ where
         }
     }
 
+    /// Check source files.
     pub fn check(&self, source_list: Vec<PathBuf>, dep_list: Vec<PathBuf>) -> Result<()> {
         let source_list = convert_path(&source_list)?;
         let dep_list = convert_path(&dep_list)?;
@@ -249,6 +268,7 @@ where
         Ok(move_lang::move_check(&source_list, &dep_list, addr)?)
     }
 
+    /// Verify and store compiled units.
     pub fn verify_and_store(
         &self,
         files: FilesSourceText,
@@ -299,6 +319,7 @@ where
         Ok(())
     }
 
+    /// Verifies sources.
     pub fn verify(
         &self,
         files: FilesSourceText,
@@ -328,6 +349,7 @@ where
         }
     }
 
+    /// Returns the account address from movec manifest.
     fn address(&self) -> Result<Option<Address>> {
         let package = &self.manifest.package;
         match package.account_address.as_ref().map(|addr| {
@@ -343,6 +365,7 @@ where
         }
     }
 
+    /// Temporary directory path.
     fn temp_dir(&self) -> Result<PathBuf> {
         self.manifest
             .layout
@@ -352,6 +375,7 @@ where
             .ok_or_else(|| anyhow!("Expected temp_dir"))
     }
 
+    /// Dependencies directory path.
     fn deps_dir(&self) -> Result<PathBuf> {
         self.manifest
             .layout
@@ -361,6 +385,7 @@ where
             .ok_or_else(|| anyhow!("Expected bytecode_cache"))
     }
 
+    /// Module output directory path.
     fn modules_out_dir(&self) -> Result<PathBuf> {
         self.manifest
             .layout
@@ -370,6 +395,7 @@ where
             .ok_or_else(|| anyhow!("Expected module_output"))
     }
 
+    /// Script output directory.
     fn scripts_out_dir(&self) -> Result<PathBuf> {
         self.manifest
             .layout
@@ -379,6 +405,7 @@ where
             .ok_or_else(|| anyhow!("Expected script_output"))
     }
 
+    /// Modules source directory path.
     fn source_modules_dir(&self) -> Result<PathBuf> {
         self.manifest
             .layout
@@ -388,6 +415,7 @@ where
             .ok_or_else(|| anyhow!("Expected module_output"))
     }
 
+    /// Scripts source directory path.
     fn source_scripts_dir(&self) -> Result<PathBuf> {
         self.manifest
             .layout
@@ -398,11 +426,13 @@ where
     }
 }
 
+/// Prints errors to stdout.
 pub fn report_errors(files: FilesSourceText, errors: Errors) {
     let mut writer = StandardStream::stderr(ColorChoice::Auto);
     errors::output_errors(&mut writer, files, errors);
 }
 
+/// Converts paths buffers into strings.
 pub fn convert_path(path_list: &[PathBuf]) -> Result<Vec<String>> {
     path_list
         .iter()
@@ -415,6 +445,7 @@ impl<'a, S> Drop for Builder<'a, S>
 where
     S: BytecodeSource,
 {
+    /// Cleans up the builder layout.
     fn drop(&mut self) {
         let res = self.temp_dir().and_then(|dir| {
             if dir.exists() {

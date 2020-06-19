@@ -156,15 +156,15 @@ To build standard library run:
 ```bash
 # format:   <source directory> [-o output-file] [--verbose] [-p] [--help]`
 # print output to stdout:
-stdlib-builder lang/stdlib -p
+stdlib-builder stdlib/modules -p
 # or write output to the file:
-stdlib-builder lang/stdlib -po ./stdlib.json
+stdlib-builder stdlib/modules -po ./stdlib.json
 ```
 
 To build your stdlib run:
 
 ```bash
-stdlib-builder /path-to-your/std-lib -po ./stdlib.json
+stdlib-builder /path-to-your/stdlib -po ./stdlib.json
 ```
 
 

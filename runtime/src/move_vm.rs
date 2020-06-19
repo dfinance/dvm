@@ -2,7 +2,7 @@ use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
 use libra_types::transaction::TransactionStatus;
 use libra_types::{account_address::AccountAddress, transaction::Module};
 use libra_vm::CompiledModule;
-use libra::move_core_types::gas_schedule::{GasAlgebra, GasUnits, CostTable};
+use libra::move_core_types::gas_schedule::{GasAlgebra, GasUnits, CostTable, AbstractMemorySize};
 use std::fmt;
 use libra_types::vm_error::{VMStatus, StatusCode};
 use libra_vm::errors::{vm_error, Location, VMResult};
@@ -43,7 +43,7 @@ impl ExecutionMeta {
         ExecutionMeta {
             max_gas_amount: 1_000_000,
             gas_unit_price: 1,
-            sender: Default::default(),
+            sender: CORE_CODE_ADDRESS,
         }
     }
 }
@@ -114,9 +114,10 @@ where
 
     pub fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
         let mut cache = self.make_data_cache();
-        let cost_strategy =
+        let mut cost_strategy =
             CostStrategy::transaction(&self.cost_table, GasUnits::new(meta.max_gas_amount));
 
+        cost_strategy.charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))?;
         let res = CompiledModule::deserialize(module.code()).and_then(|compiled_module| {
             let module_id = compiled_module.self_id();
             if meta.sender != *module_id.address() {
@@ -138,6 +139,9 @@ where
                     StatusCode::DUPLICATE_MODULE_NAME,
                 ));
             }
+
+            cost_strategy
+                .charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))?;
             cache.publish_module(module_id, module.code)
         });
 
@@ -227,7 +231,7 @@ pub struct VectorU8Store {
 #[cfg(test)]
 pub mod tests {
     use compiler::Compiler;
-    use lang::{stdlib::zero_sdt};
+    use lang::{stdlib::zero_std};
     use libra::{
         libra_types::{
             account_address::AccountAddress, transaction::Module, vm_error::StatusCode,
@@ -242,7 +246,7 @@ pub mod tests {
 
     #[test]
     fn test_publish_module() {
-        let ds = MockDataSource::with_write_set(zero_sdt());
+        let ds = MockDataSource::with_write_set(zero_std());
         let compiler = Compiler::new(ds.clone());
         let vm = Dvm::new(ds.clone());
         let account = AccountAddress::random();
@@ -259,6 +263,7 @@ pub mod tests {
         assert!(ds.get_module(&module_id).unwrap().is_none());
 
         ds.merge_write_set(output.write_set);
+        assert_eq!(output.gas_used, 1200);
 
         let loaded_module = ds.get_module(&module_id).unwrap().unwrap();
         assert_eq!(loaded_module, module);
@@ -276,7 +281,7 @@ pub mod tests {
 
     #[test]
     fn test_execute_script() {
-        let ds = MockDataSource::with_write_set(zero_sdt());
+        let ds = MockDataSource::with_write_set(zero_std());
         let compiler = Compiler::new(ds.clone());
         let vm = Dvm::new(ds.clone());
         let account = AccountAddress::random();

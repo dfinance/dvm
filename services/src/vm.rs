@@ -1,33 +1,34 @@
-use std::convert::TryFrom;
-
-use anyhow::{ensure, anyhow, Error};
-use libra::libra_types;
-use libra_types::account_address::AccountAddress;
-use libra_types::contract_event::ContractEvent;
-use libra::move_core_types::language_storage::TypeTag;
-use libra_types::transaction::{Module, TransactionStatus};
-use libra_types::vm_error::{StatusCode, VMStatus};
-use libra_types::write_set::{WriteOp, WriteSet};
-
+use std::sync::Arc;
+use data_source::DataSource;
+use info::heartbeat::HeartRateMonitor;
 use crate::{tonic, api};
 use tonic::{Request, Response, Status};
-
-use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
-use api::grpc::vm_grpc::{
-    VmContract, VmExecuteResponse, VmExecuteRequest, VmExecuteResponses, VmTypeTag, VmStatus,
-    VmValue, VmAccessPath, VmType, VmStructTag, VmEvent, ContractType,
+use api::grpc::vm_grpc::vm_script_executor_server::VmScriptExecutor;
+use dvm_net::api::grpc::vm_grpc::{
+    VmExecuteScript, VmExecuteResponse, VmTypeTag, VmStatus, StructIdent, VmValue, VmAccessPath,
+    VmEvent, ModuleIdent, LcsTag, LcsType, VmPublishModule,
 };
-use api::grpc::vm_grpc::vm_service_server::VmService as GrpcVmService;
+use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
+use libra::libra_types::account_address::AccountAddress;
+use std::convert::TryFrom;
+use libra::libra_types::vm_error::{VMStatus, StatusCode};
 use libra::move_vm_types::values::Value;
-use data_source::DataSource;
+use anyhow::Error;
+use byteorder::{LittleEndian, ByteOrder};
 use info::metrics::meter::ScopeMeter;
+use libra::move_core_types::identifier::Identifier;
+use libra::move_core_types::language_storage::{TypeTag, StructTag};
+use libra::libra_types::write_set::{WriteOp, WriteSet};
+use libra::libra_types::transaction::{Module, TransactionStatus};
 use info::metrics::live_time::ExecutionResult as ActionResult;
-use info::heartbeat::HeartRateMonitor;
+use libra::libra_types::contract_event::ContractEvent;
+use dvm_net::api::grpc::vm_grpc::vm_module_publisher_server::VmModulePublisher;
 
 /// Virtual machine service.
+#[derive(Clone)]
 pub struct VmService<D: DataSource> {
-    vm: Dvm<D>,
-    hrm: Option<HeartRateMonitor>,
+    vm: Arc<Dvm<D>>,
+    hrm: Arc<Option<HeartRateMonitor>>,
 }
 
 unsafe impl<D> Send for VmService<D> where D: DataSource {}
@@ -41,193 +42,37 @@ where
     /// Creates a new virtual machine service with the given data source and request interval counter.
     pub fn new(view: D, hrm: Option<HeartRateMonitor>) -> VmService<D> {
         VmService {
-            vm: Dvm::new(view),
-            hrm,
+            vm: Arc::new(Dvm::new(view)),
+            hrm: Arc::new(hrm),
         }
     }
-
-    /// Execute contract.
-    pub fn execute_contract(&self, contract: VmContract, _options: u64) -> VmExecuteResponse {
-        let meter = ScopeMeter::new(execution_name(&contract));
-        let response =
-            vm_result_to_execute_response(Contract::try_from(contract).and_then(|contract| {
-                match contract.code {
-                    Code::Module(code) => self.vm.publish_module(contract.meta, code),
-                    Code::Script(script) => self.vm.execute_script(contract.meta, script),
-                }
-            }));
-
-        store_metric(response, meter)
-    }
-}
-
-/// Return task name by contract type.
-fn execution_name(contract: &VmContract) -> &'static str {
-    match ContractType::from_i32(contract.contract_type) {
-        Some(ContractType::Module) => "publish_module",
-        Some(ContractType::Script) => "execute_script",
-        None => "unknown_vm_task",
-    }
-}
-
-/// Store execution result to 'scope_meter'.
-fn store_metric(result: VmExecuteResponse, mut scope_meter: ScopeMeter) -> VmExecuteResponse {
-    let status = result
-        .status_struct
-        .as_ref()
-        .map(|status| status.major_status)
-        .unwrap_or(0);
-    scope_meter.set_result(ActionResult::new(
-        result.status == 1, // 1 == Keep
-        status,
-        result.gas_used,
-    ));
-
-    result
 }
 
 #[tonic::async_trait]
-impl<D> GrpcVmService for VmService<D>
+impl<D> VmScriptExecutor for VmService<D>
 where
     D: DataSource,
 {
-    async fn execute_contracts(
+    async fn execute_script(
         &self,
-        request: Request<VmExecuteRequest>,
-    ) -> Result<Response<VmExecuteResponses>, Status> {
-        let request: VmExecuteRequest = request.into_inner();
-        let options = request.options;
-        let executions = request
-            .contracts
-            .into_iter()
-            .map(|contract| self.execute_contract(contract, options))
-            .collect();
-
-        if let Some(hrm) = &self.hrm {
-            hrm.beat();
-        }
-
-        Ok(Response::new(VmExecuteResponses { executions }))
-    }
-}
-
-#[derive(Debug)]
-struct Contract {
-    meta: ExecutionMeta,
-    code: Code,
-}
-
-#[derive(Debug)]
-enum Code {
-    Module(Module),
-    Script(Script),
-}
-
-impl TryFrom<VmContract> for Contract {
-    type Error = VMStatus;
-
-    fn try_from(contract: VmContract) -> Result<Self, Self::Error> {
-        let meta = ExecutionMeta::new(
-            contract.max_gas_amount,
-            contract.gas_unit_price,
-            AccountAddress::from_hex_literal(&contract.address).map_err(|err| {
+        request: Request<VmExecuteScript>,
+    ) -> Result<Response<VmExecuteResponse>, Status> {
+        let meter = ScopeMeter::new("execute_script");
+        let request = request.into_inner();
+        let response = ExecuteScript::try_from(request)
+            .map_err(|err| {
                 VMStatus::new(StatusCode::INVALID_DATA)
-                    .with_message(format!("Invalid AccountAddress: {:?}", err))
-            })?,
-        );
-
-        let code = match ContractType::from_i32(contract.contract_type) {
-            Some(ContractType::Module) => Ok(Code::Module(Module::new(contract.code))),
-            Some(ContractType::Script) => {
-                let args = contract
-                    .args
-                    .into_iter()
-                    .map(|arg| {
-                        match VmTypeTag::from_i32(arg.r#type) {
-                            Some(VmTypeTag::Bool) => parse_as_bool(&arg.value),
-                            Some(VmTypeTag::U64) => parse_as_u64(&arg.value),
-                            Some(VmTypeTag::ByteArray) => parse_as_u8_vector(&arg.value),
-                            Some(VmTypeTag::Address) => {
-                                match AccountAddress::from_hex_literal(&arg.value) {
-                                    Ok(address) => Ok(Value::address(address)),
-                                    Err(err) => Err(anyhow!("Invalid args type.{:?}", err)),
-                                }
-                            }
-                            Some(VmTypeTag::U128) => parse_as_u128(&arg.value),
-                            _ => Err(anyhow!("Invalid args type.")),
-                        }
-                        .map_err(|err| {
-                            VMStatus::new(StatusCode::INVALID_DATA)
-                                .with_message(format!("Invalid contract args [{:?}].", err))
-                        })
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-
-                Ok(Code::Script(Script::new(contract.code, args, vec![])))
-            }
-            None => Err(VMStatus::new(StatusCode::INVALID_DATA)
-                .with_message("Invalid contract type.".to_string())),
-        }?;
-
-        Ok(Contract { meta, code })
+                    .with_message(format!("Invalid contract args [{:?}].", err))
+            })
+            .and_then(|contract| self.vm.execute_script(contract.meta, contract.script));
+        Ok(Response::new(store_metric(
+            vm_result_to_execute_response(response),
+            meter,
+        )))
     }
 }
 
-/// Parses the given string as address.
-pub fn parse_as_address(s: &str) -> Result<Value, Error> {
-    let mut s = s.to_ascii_lowercase();
-    ensure!(s.starts_with("0x"), "address must start with '0x'");
-    ensure!(s.len() > 2, "address cannot be empty");
-
-    if s.len() % 2 != 0 {
-        s = format!("0x0{}", &s[2..]);
-    }
-    let mut addr = hex::decode(&s[2..])?;
-    ensure!(
-        s.len() <= AccountAddress::LENGTH,
-        "address must be {} bytes or less",
-        AccountAddress::LENGTH
-    );
-
-    if addr.len() < AccountAddress::LENGTH {
-        addr = vec![0u8; AccountAddress::LENGTH - addr.len()]
-            .into_iter()
-            .chain(addr.into_iter())
-            .collect();
-    }
-    Ok(Value::address(AccountAddress::try_from(addr)?))
-}
-
-/// Parses the given string as bytearray.
-pub fn parse_as_u8_vector(s: &str) -> Result<Value, Error> {
-    if s.starts_with("x\"") && s.ends_with('"') && s.len() >= 3 {
-        let s = &s[2..s.len() - 1];
-
-        ensure!(!s.is_empty(), "vector<u8> cannot be empty");
-
-        let s = if s.len() % 2 == 0 {
-            s.to_string()
-        } else {
-            format!("0{}", s)
-        };
-        Ok(Value::vector_u8(hex::decode(&s)?))
-    } else {
-        Err(anyhow!("\"{}\" is not a vector<u8>", s))
-    }
-}
-
-pub fn parse_as_u64(s: &str) -> Result<Value, Error> {
-    Ok(Value::u64(s.parse::<u64>()?))
-}
-
-pub fn parse_as_u128(s: &str) -> Result<Value, Error> {
-    Ok(Value::u128(s.parse::<u128>()?))
-}
-
-pub fn parse_as_bool(s: &str) -> Result<Value, Error> {
-    Ok(Value::bool(s.parse::<bool>()?))
-}
-
+/// Converts execution result to api response.
 fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmExecuteResponse {
     match res {
         Ok(res) => {
@@ -258,6 +103,7 @@ fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmEx
     }
 }
 
+/// Converts vm status.
 fn convert_status(status: VMStatus) -> VmStatus {
     VmStatus {
         major_status: status.major_status as u64,
@@ -266,43 +112,7 @@ fn convert_status(status: VMStatus) -> VmStatus {
     }
 }
 
-fn convert_events(events: Vec<ContractEvent>) -> Vec<VmEvent> {
-    events
-        .into_iter()
-        .map(|event| VmEvent {
-            key: event.key().to_vec(),
-            sequence_number: event.sequence_number(),
-            r#type: Some(convert_type_tag(event.type_tag())),
-            event_data: event.event_data().to_vec(),
-        })
-        .collect()
-}
-
-fn convert_type_tag(type_tag: &TypeTag) -> VmType {
-    let tag = match type_tag {
-        TypeTag::Bool => (0, None),
-        TypeTag::U64 => (1, None),
-        TypeTag::Vector(_) => (2, None),
-        TypeTag::Address => (3, None),
-        TypeTag::Struct(tag) => (
-            4,
-            Some(VmStructTag {
-                address: tag.address.to_vec(),
-                module: tag.module.as_str().to_owned(),
-                name: tag.name.as_str().to_owned(),
-                type_params: tag.type_params.iter().map(convert_type_tag).collect(),
-            }),
-        ),
-        TypeTag::U8 => (5, None),
-        TypeTag::U128 => (6, None),
-        TypeTag::Signer => (7, None),
-    };
-    VmType {
-        tag: tag.0,
-        struct_tag: tag.1,
-    }
-}
-
+/// Converts write set.
 fn convert_write_set(ws: WriteSet) -> Vec<VmValue> {
     ws.into_iter()
         .map(|(access_path, write_op)| {
@@ -324,4 +134,229 @@ fn convert_write_set(ws: WriteSet) -> Vec<VmValue> {
             }
         })
         .collect()
+}
+
+/// Converts events.
+fn convert_events(events: Vec<ContractEvent>) -> Vec<VmEvent> {
+    events
+        .into_iter()
+        .map(|event| match event {
+            ContractEvent::V0(event) => {
+                let event_type = Some(convert_event_tag(event.type_tag()));
+                VmEvent {
+                    sender_address: event.key.get_creator_address().to_vec(),
+                    event_data: event.event_data,
+                    event_type,
+                    sender_module: event.caller_module.map(|id| ModuleIdent {
+                        address: id.address().to_vec(),
+                        name: id.name().as_str().to_owned(),
+                    }),
+                }
+            }
+        })
+        .collect()
+}
+
+/// Converts event type tag.
+fn convert_event_tag(type_tag: &TypeTag) -> LcsTag {
+    fn tag(
+        type_tag: LcsType,
+        vector_type: Option<LcsTag>,
+        struct_ident: Option<StructIdent>,
+    ) -> LcsTag {
+        LcsTag {
+            type_tag: type_tag as i32,
+            vector_type: vector_type.map(Box::new),
+            struct_ident,
+        }
+    }
+
+    match type_tag {
+        TypeTag::Bool => tag(LcsType::LcsBool, None, None),
+        TypeTag::U64 => tag(LcsType::LcsU64, None, None),
+        TypeTag::Vector(v) => tag(LcsType::LcsVector, Some(convert_event_tag(v)), None),
+        TypeTag::Address => tag(LcsType::LcsAddress, None, None),
+        TypeTag::Struct(t) => tag(
+            LcsType::LcsStruct,
+            None,
+            Some(StructIdent {
+                address: t.address.to_vec(),
+                module: t.module.as_str().to_owned(),
+                name: t.name.as_str().to_owned(),
+                type_params: t.type_params.iter().map(convert_event_tag).collect(),
+            }),
+        ),
+        TypeTag::U8 => tag(LcsType::LcsU8, None, None),
+        TypeTag::U128 => tag(LcsType::LcsU128, None, None),
+        TypeTag::Signer => tag(LcsType::LcsSigner, None, None),
+    }
+}
+
+/// Store execution result to 'scope_meter'.
+fn store_metric(result: VmExecuteResponse, mut scope_meter: ScopeMeter) -> VmExecuteResponse {
+    let status = result
+        .status_struct
+        .as_ref()
+        .map(|status| status.major_status)
+        .unwrap_or(0);
+    scope_meter.set_result(ActionResult::new(
+        result.status == 1, // 1 == Keep
+        status,
+        result.gas_used,
+    ));
+
+    result
+}
+
+/// Data for script execution.
+#[derive(Debug)]
+struct ExecuteScript {
+    meta: ExecutionMeta,
+    script: Script,
+}
+
+impl TryFrom<VmExecuteScript> for ExecuteScript {
+    type Error = Error;
+
+    fn try_from(req: VmExecuteScript) -> Result<Self, Error> {
+        let args = req
+            .args
+            .into_iter()
+            .map(|arg| {
+                let value = arg.value;
+                let type_tag =
+                    VmTypeTag::from_i32(arg.r#type).ok_or_else(|| anyhow!("Invalid args type."))?;
+                Ok(match type_tag {
+                    VmTypeTag::Bool => {
+                        ensure!(
+                            value.len() == 1,
+                            "Invalid boolean argument length. Expected 1 byte."
+                        );
+                        Value::bool(value[0] != 0x0)
+                    }
+                    VmTypeTag::U64 => {
+                        ensure!(
+                            value.len() == 8,
+                            "Invalid u64 argument length. Expected 8 byte."
+                        );
+                        Value::u64(LittleEndian::read_u64(&value))
+                    }
+                    VmTypeTag::Vector => Value::vector_u8(value),
+                    VmTypeTag::Address => Value::address(AccountAddress::try_from(value)?),
+                    VmTypeTag::U8 => {
+                        ensure!(
+                            value.len() == 1,
+                            "Invalid u8 argument length. Expected 1 byte."
+                        );
+                        Value::u8(value[0] as u8)
+                    }
+                    VmTypeTag::U128 => {
+                        ensure!(
+                            value.len() == 16,
+                            "Invalid u64 argument length. Expected 16 byte."
+                        );
+                        Value::u128(LittleEndian::read_u128(&value))
+                    }
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        fn tag(t: LcsTag) -> Result<TypeTag, Error> {
+            let type_tag =
+                LcsType::from_i32(t.type_tag).ok_or_else(|| anyhow!("Invalid type tag."))?;
+            Ok(match type_tag {
+                LcsType::LcsBool => TypeTag::Bool,
+                LcsType::LcsU64 => TypeTag::U64,
+                LcsType::LcsVector => TypeTag::Vector(
+                    tag(t
+                        .vector_type
+                        .map(|t| *t)
+                        .ok_or_else(|| anyhow!("Invalid vector tag."))?)
+                    .map(Box::new)?,
+                ),
+                LcsType::LcsAddress => TypeTag::Address,
+                LcsType::LcsU8 => TypeTag::U8,
+                LcsType::LcsU128 => TypeTag::U128,
+                LcsType::LcsSigner => TypeTag::Signer,
+                LcsType::LcsStruct => TypeTag::Struct(struct_tag(
+                    t.struct_ident
+                        .ok_or_else(|| anyhow!("Invalid struct tag."))?,
+                )?),
+            })
+        }
+
+        fn struct_tag(ident: StructIdent) -> Result<StructTag, Error> {
+            Ok(StructTag {
+                address: AccountAddress::try_from(ident.address)?,
+                module: Identifier::new(ident.module)?,
+                name: Identifier::new(ident.name)?,
+                type_params: ident
+                    .type_params
+                    .into_iter()
+                    .map(tag)
+                    .collect::<Result<Vec<TypeTag>, Error>>()?,
+            })
+        }
+
+        let type_args = req
+            .type_params
+            .into_iter()
+            .map(|ident| Ok(TypeTag::Struct(struct_tag(ident)?)))
+            .collect::<Result<Vec<TypeTag>, Error>>()?;
+
+        Ok(ExecuteScript {
+            meta: ExecutionMeta::new(
+                req.max_gas_amount,
+                req.gas_unit_price,
+                AccountAddress::try_from(req.address)?,
+            ),
+            script: Script::new(req.code, args, type_args),
+        })
+    }
+}
+
+#[tonic::async_trait]
+impl<D> VmModulePublisher for VmService<D>
+where
+    D: DataSource,
+{
+    async fn publish_module(
+        &self,
+        request: Request<VmPublishModule>,
+    ) -> Result<Response<VmExecuteResponse>, Status> {
+        let meter = ScopeMeter::new("publish_module");
+        let request = request.into_inner();
+        let response = PublishModule::try_from(request)
+            .map_err(|err| {
+                VMStatus::new(StatusCode::INVALID_DATA)
+                    .with_message(format!("Invalid publish module args [{:?}].", err))
+            })
+            .and_then(|contract| self.vm.publish_module(contract.meta, contract.module));
+        Ok(Response::new(store_metric(
+            vm_result_to_execute_response(response),
+            meter,
+        )))
+    }
+}
+
+/// Data for module publication.
+#[derive(Debug)]
+struct PublishModule {
+    meta: ExecutionMeta,
+    module: Module,
+}
+
+impl TryFrom<VmPublishModule> for PublishModule {
+    type Error = Error;
+
+    fn try_from(request: VmPublishModule) -> Result<Self, Self::Error> {
+        Ok(PublishModule {
+            meta: ExecutionMeta {
+                max_gas_amount: request.max_gas_amount,
+                gas_unit_price: request.gas_unit_price,
+                sender: AccountAddress::try_from(request.address)?,
+            },
+            module: Module::new(request.code),
+        })
+    }
 }

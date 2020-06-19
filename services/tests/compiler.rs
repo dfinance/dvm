@@ -76,7 +76,7 @@ async fn test_compile_script() {
 async fn test_compile_script_with_dependencies() {
     let source_text = "
             script {
-            use 0x0::Time;
+            use 0x1::Time;
             fun main() {
                 Time::now();
             }
@@ -120,7 +120,7 @@ async fn test_compile_script_with_dependencies() {
 async fn test_required_libracoin_dependency_is_not_available() {
     let source_text = r"
             script {
-            use 0x0::Coin;
+            use 0x1::Coin;
             fun main() {
             }
             }
@@ -141,7 +141,7 @@ async fn test_required_libracoin_dependency_is_not_available() {
     let error = compilation_result.errors.get(0).unwrap();
     assert_eq!(
         error,
-        r#"Module '0x0000000000000000000000000000000000000000::Coin' not found"#
+        r#"Module '0x0000000000000000000000000000000000000001::Coin' not found"#
     )
 }
 

@@ -12,6 +12,7 @@ use termcolor::{StandardStream, ColorChoice};
 use std::process::exit;
 use crate::mv::builder::convert_path;
 
+/// Extract dependencies from source code.
 pub fn extract_from_source(
     targets: &[PathBuf],
     address: Option<AccountAddress>,
@@ -40,12 +41,14 @@ pub fn extract_from_source(
     Ok(extractor.imports())
 }
 
+/// Extract dependencies from bytecode.
 pub fn extract_from_bytecode(bytecode: &[u8]) -> Result<HashSet<ModuleId>> {
     let mut extractor = BytecodeUses::default();
     extractor.extract(CompiledModule::deserialize(bytecode)?)?;
     Ok(extractor.imports())
 }
 
+/// Source definition dependencies extractor.
 #[derive(Default)]
 pub struct DefinitionUses {
     imports: HashSet<ModuleId>,
@@ -54,6 +57,7 @@ pub struct DefinitionUses {
 }
 
 impl DefinitionUses {
+    /// Creates extractor with account address.
     pub fn with_address(address: Option<AccountAddress>) -> DefinitionUses {
         DefinitionUses {
             imports: Default::default(),
@@ -62,6 +66,7 @@ impl DefinitionUses {
         }
     }
 
+    /// Extracts dependencies from definition.
     pub fn extract(&mut self, def: &Definition) -> Result<()> {
         match def {
             Definition::Module(module) => self.module(
@@ -80,6 +85,7 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from module definition.
     fn module(&mut self, module: &ModuleDefinition, address: AccountAddress) -> Result<()> {
         for member in &module.members {
             match member {
@@ -110,15 +116,17 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from script.
     fn script(&mut self, script: &Script) -> Result<()> {
-        for _use in &script.uses {
-            self.uses(_use)?;
+        for u in &script.uses {
+            self.uses(u)?;
         }
         self.function(&script.function)
     }
 
-    fn uses(&mut self, _use: &Use) -> Result<()> {
-        let ident = match _use {
+    /// Extracts dependencies from use definition.
+    fn uses(&mut self, u: &Use) -> Result<()> {
+        let ident = match u {
             Use::Members(ident, _) => ident,
             Use::Module(ident, _) => ident,
         };
@@ -130,11 +138,13 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from function definition.
     fn function(&mut self, func: &Function) -> Result<()> {
         self.signature(&func.signature)?;
         self.internal_usages(&func.body)
     }
 
+    /// Extracts dependencies from function signature.
     fn signature(&mut self, signature: &FunctionSignature) -> Result<()> {
         for (_, v_type) in &signature.parameters {
             self.type_usages(&v_type.value)?;
@@ -142,9 +152,14 @@ impl DefinitionUses {
         self.type_usages(&signature.return_type.value)
     }
 
+    /// Extracts dependencies from function body.
     fn internal_usages(&mut self, func: &FunctionBody) -> Result<()> {
         match &func.value {
-            FunctionBody_::Defined((seq, _, exp)) => {
+            FunctionBody_::Defined((uses, seq, _, exp)) => {
+                for u in uses {
+                    self.uses(u)?;
+                }
+
                 self.block_usages(seq)?;
                 if let Some(exp) = exp.as_ref() {
                     self.expresion_usages(&exp.value)?;
@@ -157,6 +172,7 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from type.
     fn type_usages(&mut self, v_type: &Type_) -> Result<()> {
         match v_type {
             Type_::Unit => { /*No-op*/ }
@@ -184,6 +200,7 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from block.
     fn block_usages(&mut self, seq: &[SequenceItem]) -> Result<()> {
         for item in seq {
             match &item.value {
@@ -212,6 +229,7 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from bind statement.
     fn bind_usages(&mut self, bind: &Bind_) -> Result<()> {
         match bind {
             Bind_::Var(_) => { /*no-op*/ }
@@ -230,6 +248,7 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from module access.
     fn access_usages(&mut self, access: &ModuleAccess_) -> Result<()> {
         match access {
             ModuleAccess_::QualifiedModuleAccess(ident, _name) => {
@@ -239,13 +258,12 @@ impl DefinitionUses {
                     Identifier::new(ident.name.0.value.to_owned())?,
                 ));
             }
-            ModuleAccess_::ModuleAccess(_, _)
-            | ModuleAccess_::Name(_)
-            | ModuleAccess_::Global(_) => { /*no-op*/ }
+            ModuleAccess_::ModuleAccess(_, _) | ModuleAccess_::Name(_) => { /*no-op*/ }
         }
         Ok(())
     }
 
+    /// Extracts dependencies from type.
     fn s_type_usages(&mut self, s_type: &Type_) -> Result<()> {
         match s_type {
             Type_::Apply(module_access, s_types) => {
@@ -273,6 +291,7 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Extracts dependencies from expression.
     fn expresion_usages(&mut self, exp: &Exp_) -> Result<()> {
         match exp {
             Exp_::Value(_)
@@ -323,7 +342,11 @@ impl DefinitionUses {
                 self.expresion_usages(&eb.value)?;
                 self.expresion_usages(&eloop.value)?;
             }
-            Exp_::Block((seq, _, exp)) => {
+            Exp_::Block((uses, seq, _, exp)) => {
+                for u in uses {
+                    self.uses(u)?;
+                }
+
                 self.block_usages(seq)?;
                 if let Some(exp) = exp.as_ref() {
                     self.expresion_usages(&exp.value)?;
@@ -372,6 +395,7 @@ impl DefinitionUses {
         Ok(())
     }
 
+    /// Returns imports.
     pub fn imports(mut self) -> HashSet<ModuleId> {
         for module_id in self.modules {
             self.imports.remove(&module_id);
@@ -381,16 +405,19 @@ impl DefinitionUses {
     }
 }
 
+/// Bytecode dependencies extractor.
 #[derive(Default)]
 pub struct BytecodeUses {
     imports: HashSet<ModuleId>,
 }
 
 impl BytecodeUses {
+    /// Returns imports.
     pub fn imports(self) -> HashSet<ModuleId> {
         self.imports
     }
 
+    /// Extracts dependencies from compiled module.
     pub fn extract(&mut self, module: CompiledModule) -> Result<()> {
         let module = module.into_inner();
         let mut module_handles = module.module_handles;

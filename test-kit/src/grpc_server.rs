@@ -9,7 +9,8 @@ use std::thread;
 use tokio::runtime::Runtime;
 use std::io::{ErrorKind, Error as IoError};
 use std::mem;
-use crate::compiled_protos::vm_grpc::vm_service_server::VmServiceServer;
+use crate::compiled_protos::vm_grpc::vm_script_executor_server::VmScriptExecutorServer;
+use crate::compiled_protos::vm_grpc::vm_module_publisher_server::VmModulePublisherServer;
 use services::vm::VmService;
 use data_source::MockDataSource;
 
@@ -31,11 +32,10 @@ impl Server {
             rt.block_on(async {
                 for port in PORT_RANGE {
                     service_port.store(port, Ordering::SeqCst);
+                    let service = VmService::new(data_source.clone(), None);
                     let service_res = TService::builder()
-                        .add_service(VmServiceServer::new(VmService::new(
-                            data_source.clone(),
-                            None,
-                        )))
+                        .add_service(VmScriptExecutorServer::new(service.clone()))
+                        .add_service(VmModulePublisherServer::new(service.clone()))
                         .serve_with_shutdown(
                             format!("0.0.0.0:{}", port).parse().unwrap(),
                             service_signal.clone(),

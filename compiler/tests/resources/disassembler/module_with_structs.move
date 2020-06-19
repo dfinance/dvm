@@ -1,7 +1,7 @@
-address 0x0000000000000000000000000000000000000000 {
+address 0x0000000000000000000000000000000000000001 {
 
 module Foo {
-     use 0x0::Base;
+     use 0x1::Base;
      use 0x0101010101010101010101010101010101010101::Base as Base1;
 
      struct T {g: u64}
@@ -30,7 +30,7 @@ module Foo {
      resource struct GBase {t: Base1::Test, t2: Base::Test1}
 
      resource struct GBase2 {
-             t: 0x00000000000000000000000000000000::Base::Test1,
+             t: 0x00000000000000000000000000000001::Base::Test1,
              t2: 0x0101010101010101010101010101010101010101::Base::Test,
      }
 }
