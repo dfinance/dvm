@@ -6,7 +6,7 @@
 extern crate log;
 
 use http::Uri;
-use structopt::StructOpt;
+use clap::Clap;
 
 use tonic::transport::Server;
 use futures::future::FutureExt;
@@ -38,41 +38,41 @@ const MODULE_CACHE: usize = 1000;
 ///  combined with Move compilation server
 ///  powered by gRPC interface on top of TCP/IPC.
 /// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
-#[derive(Debug, StructOpt, Clone)]
-#[structopt(name = "dvm")]
-#[structopt(verbatim_doc_comment)]
+#[derive(Debug, Clone, Clap)]
+#[clap(name = "dvm")]
+#[clap(verbatim_doc_comment)]
 struct Options {
     /// Address in the form of HOST_ADDRESS:PORT.
     /// The address will be listen to by DVM and compilation server.
     /// Listening localhost by default.
     /// Supports schemes: http, ipc.
-    #[structopt(
+    #[clap(
         name = "listen address",
         default_value = "http://[::1]:50051",
         verbatim_doc_comment
     )]
     address: Endpoint,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     info_service: InfoServiceConfig,
 
     /// DataSource Server internet address.
-    #[structopt(
+    #[clap(
     name = "Data-Source URI",
     env = DVM_DATA_SOURCE,
     default_value = "http://[::1]:50052"
     )]
     ds: Uri,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     logging: LoggingOptions,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     integrations: IntegrationsOptions,
 }
 
 fn main() -> Result<()> {
-    let options = Options::from_args();
+    let options = Options::parse();
     let _guard = init(&options.logging, &options.integrations);
     main_internal(options)
 }

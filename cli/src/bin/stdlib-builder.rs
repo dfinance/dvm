@@ -1,33 +1,33 @@
 use std::{fs, io, path::PathBuf};
-use structopt::StructOpt;
+use clap::Clap;
 use serde_json::{to_string, to_string_pretty};
 use lang::stdlib::{build_external_std, Stdlib, WS};
 use std::path::Path;
 use anyhow::Error;
 use std::collections::HashMap;
 
-#[derive(StructOpt)]
-#[structopt(name = "stdlib-builder")]
+#[derive(Clap)]
+#[clap(name = "stdlib-builder")]
 struct Opts {
     /// Path to the directory with the standard library.
-    #[structopt()]
+    #[clap()]
     source_dir: String,
     /// Optional path to the output file.
     /// If not passed, result will be printed to stdout.
-    #[structopt(short, long, parse(from_os_str))]
+    #[clap(short, long, parse(from_os_str))]
     output: Option<PathBuf>,
 
-    #[structopt(short = "v", long = "verbose")]
+    #[clap(short = "v", long = "verbose")]
     /// Verbose mode flag.
     /// Enables debug printing of internals including used modules.
     debug_print: bool,
     /// Enables pretty printing of all output including debug-prints if it enabled.
-    #[structopt(short)]
+    #[clap(short)]
     pretty_print: bool,
 }
 
 fn main() {
-    let opts = Opts::from_args();
+    let opts = Opts::parse();
 
     let entries = fs::read_dir(&opts.source_dir)
         .unwrap()
