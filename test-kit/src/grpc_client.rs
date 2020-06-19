@@ -4,36 +4,62 @@ use tokio::runtime::Runtime;
 use dvm_net::tonic::transport::Channel;
 use dvm_net::tonic::Request;
 use crate::ArcMut;
-use crate::compiled_protos::vm_grpc::vm_service_client::VmServiceClient;
-use crate::compiled_protos::vm_grpc::{VmExecuteRequest, VmExecuteResponses};
+use crate::compiled_protos::vm_grpc::vm_script_executor_client::VmScriptExecutorClient;
+use crate::compiled_protos::vm_grpc::vm_module_publisher_client::VmModulePublisherClient;
+use crate::compiled_protos::vm_grpc::{VmPublishModule, VmExecuteResponse};
+use dvm_net::api::grpc::vm_grpc::VmExecuteScript;
 
+/// Vm Grpc client.
 pub struct Client {
     runtime: ArcMut<Runtime>,
-    client: ArcMut<VmServiceClient<Channel>>,
+    executor: ArcMut<VmScriptExecutorClient<Channel>>,
+    publisher: ArcMut<VmModulePublisherClient<Channel>>,
 }
 
 impl Client {
+    #[allow(clippy::eval_order_dependence)]
+    /// Creates a new grpc client with service port.
     pub fn new(port: u32) -> Result<Client> {
         let mut runtime = Runtime::new().unwrap();
-        let client = runtime.block_on(async {
-            VmServiceClient::connect(format!("http://localhost:{}", port)).await
-        })?;
+        let (executor, publisher) = runtime.block_on(async {
+            (
+                VmScriptExecutorClient::connect(format!("http://localhost:{}", port)).await,
+                VmModulePublisherClient::connect(format!("http://localhost:{}", port)).await,
+            )
+        });
 
         let client = Client {
             runtime: Arc::new(Mutex::new(runtime)),
-            client: Arc::new(Mutex::new(client)),
+            executor: Arc::new(Mutex::new(executor?)),
+            publisher: Arc::new(Mutex::new(publisher?)),
         };
         Ok(client)
     }
 
-    pub fn perform_request(&self, request: Request<VmExecuteRequest>) -> VmExecuteResponses {
+    /// Publish module.
+    pub fn publish_module(&self, request: VmPublishModule) -> VmExecuteResponse {
         let mut rt = self.runtime.lock().unwrap();
-        let client = self.client.clone();
+        let client = self.publisher.clone();
         rt.block_on(async {
             client
                 .lock()
                 .unwrap()
-                .execute_contracts(request)
+                .publish_module(Request::new(request))
+                .await
+                .unwrap()
+        })
+        .into_inner()
+    }
+
+    /// Execute script.
+    pub fn execute_script(&self, request: VmExecuteScript) -> VmExecuteResponse {
+        let mut rt = self.runtime.lock().unwrap();
+        let client = self.executor.clone();
+        rt.block_on(async {
+            client
+                .lock()
+                .unwrap()
+                .execute_script(Request::new(request))
                 .await
                 .unwrap()
         })

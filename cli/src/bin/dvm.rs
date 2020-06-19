@@ -19,7 +19,10 @@ use dvm_net::{prelude::*, api, tonic};
 use api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
 use api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
 use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
-use dvm_net::api::grpc::vm_grpc::vm_service_server::VmServiceServer;
+use dvm_net::api::grpc::vm_grpc::{
+    vm_script_executor_server::VmScriptExecutorServer,
+    vm_module_publisher_server::VmModulePublisherServer,
+};
 use data_source::{GrpcDataSource, ModuleCache, DsMeter};
 use anyhow::Result;
 use services::vm::VmService;
@@ -99,7 +102,7 @@ async fn main_internal(options: Options) -> Result<()> {
         .expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(DsMeter::new(ds), MODULE_CACHE);
     // vm services
-    let service = VmService::new(ds.clone(), hrm);
+    let vm_service = VmService::new(ds.clone(), hrm);
     // comp services
     let compiler_service = CompilerService::new(Compiler::new(ds));
     let metadata_service = MetadataService::default();
@@ -109,7 +112,8 @@ async fn main_internal(options: Options) -> Result<()> {
     // block-on the server:
     let dvm = Server::builder()
         // vm service
-        .add_service(VmServiceServer::new(service))
+        .add_service(VmScriptExecutorServer::new(vm_service.clone()))
+        .add_service(VmModulePublisherServer::new(vm_service.clone()))
         // comp services
         .add_service(VmCompilerServer::new(compiler_service.clone()))
         .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))

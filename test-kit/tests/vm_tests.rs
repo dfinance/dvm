@@ -24,11 +24,11 @@ fn test_address_as_argument() {
     let account_address = AccountAddress::random();
     let args = vec![VmArgs {
         r#type: VmTypeTag::Address as i32,
-        value: format!("0x{}", account_address),
+        value: account_address.to_vec(),
     }];
-    let res = test_kit.execute_script(script, meta(&account("0x110")), args);
+    let res = test_kit.execute_script(script, meta(&account("0x110")), args, vec![]);
     test_kit.assert_success(&res);
-    let value: AddressStore = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    let value: AddressStore = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, account_address);
 }
 
@@ -49,12 +49,12 @@ fn test_vector_as_argument() {
 
     let vec = AccountAddress::random().to_vec();
     let args = vec![VmArgs {
-        r#type: VmTypeTag::ByteArray as i32,
-        value: format!("x\"{}\"", hex::encode(vec.clone())),
+        r#type: VmTypeTag::Vector as i32,
+        value: vec.clone(),
     }];
-    let res = test_kit.execute_script(script, meta(&account("0x110")), args);
+    let res = test_kit.execute_script(script, meta(&account("0x110")), args, vec![]);
     test_kit.assert_success(&res);
-    let value: VectorU8Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    let value: VectorU8Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, vec);
 }
 
@@ -74,9 +74,9 @@ fn test_update_std_module() {
         }
         }
     ";
-    let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![]);
+    let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![], vec![]);
     test_kit.assert_success(&res);
-    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    let value: U64Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, 1);
 
     let res = test_kit.publish_module(
@@ -98,8 +98,8 @@ fn test_update_std_module() {
         }
     ";
 
-    let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![]);
+    let res = test_kit.execute_script(load_foo, meta(&AccountAddress::random()), vec![], vec![]);
     test_kit.assert_success(&res);
-    let value: U64Store = lcs::from_bytes(&res.executions[0].write_set[0].value).unwrap();
+    let value: U64Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, 2);
 }
