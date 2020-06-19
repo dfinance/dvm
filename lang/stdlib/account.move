@@ -10,10 +10,7 @@ module Account {
     use 0x1::Event;
 
     /// holds account data, currently, only events
-    resource struct T {
-        sent_events:     Event::EventHandle<SentPaymentEvent>,
-        received_events: Event::EventHandle<ReceivedPaymentEvent>,
-    }
+    resource struct T {}
 
     resource struct Balance<Token> {
         coin: Dfinance::T<Token>
@@ -59,7 +56,7 @@ module Account {
     public fun deposit_to_sender<Token>(
         account: &signer,
         to_deposit: Dfinance::T<Token>
-    ) acquires T, Balance {
+    ) acquires Balance {
         deposit<Token>(
             account,
             Signer::address_of(account),
@@ -71,7 +68,7 @@ module Account {
         account: &signer,
         payee: address,
         to_deposit: Dfinance::T<Token>
-    ) acquires T, Balance {
+    ) acquires Balance {
         deposit_with_metadata<Token>(
             account,
             payee,
@@ -85,7 +82,7 @@ module Account {
         payee: address,
         to_deposit: Dfinance::T<Token>,
         metadata: vector<u8>
-    ) acquires T, Balance {
+    ) acquires Balance {
         deposit_with_sender_and_metadata<Token>(
             account,
             payee,
@@ -98,7 +95,7 @@ module Account {
         account: &signer,
         payee: address,
         amount: u128
-    ) acquires T, Balance {
+    ) acquires Balance {
         pay_from_sender_with_metadata<Token>(
             account, payee, amount, b""
         )
@@ -110,7 +107,7 @@ module Account {
         amount: u128,
         metadata: vector<u8>
     )
-    acquires T, Balance {
+    acquires Balance {
         deposit_with_metadata<Token>(
             account,
             payee,
@@ -124,16 +121,14 @@ module Account {
         payee: address,
         to_deposit: Dfinance::T<Token>,
         metadata: vector<u8>
-    ) acquires T, Balance {
+    ) acquires Balance {
         let amount = Dfinance::value(&to_deposit);
         assert(amount > 0, 7);
 
         let denom = Dfinance::denom<Token>();
-        let sender_acc = borrow_global_mut<T>(Signer::address_of(sender));
 
         // add event as sent into account
-        Event::emit_event<SentPaymentEvent>(
-            &mut sender_acc.sent_events,
+        Event::emit<SentPaymentEvent>(
             SentPaymentEvent {
                 amount, // u64 can be copied
                 payee,
@@ -151,14 +146,12 @@ module Account {
             create_account(payee);
         };
 
-        let payee_acc     = borrow_global_mut<T>(payee);
         let payee_balance = borrow_global_mut<Balance<Token>>(payee);
 
         // send money to payee
         Dfinance::deposit(&mut payee_balance.coin, to_deposit);
         // update payee's account with new event
-        Event::emit_event<ReceivedPaymentEvent>(
-            &mut payee_acc.received_events,
+        Event::emit<ReceivedPaymentEvent>(
             ReceivedPaymentEvent {
                 amount,
                 denom,
@@ -189,15 +182,11 @@ module Account {
         destroy_signer(sig);
     }
 
+    /// keep this function, we may use T in the future
     fun create_account(addr: address) {
         let sig = create_signer(addr);
 
-        Event::publish_generator(&sig);
-
-        move_to<T>(&sig, T {
-            sent_events: Event::new_event_handle(&sig),
-            received_events: Event::new_event_handle(&sig),
-        });
+        move_to<T>(&sig, T { });
 
         destroy_signer(sig);
     }
