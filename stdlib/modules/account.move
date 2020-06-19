@@ -161,8 +161,10 @@ module Account {
         )
     }
 
-    public fun withdraw_from_sender<Token>(account: &signer, amount: u128): Dfinance::T<Token>
-    acquires Balance {
+    public fun withdraw_from_sender<Token>(
+        account: &signer,
+        amount: u128
+    ): Dfinance::T<Token> acquires Balance {
         let balance = borrow_global_mut<Balance<Token>>(Signer::address_of(account));
 
         withdraw_from_balance<Token>(balance, amount)
