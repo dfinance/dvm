@@ -1,3 +1,8 @@
+#[macro_use]
+extern crate include_dir;
+extern crate anyhow;
+extern crate libra;
+
 use libra::libra_types::write_set::{WriteSet, WriteOp};
 use anyhow::Error;
 use libra::libra_types::account_address::AccountAddress;
@@ -8,7 +13,7 @@ use include_dir::Dir;
 use compiler::Compiler;
 use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
-static STDLIB_DIR: Dir = include_dir!("stdlib");
+static STDLIB_DIR: Dir = include_dir!("modules");
 
 #[derive(Debug, Clone)]
 pub struct Stdlib {
@@ -90,7 +95,7 @@ pub fn zero_std() -> WriteSet {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::stdlib::build_std;
+    use super::build_std;
 
     #[test]
     fn test_build_std() {

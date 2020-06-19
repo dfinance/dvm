@@ -13,6 +13,7 @@ edition = "2018"
 libra = { path = "../libra", package = "dvm-libra-deps" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
 ds = { path = "../data-source", package = "dvm-data-source" }
+stdlib = { path = "../stdlib", package = "stdlib" }
 anyhow = "1.0"
 lazy_static = "1.4.0"
 bech32 = "0.7.2"
