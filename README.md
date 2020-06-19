@@ -38,12 +38,6 @@ You can use this schema for your docker-compose to run everything at once:
 ```yaml
 version: '3.7'
 services:
-  dvm-compiler:
-    container_name: dvm-compiler
-    image: dfinance/dvm
-    restart: always
-    network_mode: host
-    command: ./compiler "http://0.0.0.0:50053" "http://127.0.0.1:50052"
   dvm-server:
     container_name: dvm-server
     image: dfinance/dvm
@@ -62,16 +56,12 @@ docker pull dfinance/dvm
 That is how you do it:
 
 ```bash
-# run compiler
-docker run -d --rm --network host --name compiler -p 50053:50053 registry.wings.toys/dfinance/dvm:master ./compiler "http://0.0.0.0:50053" "http://127.0.0.1:50052"
-
-# run virtual machine
+# run virtual machine & compilation server
 docker run -d --rm --network host --name dvm -p 50051:50051 registry.wings.toys/dfinance/dvm:master ./dvm "http://0.0.0.0:50051" "http://127.0.0.1:50052"
 ```
 
 ```bash
-# stop compiler and vm
-docker stop compiler
+# stop the server
 docker stop dvm
 ```
 
@@ -105,9 +95,10 @@ cargo install --git https://github.com/dfinance/dvm.git
 
 As result you will get the following executables into your `.cargo/bin` directory:
 
-- `dvm` - virtual machine server
-- `compiler` - compilation server
+- `dvm` - virtual machine & compilation server
+- `movec` - standalone compiler
 - `stdlib-builder` - standard library builder (useful for genesis creation)
+- `status-table` - table of status/error-codes exporter tool
 
 Uninstallation: `cargo uninstall dvm`.
 
@@ -132,17 +123,9 @@ dvm "http://[::1]:50051" "http://[::1]:50052"
 
 ### Compilation server
 
-`compiler` is a Move compilation gRPC server.
+DVM has built-in Move compilation gRPC server.
 API described in [protobuf schemas][].
 
-To launch the compilation server run:
-
-```bash
-# format: <which host:port to listen> <data-source address>
-compiler "http://[::1]:50053" "http://[::1]:50052"
-```
-
-> Compiler supports Move lang.
 
 [protobuf schemas]: https://github.com/dfinance/dvm-proto/tree/master/protos
 
@@ -172,7 +155,7 @@ stdlib-builder /path-to-your/stdlib -po ./stdlib.json
 
 #### Positional arguments:
 
-__DVM__ and __compiler__ both require positional argument described as `<data-source address>`.
+__DVM__ require positional argument described as `<data-source address>`.
 This is URI of a data source server, typically [Dnode][], local or external.
 This argument can be ommited because we'll read the `DVM_DATA_SOURCE` [environment variable][environment variables] as fallback.
 
@@ -236,7 +219,7 @@ Optional arguments have higher priority than [environment variables][], and over
 
 [environment variables]: #environment-variables
 
-For more info run dvm or compiler with `--help`.
+For more info run dvm with `--help`.
 
 
 - - - - - - - - - -
@@ -254,15 +237,16 @@ cd dvm
 
 # build and run vm
 cargo run --bin dvm -- --help
-# build and run compiler
-cargo run --bin compiler -- --help
 ```
 
 
 <!-- TODO: guide for contributors should be here -->
 
-[this repo]: https://github.com/dfinance/dvm
+Check out [online documentation][dvm.docs] built on CI for latest release.
 
+
+[this repo]: https://github.com/dfinance/dvm
+[dvm.docs]: https://dfinance.github.io/dvm/
 
 ### Tests
 
