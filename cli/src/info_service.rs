@@ -48,7 +48,7 @@ async fn dvm_ping_process(
     async {
         loop {
             delay_for(Duration::from_secs(1)).await;
-            if stimulation_interval < hrm.last_heartbeat_interval() {
+            if stimulation_interval < hrm.time_since_last_heartbeat() {
                 if let Err(err) = send_ping(endpoint.clone(), bytecode.clone()).await {
                     error!("Health check failed:{:?}", err);
                 }
