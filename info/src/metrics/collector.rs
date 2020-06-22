@@ -4,7 +4,7 @@ use std::time::Duration;
 use std::thread;
 use std::sync::atomic::Ordering;
 use crate::metrics::metric::Metrics;
-use crate::task::FixedDelayDemon;
+use crate::task::PeriodicBackgroundTask;
 
 /// Metrics collector.
 #[derive(Debug, Clone)]
@@ -16,7 +16,7 @@ pub struct MetricsCollector {
 #[derive(Debug)]
 struct MetricsInner {
     metrics: Arc<RwLock<Metrics>>,
-    task: FixedDelayDemon,
+    task: PeriodicBackgroundTask,
 }
 
 impl MetricsCollector {
@@ -37,14 +37,17 @@ impl MetricsCollector {
     }
 
     /// Start collecting process.
-    fn start_collector(interval: Duration, metrics: Arc<RwLock<Metrics>>) -> FixedDelayDemon {
-        FixedDelayDemon::spawn(
+    fn start_collector(
+        period_between_collects: Duration,
+        metrics: Arc<RwLock<Metrics>>,
+    ) -> PeriodicBackgroundTask {
+        PeriodicBackgroundTask::spawn(
             move || {
                 let new_metric = Metrics::calculate(drain_action_metrics());
                 *metrics.write().unwrap() = new_metric;
-                thread::sleep(interval);
+                thread::sleep(period_between_collects);
             },
-            interval,
+            period_between_collects,
         )
     }
 }

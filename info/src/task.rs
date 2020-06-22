@@ -1,35 +1,37 @@
+#![warn(missing_docs)]
+
 use std::sync::Arc;
 use std::thread::JoinHandle;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
 
-/// Demon task.
+/// Background process. Code executed with `spawn()` will be executed once and exit.
 #[derive(Debug)]
-pub struct Demon {
+pub struct Daemon {
     handler: Option<JoinHandle<()>>,
-    is_run: Arc<AtomicBool>,
+    enabled: Arc<AtomicBool>,
 }
 
-impl Demon {
-    /// Spawn demon task.
-    pub fn spawn<T>(task: T) -> Demon
+impl Daemon {
+    /// Spawn daemon task in a separate thread.
+    pub fn spawn<T>(task: T) -> Daemon
     where
         T: FnOnce(&AtomicBool) + Send + Sync + 'static,
     {
-        let is_run = Arc::new(AtomicBool::new(true));
-        let is_run_cp = is_run.clone();
-        let handler = thread::spawn(move || task(&is_run_cp));
-        Demon {
+        let enabled = Arc::new(AtomicBool::new(true));
+        let enabled_ref = enabled.clone();
+        let handler = thread::spawn(move || task(&enabled_ref));
+        Daemon {
             handler: Some(handler),
-            is_run,
+            enabled,
         }
     }
 }
 
-impl Drop for Demon {
+impl Drop for Daemon {
     fn drop(&mut self) {
-        self.is_run.store(false, Ordering::Relaxed);
+        self.enabled.store(false, Ordering::Relaxed);
         if let Some(handler) = self.handler.take() {
             if let Err(err) = handler.join() {
                 warn!("Failed to stop demon [{:?}]", err);
@@ -38,24 +40,24 @@ impl Drop for Demon {
     }
 }
 
-/// Signal thread task with fixed delay.
+/// Signal thread task executed periodically with provided `period`.
 #[derive(Debug)]
-pub struct FixedDelayDemon {
-    demon: Demon,
+pub struct PeriodicBackgroundTask {
+    daemon: Daemon,
 }
 
-impl FixedDelayDemon {
+impl PeriodicBackgroundTask {
     /// Spawn task.
-    pub fn spawn<T>(task: T, delay: Duration) -> FixedDelayDemon
+    pub fn spawn<T>(task: T, period: Duration) -> PeriodicBackgroundTask
     where
         T: Fn() + Sync + Send + 'static,
     {
-        let demon = Demon::spawn(move |is_run| {
-            while is_run.load(Ordering::Relaxed) {
+        let daemon = Daemon::spawn(move |enabled| {
+            while enabled.load(Ordering::Relaxed) {
                 task();
-                thread::sleep(delay);
+                thread::sleep(period);
             }
         });
-        FixedDelayDemon { demon }
+        PeriodicBackgroundTask { daemon }
     }
 }
