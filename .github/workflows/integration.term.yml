@@ -1,0 +1,65 @@
+name: Term Integration Tests
+on:
+  push:
+    branches:
+    - "*"
+
+jobs:
+  tests:
+    name: Tests DVM
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - macos-latest
+        - ubuntu-latest
+
+    env:
+      RUSTFLAGS: -D warnings
+      RUST_BACKTRACE: full
+      CARGO_INCREMENTAL: 1
+      RUSTUP_MAX_RETRIES: 10
+      CARGO_NET_RETRY: 10
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        components: rustfmt
+
+    - if: matrix.os == 'ubuntu-latest'
+      run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+    - name: Restore cargo cache from cache
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-cargo
+        restore-keys: |
+          ${{ runner.os }}-cargo
+
+    - name: Restore previous build from cache
+      uses: actions/cache@v1
+      with:
+        path: ${{ github.workspace }}/target/debug
+        key: ${{ runner.os }}-target-debug
+        restore-keys: |
+          ${{ runner.os }}-target-debug
+
+    # terminal signals
+    - run: cargo build --bin dvm
+    - name: SIGs handling
+      run: |
+        tests/test-shutdown.sh dvm

@@ -1,4 +1,4 @@
-name: Integration Tests
+name: Sentry Integration Tests
 on:
   push:
     branches:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   tests:
-    name: Integration Tests
+    name: Tests DVM
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -73,8 +73,3 @@ jobs:
       run: |
         cargo test -p dvm-cli --manifest-path cli/Cargo.toml --lib --features integrity-tests panic_sentry_integrity
         curl -H "Authorization: Bearer ${SENTRY_API_TOKEN}" https://$SENTRY_HOST_URI/api/0/projects/$SENTRY_COMPANY_PROJECT/events/ 2>&1 | grep "$SENTRY_CROSS_RANDOM_TAG" 1>/dev/null
-
-    # terminal signals
-    - run: cargo build --all
-    - name: SIGs handling
-      run: tests/test-shutdown.sh dvm
