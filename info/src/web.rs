@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 use std::task::{Context, Poll};
 
 use futures_util::future;

@@ -10,4 +10,6 @@ pub mod metrics;
 
 /// Defines `PeriodicBackgroundTask` which is used to collect metrics in the background.
 pub mod task;
+
+/// Defines `InfoService`, `tower`-based web service which handles metrics collection and heartbeats.
 pub mod web;
