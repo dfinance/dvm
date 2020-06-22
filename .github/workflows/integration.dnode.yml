@@ -59,13 +59,10 @@ jobs:
         TAG_KIND=$(echo $GITHUB_REF | cut -d / -f 2)
         TAG_FIRST=$(echo $GITHUB_REF | cut -d / -f 3)
         TAG_LAST=${GITHUB_REF##*/}
-        # [[ "$TAG_FIRST" == "inegrt" ]] || { echo "::set-output name=value::$TAG_FIRST" && false } && ( echo "::set-output name=value::$TAG_LAST" )
         [[ "$TAG_FIRST" == "inegrt" ]] && echo "::set-output name=value::$TAG_LAST"
         [[ "$TAG_FIRST" == "inegrt" ]] || echo "::set-output name=value::$TAG_FIRST"
-        # fallback
-        # [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::master"
-        # TODO: uncomment ^ & rem next when ready:
-        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::feature-DFI-411_dvm_integTest_launcher"
+        # fallback, default branch
+        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::master"
         true
 
     #
