@@ -1,9 +1,13 @@
-use crate::metrics::metric::{Metrics, ExecutionMetric};
-use crate::metrics::execution::SystemMetrics;
-use prometheus_exporter_base::{PrometheusMetric, MetricType};
+#![warn(missing_docs)]
+
 use std::collections::HashMap;
+
 use once_cell::sync::Lazy;
+use prometheus_exporter_base::{MetricType, PrometheusMetric};
 use sys_info::hostname;
+
+use crate::metrics::execution::SystemMetrics;
+use crate::metrics::metric::{ExecutionMetric, Metrics};
 
 static METRIC_HEADER: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     let mut m = HashMap::new();

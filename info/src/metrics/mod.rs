@@ -6,4 +6,5 @@ pub mod execution;
 pub mod meter;
 /// Defines `Metrics` struct and all required aggregates.
 pub mod metric;
+/// Helper functions to work with Prometheus.
 pub mod prometheus;
