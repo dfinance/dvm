@@ -4,5 +4,6 @@ pub mod collector;
 pub mod execution;
 /// Defines `ScopeMeter` which handles metric recording.
 pub mod meter;
+/// Defines `Metrics` struct and all required aggregates.
 pub mod metric;
 pub mod prometheus;
