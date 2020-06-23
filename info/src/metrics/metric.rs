@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::collections::HashMap;
 
 use serde_derive::Serialize;

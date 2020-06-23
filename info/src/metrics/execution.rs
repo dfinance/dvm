@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::{panic, process, thread};
 use std::cell::RefCell;
 use std::collections::HashMap;

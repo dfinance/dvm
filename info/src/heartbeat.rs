@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::sync::Arc;
 use std::time::{SystemTime, Duration};
 use std::sync::atomic::Ordering;

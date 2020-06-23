@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::net::SocketAddr;
 use clap::Clap;
 

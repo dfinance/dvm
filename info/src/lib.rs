@@ -1,3 +1,8 @@
+//! Responsible for gathering various metrics from the running dvm process and sending it
+//! to the Prometheus instance.
+
+#![warn(missing_docs)]
+
 #[macro_use]
 extern crate log;
 
@@ -6,6 +11,8 @@ pub mod config;
 
 /// Defines `HeartRateMonitor`, that wraps an `AtomicU64` corresponding to the last valid heartbeat timestamp.
 pub mod heartbeat;
+
+/// Execution metrics.
 pub mod metrics;
 
 /// Defines `PeriodicBackgroundTask` which is used to collect metrics in the background.

@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::sync::Arc;
 use std::thread::JoinHandle;
 use std::sync::atomic::{AtomicBool, Ordering};

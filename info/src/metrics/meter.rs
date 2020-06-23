@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::time::Instant;
 
 use crate::metrics::execution::{ExecutionData, ExecutionResult, store_metric};

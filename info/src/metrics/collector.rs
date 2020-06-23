@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::sync::{Arc, RwLock};
 use std::sync::atomic::Ordering;
 use std::thread;
