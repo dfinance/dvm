@@ -1,4 +1,4 @@
-use crate::metrics::live_time::ExecutionData;
+use crate::metrics::execution::ExecutionData;
 use std::collections::HashMap;
 use serde_derive::Serialize;
 
@@ -124,7 +124,7 @@ impl ExecutionMetric {
 
 #[cfg(test)]
 mod test {
-    use crate::metrics::live_time::{ExecutionData, ExecutionResult};
+    use crate::metrics::execution::{ExecutionData, ExecutionResult};
     use std::collections::HashMap;
     use crate::metrics::metric::{Percentiles, ExecutionMetric, Average, Metrics};
 

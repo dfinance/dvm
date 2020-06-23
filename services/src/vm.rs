@@ -20,7 +20,7 @@ use libra::move_core_types::identifier::Identifier;
 use libra::move_core_types::language_storage::{TypeTag, StructTag};
 use libra::libra_types::write_set::{WriteOp, WriteSet};
 use libra::libra_types::transaction::{Module, TransactionStatus};
-use info::metrics::live_time::ExecutionResult as ActionResult;
+use info::metrics::execution::ExecutionResult as ActionResult;
 use libra::libra_types::contract_event::ContractEvent;
 use dvm_net::api::grpc::vm_grpc::vm_module_publisher_server::VmModulePublisher;
 

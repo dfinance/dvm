@@ -1,5 +1,5 @@
 use crate::metrics::metric::{Metrics, ExecutionMetric};
-use crate::metrics::live_time::SysMetrics;
+use crate::metrics::execution::SystemMetrics;
 use prometheus_exporter_base::{PrometheusMetric, MetricType};
 use std::collections::HashMap;
 use once_cell::sync::Lazy;
@@ -62,7 +62,7 @@ macro_rules! store {
 
 /// Encode metrics.
 pub fn encode_metrics(
-    system_metrics: Option<SysMetrics>,
+    system_metrics: Option<SystemMetrics>,
     metrics: Metrics,
     metrics_list: &[&str],
 ) -> String {
@@ -117,7 +117,7 @@ pub fn encode_metrics(
 }
 
 /// Encode system metrics.
-fn encode_sys_metrics(buf: &mut String, metric: &SysMetrics) {
+fn encode_sys_metrics(buf: &mut String, metric: &SystemMetrics) {
     let pc = PrometheusMetric::new(
         "dvm_sys_info_cpu_usage",
         MetricType::Gauge,

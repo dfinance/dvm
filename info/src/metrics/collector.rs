@@ -5,7 +5,7 @@ use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
 
-use crate::metrics::live_time::{drain_action_metrics, STORE_METRICS};
+use crate::metrics::execution::{drain_action_metrics, STORE_METRICS};
 use crate::metrics::metric::Metrics;
 use crate::task::PeriodicBackgroundTask;
 
