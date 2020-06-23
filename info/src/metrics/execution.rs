@@ -1,14 +1,15 @@
 #![warn(missing_docs)]
 
-use std::sync::RwLock;
-use std::collections::HashMap;
-use std::{thread, process, panic};
-use std::thread::ThreadId;
+use std::{panic, process, thread};
 use std::cell::RefCell;
-use once_cell::sync::Lazy;
-use sysinfo::{System, SystemExt};
-use serde_derive::{Serialize, Deserialize};
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::RwLock;
+use std::thread::ThreadId;
+
+use once_cell::sync::Lazy;
+use serde_derive::{Deserialize, Serialize};
+use sysinfo::{System, SystemExt};
 
 /// Live time metrics.
 /// Recorded metrics for the current countdown.
@@ -167,12 +168,13 @@ fn current_thread_id() -> ThreadId {
 
 #[cfg(test)]
 mod test {
-    use std::thread;
     use std::collections::HashSet;
-    use crate::metrics::execution::{
-        get_system_metrics, drain_action_metrics, store_metric, ExecutionData, STORE_METRICS,
-    };
     use std::sync::atomic::Ordering;
+    use std::thread;
+
+    use crate::metrics::execution::{
+        drain_action_metrics, ExecutionData, get_system_metrics, store_metric, STORE_METRICS,
+    };
 
     #[test]
     pub fn test_multi_thread() {
