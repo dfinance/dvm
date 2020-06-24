@@ -19,9 +19,7 @@ impl Metrics {
             .map(|(name, metrics)| (name, ExecutionMetric::calculate(metrics)))
             .collect();
 
-        Metrics {
-            execution_metrics,
-        }
+        Metrics { execution_metrics }
     }
 }
 
