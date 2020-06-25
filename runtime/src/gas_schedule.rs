@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 use libra::move_core_types::gas_schedule::{CostTable, GasCost};
 use libra::libra_vm::{
     file_format::{
@@ -9,6 +11,7 @@ use libra::libra_vm::{
 };
 use libra::move_vm_types::gas_schedule::*;
 
+/// Specific gas per instruction configuration for dvm.
 pub fn cost_table() -> CostTable {
     use Bytecode::*;
     let mut instrs = vec![
