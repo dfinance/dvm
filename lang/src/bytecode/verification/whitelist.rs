@@ -29,11 +29,13 @@ fn get_imported_module(script: &CompiledScript, handle: &ModuleHandle) -> Import
     ImportedModule { address, name }
 }
 
+/// Restricts set of modules allowed to use in script.
 pub struct WhitelistVerifier {
     allowed_modules: HashMap<AccountAddress, HashSet<String>>,
 }
 
 impl WhitelistVerifier {
+    /// Only modules allowed to use are modules from whitelist and owner's modules.
     pub fn new(
         sender_address: AccountAddress,
         sender_modules: Vec<String>,
@@ -50,6 +52,7 @@ impl WhitelistVerifier {
         WhitelistVerifier { allowed_modules }
     }
 
+    /// Verify whether all `use` statements in script importing only modules from whitelist.
     pub fn verify_only_whitelisted_modules(&self, script: &CompiledScript) -> Result<()> {
         let deps: HashSet<ImportedModule> = script
             .module_handles()

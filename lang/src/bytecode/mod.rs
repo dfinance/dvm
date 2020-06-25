@@ -1,9 +1,12 @@
 use anyhow::Error;
-use libra::libra_vm::file_format::{SignatureToken, CompiledScript};
-use libra::libra_vm::access::ScriptAccess;
 
+use libra::libra_vm::access::ScriptAccess;
+use libra::libra_vm::file_format::{CompiledScript, SignatureToken};
+
+/// Procedures for verification of bytecode (restricted set of instructions and modules).
 pub mod verification;
 
+/// Get script signature.
 pub fn extract_script_params(bytecode: &[u8]) -> Result<Vec<SignatureToken>, Error> {
     let script = CompiledScript::deserialize(bytecode).map_err(|err| {
         anyhow!(

@@ -2,6 +2,7 @@ use anyhow::Result;
 use libra::libra_vm::access::ScriptAccess;
 use libra::libra_vm::file_format::{Bytecode, CompiledScript};
 
+/// Validate that script contains only allowed bytecode instructions (load variables, move, copy and method calls).
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
     let instructions = &script.code().code;
     for inst in instructions {
