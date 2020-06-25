@@ -1,8 +1,11 @@
+#![warn(missing_docs)]
+
 use anyhow::Result;
 use bech32::u5;
 use lazy_static::lazy_static;
 use regex::Regex;
 
+/// Fixed prefix of all dfinance bech32 addresses.
 pub static HRP: &str = "wallet";
 
 lazy_static! {
@@ -12,12 +15,15 @@ lazy_static! {
     .unwrap();
 }
 
+/// Convert bech32 wallet1 prefixed address into 20 bytes libra address.
+/// Will fail, if bech32 is invalid.
 pub fn bech32_into_libra(address: &str) -> Result<String> {
     let (_, data_bytes) = bech32::decode(address)?;
     let data = bech32::convert_bits(&data_bytes, 5, 8, true)?;
     Ok(hex::encode(&data))
 }
 
+/// Convert libra 20 byte address into bech32 form.
 pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
     ensure!(
         libra_address.starts_with("0x"),
@@ -33,6 +39,7 @@ pub fn libra_into_bech32(libra_address: &str) -> Result<String> {
     Ok(bech32::encode(&HRP, data)?)
 }
 
+/// Replace all occurrences of bech32 addresses in the `source` string.
 pub fn replace_bech32_addresses(source: &str) -> String {
     let mut transformed_source = source.to_string();
     for mat in BECH32_REGEX.captures_iter(source).into_iter() {
