@@ -14,6 +14,7 @@ use crate::compiled_protos::vm_grpc::vm_module_publisher_server::VmModulePublish
 use services::vm::VmService;
 use data_source::MockDataSource;
 
+/// Grps VM service.
 pub struct Server {
     signal: Signal,
     port: u32,
@@ -21,6 +22,7 @@ pub struct Server {
 }
 
 impl Server {
+    /// Create a new VM service with the given data source.
     pub fn new(data_source: MockDataSource) -> Server {
         let signal = Signal::new();
         let port = Arc::new(AtomicU32::new(0));
@@ -69,6 +71,7 @@ impl Server {
         }
     }
 
+    /// Returns the service port.
     pub fn port(&self) -> u32 {
         self.port
     }
@@ -86,6 +89,7 @@ impl Drop for Server {
     }
 }
 
+/// Vm servcie signal handler.
 #[derive(Clone)]
 pub struct Signal {
     shutdown_signal: Sender<()>,
@@ -95,6 +99,7 @@ pub struct Signal {
 }
 
 impl Signal {
+    /// Create a new signal handler.
     pub fn new() -> Signal {
         let (shutdown_sender, shutdown_receiver) = channel();
         let (start_sender, start_receiver) = channel();
@@ -107,10 +112,12 @@ impl Signal {
         }
     }
 
+    /// Returns true if the service is running, false otherwise.
     pub fn ensure_run(&self) {
         self.start_signal_receiver.lock().unwrap().recv().unwrap();
     }
 
+    /// Send shutdown signal.
     pub fn shutdown(&self) {
         self.shutdown_signal.send(()).unwrap();
     }
