@@ -488,7 +488,7 @@ dependencies = [
  "libra-workspace-hack",
  "once_cell",
  "sha2 0.9.1",
- "stdlib 0.1.0",
+ "stdlib",
  "vm",
 ]
 
@@ -841,6 +841,7 @@ dependencies = [
  "dvm-compiler",
  "dvm-data-source",
  "dvm-libra-deps",
+ "dvm-stdlib",
  "hex",
  "include_dir",
  "lazy_static",
@@ -851,7 +852,6 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "stdlib 0.2.0",
 ]
 
 [[package]]
@@ -923,11 +923,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "dvm-stdlib"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "dvm-compiler",
+ "dvm-data-source",
+ "dvm-libra-deps",
+ "dvm-test-kit",
+ "hex",
+ "include_dir",
+ "serde",
+]
+
+[[package]]
 name = "dvm-test-kit"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "byteorder",
+ "chrono",
  "dvm-compiler",
  "dvm-data-source",
  "dvm-lang",
@@ -937,9 +952,12 @@ dependencies = [
  "dvm-services",
  "futures",
  "hex",
+ "lazy_static",
+ "regex",
  "serde",
  "serde_derive",
  "serde_json",
+ "termion",
  "tokio",
  "twox-hash",
 ]
@@ -2314,6 +2332,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "numtoa"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8f8bdf33df195859076e54ab11ee78a1b208382d3a26ec40d142ffc1ecc49ef"
+
+[[package]]
 name = "object"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2785,6 +2809,15 @@ name = "redox_syscall"
 version = "0.1.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2439c63f3f6139d1b57529d16bc3b8bb855230c8efcc5d3a896c8bea7c3b1e84"
+
+[[package]]
+name = "redox_termios"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e891cfe48e9100a70a3b6eb652fef28920c117d366339687bd5576160db0f76"
+dependencies = [
+ "redox_syscall",
+]
 
 [[package]]
 name = "ref-cast"
@@ -3341,19 +3374,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "stdlib"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "dvm-compiler",
- "dvm-data-source",
- "dvm-libra-deps",
- "hex",
- "include_dir",
- "serde",
-]
-
-[[package]]
 name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3469,6 +3489,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb6bfa289a4d7c5766392812c0a1f4c1ba45afa1ad47803c11e1f407d846d75f"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "termion"
+version = "1.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c22cec9d8978d906be5ac94bceb5a010d885c626c4c8855721a4dbd20e3ac905"
+dependencies = [
+ "libc",
+ "numtoa",
+ "redox_syscall",
+ "redox_termios",
 ]
 
 [[package]]

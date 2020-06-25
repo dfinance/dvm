@@ -1,6 +1,9 @@
+#[macro_use]
+extern crate anyhow;
 mod genesis;
 mod grpc_client;
 mod grpc_server;
+pub mod test_suite;
 
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
@@ -18,6 +21,8 @@ pub use genesis::genesis_write_set;
 use anyhow::Error;
 use crate::compiled_protos::vm_grpc::{VmArgs, VmPublishModule, VmExecuteResponse};
 use dvm_net::api::grpc::vm_grpc::{VmExecuteScript, StructIdent};
+use twox_hash::XxHash64;
+use std::hash::Hasher;
 
 pub mod compiled_protos {
     extern crate dvm_net;
@@ -176,4 +181,10 @@ pub fn meta(addr: &AccountAddress) -> ExecutionMeta {
 /// Create a new account address from hex string.
 pub fn account(addr: &str) -> AccountAddress {
     AccountAddress::from_hex_literal(addr).unwrap()
+}
+
+pub fn str_xxhash(ticker: &str) -> u64 {
+    let mut hash = XxHash64::default();
+    Hasher::write(&mut hash, ticker.as_bytes());
+    Hasher::finish(&hash)
 }
