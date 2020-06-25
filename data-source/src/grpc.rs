@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use std::convert::TryInto;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};

@@ -239,7 +239,7 @@ pub mod tests {
         },
         lcs,
     };
-    use ds::{MockDataSource, MergeWriteSet, DataAccess};
+    use ds::{MockDataSource, DataAccess};
     use libra::move_vm_types::values::Value;
     use crate::move_vm::{ExecutionMeta, Dvm, Script, U64Store};
     use libra::libra_vm::CompiledModule;

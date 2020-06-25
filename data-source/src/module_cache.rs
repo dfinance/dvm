@@ -1,14 +1,19 @@
-use lru::LruCache;
 use std::sync::{Arc, Mutex};
+
+use anyhow::Error;
+use lru::LruCache;
+
 use libra::libra_state_view::StateView;
 use libra::libra_types::access_path::AccessPath;
-use anyhow::Error;
-use libra::move_vm_runtime::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
-use crate::{DataSource, Clear};
+use libra::move_vm_runtime::data_cache::RemoteCache;
 
+use crate::{Clear, DataSource};
+
+/// Value of the first byte in serialized representation of the `Module` for `lcs`.
 const CODE_TAG: u8 = 0;
 
+/// Cached `DataSource`.
 #[derive(Debug, Clone)]
 pub struct ModuleCache<D>
 where
@@ -22,6 +27,7 @@ impl<D> ModuleCache<D>
 where
     D: DataSource,
 {
+    /// Create new cached data source with `cache_size` max number of entries in cache.
     pub fn new(inner: D, cache_size: usize) -> ModuleCache<D> {
         ModuleCache {
             inner,

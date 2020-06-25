@@ -680,7 +680,7 @@ mod tests {
 
     #[test]
     pub fn test_module_signature() {
-        let ds = MockDataSource::default();
+        let ds = MockDataSource::new();
         let compiler = Compiler::new(ds.clone());
         ds.publish_module(
             compiler
