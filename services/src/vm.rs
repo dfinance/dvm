@@ -103,7 +103,7 @@ fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmEx
     }
 }
 
-/// Converts vm status.
+/// Converts libra `VMStatus` into gRPC `VMStatus`.
 fn convert_status(status: VMStatus) -> VmStatus {
     VmStatus {
         major_status: status.major_status as u64,
@@ -112,7 +112,7 @@ fn convert_status(status: VMStatus) -> VmStatus {
     }
 }
 
-/// Converts write set.
+/// Converts `WriteSet`.into a vec of `VmValue` for gRPC
 fn convert_write_set(ws: WriteSet) -> Vec<VmValue> {
     ws.into_iter()
         .map(|(access_path, write_op)| {
@@ -136,7 +136,7 @@ fn convert_write_set(ws: WriteSet) -> Vec<VmValue> {
         .collect()
 }
 
-/// Converts events.
+/// Converts libra `ContractEvent`s into gRPC `VmEvent`.
 fn convert_events(events: Vec<ContractEvent>) -> Vec<VmEvent> {
     events
         .into_iter()
