@@ -1,33 +1,33 @@
-use crate::metrics::live_time::{STORE_METRICS, drain_action_metrics};
 use std::sync::{Arc, RwLock};
-use std::time::Duration;
-use std::thread;
 use std::sync::atomic::Ordering;
+use std::thread;
+use std::time::Duration;
+
+use crate::metrics::execution::{drain_action_metrics, STORE_METRICS};
 use crate::metrics::metric::Metrics;
-use crate::task::FixedDelayDemon;
+use crate::task::PeriodicBackgroundTask;
 
 /// Metrics collector.
 #[derive(Debug, Clone)]
 pub struct MetricsCollector {
-    inner: Arc<MetricsInner>,
+    inner: Arc<CollectorState>,
 }
 
-/// Metrics collector state.
+/// Metrics collector state. Wraps collected metrics and periodic task.
 #[derive(Debug)]
-struct MetricsInner {
+struct CollectorState {
     metrics: Arc<RwLock<Metrics>>,
-    task: FixedDelayDemon,
+    task: PeriodicBackgroundTask,
 }
 
 impl MetricsCollector {
-    /// Create a new metrics collector.
-    /// `interval` is metric interval.
-    pub fn new(interval: Duration) -> MetricsCollector {
+    /// Create a `MetricsCollector` which fires once every `time_between_collects`.
+    pub fn new(time_between_collects: Duration) -> MetricsCollector {
         STORE_METRICS.store(true, Ordering::Relaxed);
         let metrics = Arc::new(RwLock::new(Default::default()));
-        let task = MetricsCollector::start_collector(interval, metrics.clone());
+        let task = MetricsCollector::start_collector(time_between_collects, metrics.clone());
         MetricsCollector {
-            inner: Arc::new(MetricsInner { metrics, task }),
+            inner: Arc::new(CollectorState { metrics, task }),
         }
     }
 
@@ -37,19 +37,22 @@ impl MetricsCollector {
     }
 
     /// Start collecting process.
-    fn start_collector(interval: Duration, metrics: Arc<RwLock<Metrics>>) -> FixedDelayDemon {
-        FixedDelayDemon::spawn(
+    fn start_collector(
+        time_between_collects: Duration,
+        metrics: Arc<RwLock<Metrics>>,
+    ) -> PeriodicBackgroundTask {
+        PeriodicBackgroundTask::spawn(
             move || {
                 let new_metric = Metrics::calculate(drain_action_metrics());
                 *metrics.write().unwrap() = new_metric;
-                thread::sleep(interval);
+                thread::sleep(time_between_collects);
             },
-            interval,
+            time_between_collects,
         )
     }
 }
 
-impl Drop for MetricsInner {
+impl Drop for CollectorState {
     fn drop(&mut self) {
         STORE_METRICS.store(false, Ordering::Relaxed);
     }

@@ -5,7 +5,7 @@ use libra::move_vm_runtime::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
 use crate::{DataSource, Clear};
 use dvm_info::metrics::meter::ScopeMeter;
-use dvm_info::metrics::live_time::ExecutionResult;
+use dvm_info::metrics::execution::ExecutionResult;
 
 /// Wrapper for data source which collects metrics queries.
 #[derive(Debug, Clone)]

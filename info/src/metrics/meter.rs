@@ -1,5 +1,6 @@
 use std::time::Instant;
-use crate::metrics::live_time::{store_metric, ExecutionData, ExecutionResult};
+
+use crate::metrics::execution::{ExecutionData, ExecutionResult, store_metric};
 
 /// Scope metric.
 pub struct ScopeMeter {
@@ -36,10 +37,11 @@ impl Drop for ScopeMeter {
 
 #[cfg(test)]
 mod test {
+    use std::sync::atomic::Ordering;
     use std::thread;
     use std::time::Duration;
-    use crate::metrics::live_time::{ExecutionResult, drain_action_metrics, STORE_METRICS};
-    use std::sync::atomic::Ordering;
+
+    use crate::metrics::execution::{drain_action_metrics, ExecutionResult, STORE_METRICS};
     use crate::metrics::meter::ScopeMeter;
 
     #[test]

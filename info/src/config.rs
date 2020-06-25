@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use clap::Clap;
 
+/// Configuration for service that gathers metrics about VM execution.
 #[derive(Debug, Default, Clone, Clap)]
 pub struct InfoServiceConfig {
     /// Info service address  in the form of HOST_ADDRESS:PORT.

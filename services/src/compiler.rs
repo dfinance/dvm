@@ -13,7 +13,7 @@ use api::grpc::vm_grpc::{
 use std::convert::TryFrom;
 use compiler::Compiler;
 use info::metrics::meter::ScopeMeter;
-use info::metrics::live_time::ExecutionResult;
+use info::metrics::execution::ExecutionResult;
 
 /// Compilation service.
 #[derive(Clone)]

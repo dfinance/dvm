@@ -1,12 +1,13 @@
-use std::sync::RwLock;
-use std::collections::HashMap;
-use std::{thread, process, panic};
-use std::thread::ThreadId;
+use std::{panic, process, thread};
 use std::cell::RefCell;
-use once_cell::sync::Lazy;
-use sysinfo::{System, SystemExt};
-use serde_derive::{Serialize, Deserialize};
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::RwLock;
+use std::thread::ThreadId;
+
+use once_cell::sync::Lazy;
+use serde_derive::{Deserialize, Serialize};
+use sysinfo::{System, SystemExt};
 
 /// Live time metrics.
 /// Recorded metrics for the current countdown.
@@ -66,11 +67,14 @@ impl ExecutionResult {
     }
 }
 
-/// System metrics.
+/// Metrics for the running process.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct SysMetrics {
+pub struct SystemMetrics {
+    /// Total CPU usage.
     pub cpu_usage: f32,
+    /// Memory usage for the process (in kB).
     pub memory: u64,
+    /// Number of threads in the current process.
     pub threads_count: usize,
 }
 
@@ -84,7 +88,7 @@ pub fn store_metric(name: &'static str, metric: ExecutionData) {
             };
             if let Some(metric) = not_stored_metric {
                 let metrics = &mut LIVE_METRICS.write().unwrap();
-                metrics.crate_local_metrics();
+                metrics.create_local_metrics();
                 metrics.store_metric(name, metric);
             }
         }
@@ -95,21 +99,11 @@ pub fn store_metric(name: &'static str, metric: ExecutionData) {
     }
 }
 
-/// Returns the live metrics by name.
-pub fn get_action_metrics(name: &'static str) -> Vec<ExecutionData> {
-    let metrics = &LIVE_METRICS.read().unwrap();
-    metrics.0.iter().fold(Vec::new(), |mut acc, (_, local)| {
-        if let Some(metric) = local.borrow().get(name) {
-            acc.extend(metric.iter().cloned());
-        }
-        acc
-    })
-}
-
-pub fn get_sys_metrics() -> SysMetrics {
+/// Get metrics for the CPU and memory of the node.
+pub fn get_system_metrics() -> SystemMetrics {
     let sys = System::default();
     let process = sys.get_process(process::id() as i32).unwrap();
-    SysMetrics {
+    SystemMetrics {
         cpu_usage: process.cpu_usage,
         memory: process.memory,
         threads_count: palaver::thread::count(),
@@ -147,7 +141,7 @@ impl Metrics {
     /// Stores thread local metric.
     /// Returns None if thread local metrics is available for current thread, given metric otherwise.
     fn store_metric(&self, name: &'static str, metric: ExecutionData) -> Option<ExecutionData> {
-        if let Some(local_metrics) = self.0.get(&id()) {
+        if let Some(local_metrics) = self.0.get(&current_thread_id()) {
             let mut metrics = local_metrics.borrow_mut();
             let metrics = metrics.entry(name);
             metrics.or_insert_with(Vec::new).push(metric);
@@ -158,26 +152,27 @@ impl Metrics {
     }
 
     /// Creates metric for thread local.
-    fn crate_local_metrics(&mut self) {
+    fn create_local_metrics(&mut self) {
         self.0
-            .entry(id())
+            .entry(current_thread_id())
             .or_insert_with(|| RefCell::new(Default::default()));
     }
 }
 
 /// Returns current thread id.
-fn id() -> ThreadId {
+fn current_thread_id() -> ThreadId {
     thread::current().id()
 }
 
 #[cfg(test)]
 mod test {
-    use std::thread;
     use std::collections::HashSet;
-    use crate::metrics::live_time::{
-        get_sys_metrics, drain_action_metrics, store_metric, ExecutionData, STORE_METRICS,
-    };
     use std::sync::atomic::Ordering;
+    use std::thread;
+
+    use crate::metrics::execution::{
+        drain_action_metrics, ExecutionData, get_system_metrics, store_metric, STORE_METRICS,
+    };
 
     #[test]
     pub fn test_multi_thread() {
@@ -230,6 +225,6 @@ mod test {
 
     #[test]
     pub fn test_sys_metrics() {
-        get_sys_metrics();
+        get_system_metrics();
     }
 }

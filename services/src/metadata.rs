@@ -6,7 +6,7 @@ use tonic::{Request, Response, Status};
 use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
 use api::grpc::vm_grpc::{Signature, VmScript, VmTypeTag};
 use info::metrics::meter::ScopeMeter;
-use info::metrics::live_time::ExecutionResult;
+use info::metrics::execution::ExecutionResult;
 
 /// Metadata service.
 /// Provides a function to retrieve metadata for the script.

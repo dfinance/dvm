@@ -1,32 +1,36 @@
-use crate::metrics::live_time::ExecutionData;
 use std::collections::HashMap;
+
 use serde_derive::Serialize;
+
+use crate::metrics::execution::ExecutionData;
 
 /// Application metrics;
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
 pub struct Metrics {
+    /// Inner metrics state: (name of a metric) -> ExecutionMetric
     pub execution_metrics: HashMap<&'static str, ExecutionMetric>,
 }
 
 impl Metrics {
     /// Calculate metrics based on a list of executions.
-    pub fn calculate(app_metric: HashMap<&'static str, Vec<ExecutionData>>) -> Metrics {
-        let action_metrics = app_metric
+    pub fn calculate(executions: HashMap<&'static str, Vec<ExecutionData>>) -> Metrics {
+        let execution_metrics = executions
             .into_iter()
             .map(|(name, metrics)| (name, ExecutionMetric::calculate(metrics)))
             .collect();
 
-        Metrics {
-            execution_metrics: action_metrics,
-        }
+        Metrics { execution_metrics }
     }
 }
 
-/// Percentiles.
+/// Time to process different chunks of executions.
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
 pub struct Percentiles {
+    /// 50% percentile
     pub p_50: u64,
+    /// 75%
     pub p_75: u64,
+    /// 90%
     pub p_90: u64,
 }
 
@@ -39,7 +43,7 @@ pub struct Average {
     pub sd: f64,
 }
 
-/// Action metrics.
+/// Aggregate for the executions metrics.
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
 pub struct ExecutionMetric {
     /// The number of actions performed in the time interval.
@@ -63,6 +67,7 @@ pub struct ExecutionMetric {
 }
 
 impl ExecutionMetric {
+    /// Calculate metrics based on provided execution data.
     pub fn calculate(mut metrics: Vec<ExecutionData>) -> ExecutionMetric {
         let executions_count = metrics.len() as u64;
         let mut min_time = 0;
@@ -124,9 +129,10 @@ impl ExecutionMetric {
 
 #[cfg(test)]
 mod test {
-    use crate::metrics::live_time::{ExecutionData, ExecutionResult};
     use std::collections::HashMap;
-    use crate::metrics::metric::{Percentiles, ExecutionMetric, Average, Metrics};
+
+    use crate::metrics::execution::{ExecutionData, ExecutionResult};
+    use crate::metrics::metric::{Average, ExecutionMetric, Metrics, Percentiles};
 
     #[test]
     fn test_empty_metrics_calculation() {
