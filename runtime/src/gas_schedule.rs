@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use libra::move_core_types::gas_schedule::{CostTable, GasCost};
 use libra::libra_vm::{
     file_format::{

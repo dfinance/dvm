@@ -1,4 +1,4 @@
-use dvm_test_kit::TestKit;
+use dvm_test_kit::{TestKit};
 use byteorder::{LittleEndian, ByteOrder};
 use dvm_test_kit::*;
 use libra::move_vm_natives::oracle;
