@@ -1,25 +1,32 @@
+#![warn(missing_docs)]
+
 use std::convert::TryInto;
-use std::thread::{self, JoinHandle};
 use std::sync::Arc;
+use std::thread::{self, JoinHandle};
 use std::time::Duration;
-use libra::{libra_types, libra_state_view, move_vm_runtime};
+
+use anyhow::Error;
+use api::grpc::ds_grpc::{ds_raw_response::ErrorCode, ds_service_client::DsServiceClient, DsAccessPath};
+use crossbeam::channel::{bounded, Receiver, Sender};
+use http::Uri;
 use libra_state_view::StateView;
 use libra_types::access_path::AccessPath;
-use anyhow::Error;
-use http::Uri;
-use tokio::runtime::Runtime;
-use crossbeam::channel::{Sender, Receiver, bounded};
-use dvm_net::api;
-use dvm_net::tonic;
-use dvm_net::prelude::*;
-use api::grpc::ds_grpc::{ds_service_client::DsServiceClient, DsAccessPath, ds_raw_response::ErrorCode};
-use libra::libra_vm::errors::VMResult;
-use libra_types::vm_error::{VMStatus, StatusCode};
-use crate::{DataSource, Clear};
+use libra_types::vm_error::{StatusCode, VMStatus};
 use move_vm_runtime::data_cache::RemoteCache;
+use tokio::runtime::Runtime;
 
+use dvm_net::api;
+use dvm_net::prelude::*;
+use dvm_net::tonic;
+use libra::{libra_state_view, libra_types, move_vm_runtime};
+use libra::libra_vm::errors::VMResult;
+
+use crate::{Clear, DataSource};
+
+/// Receiver for a channel that handles shutdown signals.
 pub type ShutdownSig = tokio::sync::oneshot::Receiver<()>;
 
+/// Wrapper around gRPC-based interface to dnode. Used for the resource resolution inside the VM.
 #[derive(Clone)]
 pub struct GrpcDataSource {
     handler: Arc<JoinHandle<()>>,
@@ -27,6 +34,8 @@ pub struct GrpcDataSource {
 }
 
 impl GrpcDataSource {
+    /// Create an instance of gRPC based data source for VM.
+    /// `shutdown_signal` is a oneshot `crossbeam_channel::Sender` to shutdown the service.
     pub fn new(uri: Uri, shutdown_signal: Option<ShutdownSig>) -> Result<GrpcDataSource, Error> {
         let rt = Runtime::new()?;
         let (sender, receiver) = bounded(10);
@@ -152,6 +161,7 @@ impl StateView for GrpcDataSource {
     }
 }
 
+/// Convert Libra's `AccessPath` into gRPC `DsAccessPath`.
 pub fn access_path_into_ds(ap: AccessPath) -> DsAccessPath {
     DsAccessPath::new(ap.address.to_vec(), ap.path)
 }

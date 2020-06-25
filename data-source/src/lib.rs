@@ -3,6 +3,7 @@ extern crate anyhow;
 #[macro_use]
 extern crate log;
 
+/// `GrpcDataSource` to wrap all gRPC calls to `dnode`.
 pub mod grpc;
 pub mod metrics;
 pub mod mock;
