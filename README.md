@@ -93,7 +93,7 @@ To install using `cargo` run the following commands:
 
 ```bash
 git clone https://github.com/dfinance/dvm.git && cd dvm
-cargo install --path ./cli --bin dvm
+cargo install --path ./cli --bins
 ```
 
 As result you will get the following executables into your `.cargo/bin` directory:
