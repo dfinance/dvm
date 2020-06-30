@@ -1,11 +1,13 @@
+use anyhow::Error;
+
+use dvm_info::metrics::execution::ExecutionResult;
+use dvm_info::metrics::meter::ScopeMeter;
 use libra::libra_state_view::StateView;
 use libra::libra_types::access_path::AccessPath;
-use anyhow::Error;
-use libra::move_vm_runtime::data_cache::RemoteCache;
 use libra::libra_vm::errors::VMResult;
-use crate::{DataSource, Clear};
-use dvm_info::metrics::meter::ScopeMeter;
-use dvm_info::metrics::execution::ExecutionResult;
+use libra::move_vm_runtime::data_cache::RemoteCache;
+
+use crate::{Clear, DataSource};
 
 /// Wrapper for data source which collects metrics queries.
 #[derive(Debug, Clone)]
@@ -20,6 +22,7 @@ impl<D> DsMeter<D>
 where
     D: DataSource,
 {
+    /// Contructor
     pub fn new(inner: D) -> DsMeter<D> {
         DsMeter { inner }
     }

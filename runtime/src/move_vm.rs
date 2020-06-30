@@ -1,36 +1,43 @@
-use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
-use libra_types::transaction::TransactionStatus;
-use libra_types::{account_address::AccountAddress, transaction::Module};
-use libra_vm::CompiledModule;
-use libra::move_core_types::gas_schedule::{GasAlgebra, GasUnits, CostTable, AbstractMemorySize};
-use std::fmt;
-use libra_types::vm_error::{VMStatus, StatusCode};
-use libra_vm::errors::{vm_error, Location, VMResult};
-use libra_types::write_set::WriteSet;
-
-use libra_types::contract_event::ContractEvent;
-use libra::move_vm_types::values::Value;
-use ds::DataSource;
-use move_vm_runtime::{loader::ModuleCache};
-use crate::gas_schedule;
-use libra::move_core_types::language_storage::TypeTag;
-use serde_derive::Deserialize;
-use libra_types::account_config::CORE_CODE_ADDRESS;
 use std::collections::HashMap;
+use std::fmt;
+
+use libra_types::{account_address::AccountAddress, transaction::Module};
+use libra_types::account_config::CORE_CODE_ADDRESS;
+use libra_types::contract_event::ContractEvent;
+use libra_types::transaction::TransactionStatus;
+use libra_types::vm_error::{StatusCode, VMStatus};
+use libra_types::write_set::WriteSet;
+use libra_vm::CompiledModule;
+use libra_vm::errors::{Location, vm_error, VMResult};
+use move_vm_runtime::{loader::ModuleCache};
+use move_vm_runtime::data_cache::TransactionDataCache;
 use move_vm_runtime::loader::ScriptCache;
 use move_vm_runtime::move_vm::MoveVM;
-use move_vm_runtime::data_cache::TransactionDataCache;
-use move_vm_types::gas_schedule::CostStrategy;
 use move_vm_types::data_store::DataStore;
+use move_vm_types::gas_schedule::CostStrategy;
+use serde::Deserialize;
 
+use ds::DataSource;
+use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
+use libra::move_core_types::gas_schedule::{AbstractMemorySize, CostTable, GasAlgebra, GasUnits};
+use libra::move_core_types::language_storage::TypeTag;
+use libra::move_vm_types::values::Value;
+
+use crate::gas_schedule;
+
+/// Stores metadata for vm execution.
 #[derive(Debug)]
 pub struct ExecutionMeta {
+    /// Max gas units to be used in transaction execution.
     pub max_gas_amount: u64,
+    /// Price in `DFI` coins per unit of gas.
     pub gas_unit_price: u64,
+    /// Sender address of the transaction owner.
     pub sender: AccountAddress,
 }
 
 impl ExecutionMeta {
+    /// Contructor.
     pub fn new(max_gas_amount: u64, gas_unit_price: u64, sender: AccountAddress) -> ExecutionMeta {
         ExecutionMeta {
             max_gas_amount,
@@ -39,6 +46,7 @@ impl ExecutionMeta {
         }
     }
 
+    /// Default metadata for testing.
     pub fn test() -> ExecutionMeta {
         ExecutionMeta {
             max_gas_amount: 1_000_000,
@@ -48,22 +56,28 @@ impl ExecutionMeta {
     }
 }
 
+/// Result of transaction execution.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExecutionResult {
+    /// Changes to the chain.
     pub write_set: WriteSet,
+    /// Emitted events.
     pub events: Vec<ContractEvent>,
+    /// Number of gas units used for execution.
     pub gas_used: u64,
+    /// Status of execution (success, failure or retry).
     pub status: TransactionStatus,
 }
 
 impl ExecutionResult {
+    /// Creates `ExecutionResult` out of resulting chain data cache and `vm_result`.
     fn new(
         mut data_cache: TransactionDataCache,
         cost_strategy: CostStrategy,
-        txn_data: ExecutionMeta,
-        result: VMResult<()>,
+        txn_meta: ExecutionMeta,
+        vm_result: VMResult<()>,
     ) -> VmResult {
-        let gas_used = GasUnits::new(txn_data.max_gas_amount)
+        let gas_used = GasUnits::new(txn_meta.max_gas_amount)
             .sub(cost_strategy.remaining_gas())
             .get();
 
@@ -71,7 +85,7 @@ impl ExecutionResult {
             write_set: data_cache.make_write_set()?,
             events: data_cache.event_data().to_vec(),
             gas_used,
-            status: match result {
+            status: match vm_result {
                 Ok(()) => TransactionStatus::from(VMStatus::new(StatusCode::EXECUTED)),
                 Err(err) => TransactionStatus::from(err),
             },
@@ -79,6 +93,7 @@ impl ExecutionResult {
     }
 }
 
+/// Result enum for ExecutionResult
 pub type VmResult = Result<ExecutionResult, VMStatus>;
 
 /// Dfinance virtual machine.
@@ -112,6 +127,7 @@ where
         TransactionDataCache::new(&self.ds)
     }
 
+    /// Publishes module to the chain.
     pub fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
         let mut cache = self.make_data_cache();
         let mut cost_strategy =
@@ -148,6 +164,7 @@ where
         ExecutionResult::new(cache, cost_strategy, meta, res)
     }
 
+    /// Executes passed script on the chain.
     pub fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult {
         let mut cache = self.make_data_cache();
 
@@ -176,6 +193,7 @@ where
     }
 }
 
+/// Script bytecode + passed arguments and type parameters.
 pub struct Script {
     code: Vec<u8>,
     args: Vec<Value>,
@@ -183,6 +201,7 @@ pub struct Script {
 }
 
 impl Script {
+    /// Contructor.
     pub fn new(code: Vec<u8>, args: Vec<Value>, type_args: Vec<TypeTag>) -> Self {
         Script {
             code,
@@ -191,14 +210,17 @@ impl Script {
         }
     }
 
+    /// Script bytecode.
     pub fn code(&self) -> &[u8] {
         &self.code
     }
 
+    /// Parameters passed to main() function.
     pub fn args(&self) -> &[Value] {
         &self.args
     }
 
+    /// Convert into internal data.
     pub fn into_inner(self) -> (Vec<u8>, Vec<Value>, Vec<TypeTag>) {
         (self.code, self.args, self.type_args)
     }
@@ -213,36 +235,43 @@ impl fmt::Debug for Script {
     }
 }
 
+/// Deserializable `u64` for lcs.
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct U64Store {
+    /// Internal value.
     pub val: u64,
 }
 
+/// Deserializable `AccountAddress` for lcs.
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct AddressStore {
+    /// Internal value.
     pub val: AccountAddress,
 }
 
+/// Deserializable `Vec<u8>` for lcs.
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct VectorU8Store {
+    /// Internal value.
     pub val: Vec<u8>,
 }
 
 #[cfg(test)]
 pub mod tests {
     use compiler::Compiler;
+    use ds::{DataAccess, MockDataSource};
     use lang::{stdlib::zero_std};
     use libra::{
+        lcs,
         libra_types::{
             account_address::AccountAddress, transaction::Module, vm_error::StatusCode,
             write_set::WriteOp,
         },
-        lcs,
     };
-    use ds::{MockDataSource, MergeWriteSet, DataAccess};
-    use libra::move_vm_types::values::Value;
-    use crate::move_vm::{ExecutionMeta, Dvm, Script, U64Store};
     use libra::libra_vm::CompiledModule;
+    use libra::move_vm_types::values::Value;
+
+    use crate::move_vm::{Dvm, ExecutionMeta, Script, U64Store};
 
     #[test]
     fn test_publish_module() {

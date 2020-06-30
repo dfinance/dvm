@@ -9,6 +9,7 @@ use libra::libra_vm::{
 };
 use libra::move_vm_types::gas_schedule::*;
 
+/// Specific gas per instruction configuration for dvm.
 pub fn cost_table() -> CostTable {
     use Bytecode::*;
     let mut instrs = vec![
