@@ -87,10 +87,13 @@ Check out [Usage](#Usage) part for more info.
 
 ### Build and Install
 
-To install using `cargo` run the following command:
+To install using `cargo` run the following commands:
+
+<!-- TODO: fix via make dvm-cli a main create -->
 
 ```bash
-cargo install --git https://github.com/dfinance/dvm.git
+git clone https://github.com/dfinance/dvm.git && cd dvm
+cargo install --path ./cli --bin dvm
 ```
 
 As result you will get the following executables into your `.cargo/bin` directory:
