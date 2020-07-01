@@ -5,7 +5,7 @@ use walkdir::WalkDir;
 use std::fs::{File, OpenOptions};
 use crate::mv::bech32::bech32_into_libra;
 use std::io::Write;
-use crate::mv::{preprocessor, disassembler};
+use crate::mv::{preprocessor, disassembler1 as disassembler};
 use anyhow::{Result, Error};
 use libra::{prelude::*, compiler::*};
 use crate::mv::dependence::extractor::{extract_from_source, extract_from_bytecode};
