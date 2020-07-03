@@ -6,7 +6,7 @@ on:
 
 jobs:
   docs:
-    name: Docs
+    name: Build Docs
     runs-on: ubuntu-latest
 
     strategy:

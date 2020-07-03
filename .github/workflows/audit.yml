@@ -8,7 +8,7 @@ on:
 
 jobs:
   rust:
-    name: Rust
+    name: Audit
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -17,7 +17,6 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
-        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -33,13 +32,13 @@ jobs:
     - if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    # - name: Restore cargo cache
-    #   uses: actions/cache@v1
-    #   with:
-    #     path: ~/.cargo
-    #     key: ${{ runner.os }}-cargo
-    #     restore-keys: |
-    #       ${{ runner.os }}-cargo
+    - name: Restore cargo cache
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-cargo
+        restore-keys: |
+          ${{ runner.os }}-cargo
 
     - name: Install cargo-audit
       uses: actions-rs/install@v0.1

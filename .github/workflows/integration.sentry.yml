@@ -7,7 +7,7 @@ on:
 
 jobs:
   tests:
-    name: Tests DVM
+    name: Tests DVM & Sentry
     runs-on: ${{ matrix.os }}
 
     defaults:

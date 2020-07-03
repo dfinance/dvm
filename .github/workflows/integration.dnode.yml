@@ -15,7 +15,7 @@ on:
 
 jobs:
   with-node:
-    name: Tests DVM with Node
+    name: Tests DVM & Node
     runs-on: ${{ matrix.os }}
 
     defaults:
