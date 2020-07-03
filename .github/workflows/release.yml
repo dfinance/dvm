@@ -15,7 +15,6 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
-        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -64,7 +63,6 @@ jobs:
       run: cargo build --all --release
 
     - name: Archive
-      # if: matrix.os != 'windows-latest'
       run: >
         zip --junk-paths dvm-${{ runner.os }}.zip
         LICENSE README.md
@@ -72,13 +70,6 @@ jobs:
         target/release/movec
         target/release/status-table
         target/release/stdlib-builder
-
-    # - name: Archive (win)
-    #   if: matrix.os == 'windows-latest'
-    #   uses: papeloto/action-zip@v1
-    #   with:
-    #     files: LICENSE README.md target/release/dvm.exe target/release/stdlib-builder.exe
-    #     dest: dvm-${{ runner.os }}.zip
 
     - uses: actions/upload-artifact@master
       with:
@@ -106,15 +97,8 @@ jobs:
         name: dvm-Linux
         path: artifacts/
 
-    # - name: Get Windows artifacts from Build Job
-    #   uses: actions/download-artifact@v1
-    #   with:
-    #     name: dvm-Windows
-    #     path: artifacts/
-
     - name: Extract the version tag
       id: version_tag
-      # or ${GITHUB_REF##*/}
       shell: bash
       run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
 
@@ -149,13 +133,3 @@ jobs:
         asset_path: artifacts/dvm-macOS.zip
         asset_name: dvm-${{ steps.version_tag.outputs.value }}-macos.zip
         asset_content_type: application/zip
-
-    # - name: Upload Release Asset (win)
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-    #     asset_path: artifacts/dvm-Windows.zip
-    #     asset_name: dvm-${{ steps.version_tag.outputs.value }}-windows.zip
-    #     asset_content_type: application/zip

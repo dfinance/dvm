@@ -59,7 +59,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-target-debug
 
+    #
     # Sentry integration:
+    #
     - name: Prepare ENV
       run: echo "::set-env name=SENTRY_CROSS_RANDOM_TAG::$GITHUB_SHA-${{ runner.os }}"
 

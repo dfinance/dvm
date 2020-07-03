@@ -47,10 +47,6 @@ jobs:
         echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dnode
         echo ::set-output name=GOPATH::${{ github.workspace }}/go
 
-    - name: Extract the version tag
-      id: version_tag
-      run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
-
     # usage:
     # ${{ steps.dnode_ref.outputs.value }}
     - name: Extract the dnode repo ref from tag
@@ -81,6 +77,22 @@ jobs:
 
     - if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+    - name: Restore cargo cache from cache
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-cargo
+        restore-keys: |
+          ${{ runner.os }}-cargo
+
+    - name: Restore previous build from cache
+      uses: actions/cache@v1
+      with:
+        path: ${{ github.workspace }}/target/debug
+        key: ${{ runner.os }}-target-debug
+        restore-keys: |
+          ${{ runner.os }}-target-debug
 
     - name: Build DVM
       run: cargo build --bin dvm

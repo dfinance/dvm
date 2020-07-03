@@ -58,7 +58,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-target-debug
 
-    # terminal signals
+    #
+    # Terminal signals
+    #
     - run: cargo build --bin dvm
     - name: SIGs handling
       run: |
