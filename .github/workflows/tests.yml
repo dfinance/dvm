@@ -52,6 +52,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo
 
+    - name: Install cargo-sweep
+      uses: actions-rs/install@v0.1
+      continue-on-error: true
+      with:
+        crate: cargo sweep
+        version: latest
+        use-tool-cache: true
+
     - name: Restore previous build from cache
       uses: actions/cache@v1
       with:
@@ -68,3 +76,6 @@ jobs:
 
     - name: Run clippy
       run: cargo clippy --tests --examples -- -Dwarnings
+
+    - name: Run cargo-sweep
+      run: cargo sweep -t 10
