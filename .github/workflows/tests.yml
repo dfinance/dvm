@@ -56,7 +56,7 @@ jobs:
       uses: actions-rs/install@v0.1
       continue-on-error: true
       with:
-        crate: cargo sweep
+        crate: cargo-sweep
         version: latest
         use-tool-cache: true
 
