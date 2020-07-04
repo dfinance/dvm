@@ -58,6 +58,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-target-debug
 
+    - name: Install cargo-sweep
+      uses: actions-rs/install@v0.1
+      continue-on-error: true
+      with:
+        crate: cargo-sweep
+        version: latest
+        use-tool-cache: true
+
     #
     # Terminal signals
     #
@@ -65,3 +73,9 @@ jobs:
     - name: SIGs handling
       run: |
         tests/test-shutdown.sh dvm
+
+    - name: CleanUp deps build dir
+      continue-on-error: true
+      run: |
+        cargo sweep -t 7
+        cargo sweep -i
