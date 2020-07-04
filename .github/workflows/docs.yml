@@ -20,19 +20,21 @@ jobs:
       CARGO_NET_RETRY: 10
 
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v2
 
-    - if: matrix.os == 'ubuntu-latest'
+    - name: fix permissions
+      if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    - name: Run cargo-doc
+    - name: Build
       run: cargo doc --all --no-deps --all-features
 
     - name: Copy index.html
       run: cp -rf ./.github/docs-index.html target/doc/index.html
 
-    - uses: maxheld83/ghpages@v0.3.0
+    - name: Upload
+      uses: maxheld83/ghpages@v0.3.0
       env:
         BUILD_DIR: target/doc/
         GH_PAT: ${{ secrets.GH_PAT }}

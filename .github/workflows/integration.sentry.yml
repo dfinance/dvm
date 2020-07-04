@@ -29,10 +29,10 @@ jobs:
       CARGO_NET_RETRY: 10
 
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Install Rust toolchain
+    - name: Rust Toolchain
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
@@ -40,10 +40,11 @@ jobs:
         override: true
         components: rustfmt
 
-    - if: matrix.os == 'ubuntu-latest'
+    - name: fix permissions
+      if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    - name: Restore cargo cache from cache
+    - name: Restore cargo cache
       uses: actions/cache@v1
       with:
         path: ~/.cargo
@@ -51,7 +52,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo
 
-    - name: Restore previous build from cache
+    - name: Restore build cache
       uses: actions/cache@v1
       with:
         path: ${{ github.workspace }}/target/debug
