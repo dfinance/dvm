@@ -8,7 +8,7 @@ on:
 
 jobs:
   rust:
-    name: Rust
+    name: Audit
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -17,7 +17,6 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
-        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -27,26 +26,20 @@ jobs:
       CARGO_NET_RETRY: 10
 
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v2
 
-    - if: matrix.os == 'ubuntu-latest'
+    - name: fix permissions
+      if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    # - name: Restore cargo cache
-    #   uses: actions/cache@v1
-    #   with:
-    #     path: ~/.cargo
-    #     key: ${{ runner.os }}-cargo
-    #     restore-keys: |
-    #       ${{ runner.os }}-cargo
-
-    - name: Install cargo-audit
+    - name: cargo-audit
       uses: actions-rs/install@v0.1
+      continue-on-error: true
       with:
         crate: cargo-audit
         version: latest
-        # use-tool-cache: true
+        use-tool-cache: true
 
-    - name: Run cargo-audit
+    - name: Audit dependencies
       run: cargo audit # --deny-warnings

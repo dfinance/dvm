@@ -15,7 +15,7 @@ on:
 
 jobs:
   with-node:
-    name: Tests DVM with Node
+    name: Tests DVM & Node
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -28,6 +28,8 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
+        go:
+        - "1.14.1"
 
     env:
       RUSTFLAGS: -D warnings
@@ -47,10 +49,6 @@ jobs:
         echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dnode
         echo ::set-output name=GOPATH::${{ github.workspace }}/go
 
-    - name: Extract the version tag
-      id: version_tag
-      run: echo ::set-output name=value::$(echo $GITHUB_REF | cut -d / -f 3)
-
     # usage:
     # ${{ steps.dnode_ref.outputs.value }}
     - name: Extract the dnode repo ref from tag
@@ -66,12 +64,12 @@ jobs:
         true
 
     #
-    # VM
+    # VM (Rust)
     #
     - name: Checkout DVM
       uses: actions/checkout@v2
 
-    - name: Install Rust toolchain
+    - name: Rust Toolchain
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
@@ -79,20 +77,51 @@ jobs:
         override: true
         components: rustfmt
 
-    - if: matrix.os == 'ubuntu-latest'
+    - name: fix permissions
+      if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+    - name: Restore cargo cache
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-cargo
+        restore-keys: |
+          ${{ runner.os }}-cargo
+
+    - name: Restore build cache
+      uses: actions/cache@v1
+      with:
+        path: ${{ github.workspace }}/target/debug
+        key: ${{ runner.os }}-target-debug
+        restore-keys: |
+          ${{ runner.os }}-target-debug
+
+    - name: cargo-sweep
+      uses: actions-rs/install@v0.1
+      continue-on-error: true
+      with:
+        crate: cargo-sweep
+        version: latest
+        use-tool-cache: true
 
     - name: Build DVM
       run: cargo build --bin dvm
+
+    - name: Cleanup build
+      continue-on-error: true
+      run: |
+        cargo sweep -t 7
+        cargo sweep -i
 
     - name: Add DVM into PATH
       run: |
         echo "::add-path::${{ steps.VARS.outputs.DVM_BIN }}"
 
     #
-    # Node
+    # Node (Go)
     #
-    - name: Checkout DNode ${{ steps.dnode_ref.outputs.value }}
+    - name: Checkout DNode (${{ steps.dnode_ref.outputs.value }})
       uses: actions/checkout@v2
       with:
         repository: ${{ steps.VARS.outputs.NODE_REPO }}
@@ -105,10 +134,10 @@ jobs:
         echo "::set-env name=GOPATH::${{ steps.VARS.outputs.GOPATH }}"
         echo "::add-path::${{ steps.VARS.outputs.GOPATH }}/bin"
 
-    - name: Install Go 1.14.1
+    - name: Go Toolchain (${{ matrix.go }})
       uses: actions/setup-go@v1
       with:
-        go-version: 1.14.1
+        go-version: ${{ matrix.go }}
       id: go
 
     - name: Get dependencies
@@ -125,7 +154,7 @@ jobs:
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
         make
 
-    - name: Run tests
+    - name: Tests
       run: |
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
         go test -v ./... --tags=integ

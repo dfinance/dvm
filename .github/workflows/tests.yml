@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Rust
+    name: Tests
     runs-on: ${{ matrix.os }}
 
     defaults:
@@ -21,7 +21,6 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
-        # - windows-latest
 
     env:
       RUSTFLAGS: -D warnings
@@ -31,18 +30,10 @@ jobs:
       CARGO_NET_RETRY: 10
 
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v2
 
-    # We need to disable the existing toolchain to avoid updating rust-docs
-    # which takes a long time. The fastest way to do this is to rename the
-    # existing folder, as deleting it takes about as much time as not doing
-    # anything and just updating rust-docs.
-    - name: Rename existing rust toolchain (Windows)
-      if: matrix.os == 'windows-latest'
-      run: Rename-Item C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc C:\Users\runneradmin\.rustup\toolchains\stable-x86_64-pc-windows-msvc.old
-
-    - name: Install Rust toolchain
+    - name: Rust Toolchain
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
@@ -50,10 +41,11 @@ jobs:
         override: true
         components: rustfmt, clippy
 
-    - if: matrix.os == 'ubuntu-latest'
+    - name: fix permissions
+      if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    - name: Restore cargo cache from cache
+    - name: Restore cargo cache
       uses: actions/cache@v1
       with:
         path: ~/.cargo
@@ -61,7 +53,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo
 
-    - name: Restore previous build from cache
+    - name: Restore build cache
       uses: actions/cache@v1
       with:
         path: ${{ github.workspace }}/target/debug
@@ -69,11 +61,25 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-target-debug
 
-    - name: Test
+    - name: cargo-sweep
+      uses: actions-rs/install@v0.1
+      continue-on-error: true
+      with:
+        crate: cargo-sweep
+        version: latest
+        use-tool-cache: true
+
+    - name: Tests
       run: cargo test --all --tests --no-fail-fast -- --test-threads=4 --nocapture
 
-    - name: Check formatting
+    - name: Code-style
       run: cargo fmt -- --check
 
-    - name: Run clippy
+    - name: Clippy
       run: cargo clippy --tests --examples -- -Dwarnings
+
+    - name: Cleanup build
+      continue-on-error: true
+      run: |
+        cargo sweep -t 7
+        cargo sweep -i
