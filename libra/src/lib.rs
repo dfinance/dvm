@@ -1,20 +1,20 @@
 extern crate move_lang;
-extern crate libra_crypto;
-extern crate language_e2e_tests;
+//extern crate libra_crypto;
+//extern crate language_e2e_tests;
 extern crate libra_vm;
 extern crate move_core_types;
-extern crate bytecode_source_map;
+//extern crate bytecode_source_map;
 extern crate move_vm_types;
 extern crate libra_state_view;
-extern crate libra_config;
+//extern crate libra_config;
 extern crate libra_types;
-extern crate move_ir_types;
-extern crate stdlib;
-extern crate bytecode_verifier;
+//extern crate move_ir_types;
+//extern crate stdlib;
+//extern crate bytecode_verifier;
 extern crate lcs as _lcs;
 extern crate compiler as libra_compiler;
 extern crate libra_logger;
-extern crate ir_to_bytecode;
+//extern crate ir_to_bytecode;
 extern crate move_vm_runtime;
 extern crate move_vm_natives;
 
@@ -30,7 +30,9 @@ pub mod module {
     pub use move_core_types::language_storage::ModuleId;
     pub use libra_types::transaction::Module;
     pub use libra_vm::access::{ModuleAccess, ScriptAccess};
-    pub use libra_vm::file_format::{Bytecode, CompiledScript, CompiledModule, ModuleHandle, SignatureToken};
+    pub use libra_vm::file_format::{
+        Bytecode, CompiledScript, CompiledModule, ModuleHandle, SignatureToken,
+    };
     pub use move_lang::compiled_unit::CompiledUnit;
     pub use move_lang::parser::ast::{Definition, ModuleDefinition, Script};
 }
@@ -75,7 +77,7 @@ pub mod vm {
     pub use libra_types::contract_event::ContractEvent;
     pub use libra_types::transaction::TransactionStatus;
     pub use move_vm_runtime::move_vm::MoveVM;
-    pub use move_core_types::language_storage::TypeTag;
+    pub use move_core_types::language_storage::{TypeTag, StructTag};
     pub use move_vm_types::values::Value;
 }
 
@@ -86,4 +88,12 @@ pub mod gas {
 
 pub mod lcs {
     pub use _lcs::*;
+}
+
+pub mod logger {
+    pub use libra_logger::*;
+}
+
+pub mod oracle {
+    pub use move_vm_natives::oracle::*;
 }

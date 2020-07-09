@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use libra::libra_types::vm_error::StatusCode;
+use libra::prelude::*;
 use clap::Clap;
 use std::collections::HashMap;
 use enum_iterator::IntoEnumIterator;

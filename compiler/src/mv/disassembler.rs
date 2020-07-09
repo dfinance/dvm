@@ -667,11 +667,10 @@ impl ModuleSignature {}
 
 #[cfg(test)]
 mod tests {
-    use libra::libra_types::account_address::AccountAddress;
+    use libra::prelude::*;
     use ds::MockDataSource;
     use crate::embedded::Compiler;
     use crate::mv::disassembler::module_signature;
-    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
     #[test]
     pub fn test_module_signature() {

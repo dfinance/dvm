@@ -6,14 +6,9 @@ pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
 use runtime::move_vm::ExecutionMeta;
-
-use libra::{libra_types, libra_vm};
-use libra_types::access_path::AccessPath;
-use libra_types::account_address::AccountAddress;
+use libra::prelude::*;
 use std::convert::TryFrom;
 use crate::grpc_client::Client;
-use libra_vm::CompiledModule;
-use libra::libra_state_view::StateView;
 use data_source::MockDataSource;
 use lang::{
     stdlib::{build_std, zero_std},
@@ -21,8 +16,6 @@ use lang::{
 use compiler::Compiler;
 pub use genesis::genesis_write_set;
 use anyhow::Error;
-use libra_types::write_set::WriteSet;
-use libra_types::account_config::CORE_CODE_ADDRESS;
 use crate::compiled_protos::vm_grpc::{VmArgs, VmPublishModule, VmExecuteResponse};
 use dvm_net::api::grpc::vm_grpc::{VmExecuteScript, StructIdent};
 
@@ -163,7 +156,7 @@ impl TestKit {
 
 impl StateView for TestKit {
     fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
-        self.data_source.get(access_path)
+        StateView::get(&self.data_source, access_path)
     }
 
     fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {

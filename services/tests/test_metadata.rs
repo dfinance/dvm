@@ -1,5 +1,4 @@
-use libra::libra_types;
-use libra_types::account_address::AccountAddress;
+use libra::prelude::*;
 use dvm_net::{tonic, api};
 use tonic::{Request, Code};
 

@@ -1,8 +1,7 @@
 use std::hash::Hasher;
 use byteorder::{LittleEndian, ByteOrder};
-use libra::move_vm_natives::oracle;
-use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
-use libra::lcs;
+use libra::{prelude::*, lcs, oracle};
+
 use twox_hash::XxHash64;
 use serde_derive::Serialize;
 use runtime::move_vm::{U64Store, AddressStore};
@@ -36,8 +35,8 @@ fn test_oracle() {
         use 0x1::Currency;
         use 0x1::Oracle;
 
-        fun main() {
-            Store::store_u64(Oracle::get_price<Currency::USD, Currency::BTC>());
+        fun main(account: &signer) {
+            Store::store_u64(account, Oracle::get_price<Currency::USD, Currency::BTC>());
         }
         }
     ";
@@ -55,8 +54,8 @@ fn test_oracle() {
         use 0x1::Currency;
         use 0x1::Oracle;
 
-        fun main() {
-          Store::store_u64(Oracle::get_price<Currency::USD, Currency::ETH>());
+        fun main(account: &signer) {
+          Store::store_u64(account, Oracle::get_price<Currency::USD, Currency::ETH>());
         }
         }
     ";
@@ -76,8 +75,8 @@ fn test_native_function() {
         script {
         use 0x1::Store;
 
-        fun main() {
-            Store::store_address(0x110);
+        fun main(account: &signer) {
+            Store::store_address(account, 0x110);
         }
         }
     ";

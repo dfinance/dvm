@@ -67,7 +67,7 @@ pub(crate) mod support_sentry {
 }
 
 mod support_libra_logger {
-    use libra::libra_logger as logger;
+    use libra::logger;
     use logger::{StructLogSink, StructuredLogEntry};
     use logger::{struct_logger_set, set_struct_logger};
 

@@ -8,7 +8,7 @@ use dvm_net::api::grpc::vm_grpc::vm_script_executor_client::VmScriptExecutorClie
 use dvm_net::api::tonic::Request;
 use dvm_net::api::grpc::vm_grpc::{VmExecuteScript};
 use tokio::time::delay_for;
-use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
+use libra::prelude::*;
 
 static TEST_SCRIPT: &str = "script{fun main() {}}";
 
