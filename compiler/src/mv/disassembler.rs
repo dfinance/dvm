@@ -1,14 +1,9 @@
 use anyhow::Result;
-use libra::libra_vm::CompiledModule;
+use libra::{prelude::*, file_format::*};
 use std::fmt::Display;
 use serde::export::Formatter;
 use core::fmt;
 use std::collections::BTreeMap;
-use libra::move_core_types::language_storage::ModuleId;
-use libra::libra_vm::file_format::{
-    StructFieldInformation, Kind, SignatureToken, StructHandleIndex, CompiledModuleMut, Signature,
-};
-use libra::libra_types::account_address::AccountAddress;
 
 const PHANTOM_RESOURCE_NAME: &str = "X_phantom_resource_X_";
 const GENERIC_PREFIX: &str = "__G_";

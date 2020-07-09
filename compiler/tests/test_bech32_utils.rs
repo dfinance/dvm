@@ -1,4 +1,4 @@
-use libra::libra_types::account_address::AccountAddress;
+use libra::prelude::*;
 use bech32::{encode, ToBase32};
 use dvm_compiler::bech32::{libra_into_bech32, replace_bech32_addresses, HRP, bech32_into_libra};
 

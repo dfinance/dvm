@@ -1,13 +1,7 @@
-use libra::libra_types::account_address::AccountAddress;
 use ds::MockDataSource;
-use libra::libra_vm::{
-    file_format::{CompiledScript, CompiledModule},
-    access::ModuleAccess,
-};
-
+use libra::prelude::*;
 use dvm_compiler::Compiler;
 use anyhow::Error;
-use libra::libra_types::account_config::CORE_CODE_ADDRESS;
 
 pub fn compile(
     source: &str,

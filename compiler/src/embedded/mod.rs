@@ -1,7 +1,6 @@
 pub mod ds_loader;
 
-use libra::libra_state_view::StateView;
-use libra::libra_types::account_address::AccountAddress;
+pub use libra::prelude::*;
 use crate::mv::dependence::loader::Loader;
 use crate::embedded::ds_loader::StateViewLoader;
 use std::collections::HashMap;

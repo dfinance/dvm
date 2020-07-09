@@ -2,23 +2,16 @@ use std::path::{Path, PathBuf};
 use crate::manifest::MoveToml;
 use std::fs;
 use walkdir::WalkDir;
-use libra::move_lang;
 use std::fs::{File, OpenOptions};
 use crate::mv::bech32::bech32_into_libra;
 use std::io::Write;
 use crate::mv::{preprocessor, disassembler};
 use anyhow::{Result, Error};
-use move_lang::shared::Address;
-use move_lang::errors::{FilesSourceText, Errors, output_errors};
-use move_lang::compiled_unit::CompiledUnit;
-use move_lang::{compiled_unit, errors, parse_program, compile_program};
+use libra::{prelude::*, compiler::*};
 use crate::mv::dependence::extractor::{extract_from_source, extract_from_bytecode};
 use crate::mv::dependence::loader::{BytecodeSource, Loader};
 use std::collections::{HashMap, HashSet};
-use libra::move_core_types::language_storage::ModuleId;
 use termcolor::{StandardStream, ColorChoice, Buffer};
-use libra::libra_types::account_address::AccountAddress;
-use move_lang::name_pool::ConstPool;
 
 /// Move builder.
 pub struct Builder<'a, S: BytecodeSource> {
@@ -265,7 +258,7 @@ where
         let source_list = convert_path(&source_list)?;
         let dep_list = convert_path(&dep_list)?;
         let addr = self.address()?;
-        Ok(move_lang::move_check(&source_list, &dep_list, addr)?)
+        Ok(move_check(&source_list, &dep_list, addr)?)
     }
 
     /// Verify and store compiled units.

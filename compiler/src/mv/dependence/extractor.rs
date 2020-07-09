@@ -1,13 +1,9 @@
 use anyhow::Result;
-use libra::move_core_types::language_storage::ModuleId;
 use std::path::PathBuf;
-use libra::move_lang::{parse_program, errors};
-use libra::move_lang::parser::ast::{Definition, ModuleDefinition, Script};
+
+use libra::{prelude::*, compiler::*};
+
 use std::collections::HashSet;
-use libra::move_core_types::identifier::Identifier;
-use libra::account::AccountAddress;
-use libra::move_lang::parser::ast::*;
-use libra::libra_vm::CompiledModule;
 use termcolor::{StandardStream, ColorChoice};
 use std::process::exit;
 use crate::mv::builder::convert_path;
