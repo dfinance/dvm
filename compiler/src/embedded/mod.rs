@@ -124,7 +124,6 @@ pub fn compile(code: &str, address: Option<AccountAddress>) -> Result<Vec<u8>> {
 #[derive(Clone)]
 struct ZeroStateView;
 
-use libra::libra_types::access_path::AccessPath;
 impl StateView for ZeroStateView {
     fn get(&self, _: &AccessPath) -> Result<Option<Vec<u8>>> {
         Ok(None)

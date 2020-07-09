@@ -77,11 +77,10 @@ impl WhitelistVerifier {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use libra::libra_types::account_address::AccountAddress;
+    use libra::prelude::AccountAddress;
     use compiler::Compiler;
     use anyhow::Error;
     use ds::MockDataSource;
-    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
     pub fn compile(
         source: &str,
