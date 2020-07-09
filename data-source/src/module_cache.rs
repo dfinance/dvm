@@ -3,11 +3,7 @@ use std::sync::{Arc, Mutex};
 use anyhow::Error;
 use lru::LruCache;
 
-use libra::libra_state_view::StateView;
-use libra::libra_types::access_path::AccessPath;
-use libra::libra_vm::errors::VMResult;
-use libra::move_vm_runtime::data_cache::RemoteCache;
-
+use libra::prelude::*;
 use crate::{Clear, DataSource};
 
 /// Value of the first byte in serialized representation of the `Module` for `lcs`.

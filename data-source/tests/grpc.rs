@@ -7,8 +7,7 @@ use grpc::ds_grpc::ds_service_server::{DsServiceServer, DsService};
 use grpc::ds_grpc::{DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses};
 use std::time::Duration;
 use dvm_data_source::GrpcDataSource;
-use libra::libra_state_view::StateView;
-use libra::libra_types::{access_path::AccessPath, account_address::AccountAddress};
+use libra::prelude::*;
 
 const ADDRESS: &str = "127.0.0.1:8080";
 
@@ -69,7 +68,7 @@ fn test_grpc_ds() {
                         AccountAddress::random(),
                         AccountAddress::random().to_vec(),
                     );
-                    if let Ok(Some(resp)) = ds.get(&path) {
+                    if let Ok(Some(resp)) = StateView::get(&ds, &path) {
                         let mut response =
                             Vec::with_capacity(path.address.as_ref().len() + path.path.len());
                         response.append(&mut path.address.to_vec());

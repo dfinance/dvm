@@ -5,7 +5,7 @@ use libra::move_lang::{parse_program, errors};
 use libra::move_lang::parser::ast::{Definition, ModuleDefinition, Script};
 use std::collections::HashSet;
 use libra::move_core_types::identifier::Identifier;
-use libra::libra_types::account_address::AccountAddress;
+use libra::account::AccountAddress;
 use libra::move_lang::parser::ast::*;
 use libra::libra_vm::CompiledModule;
 use termcolor::{StandardStream, ColorChoice};
@@ -106,6 +106,9 @@ impl DefinitionUses {
                 ModuleMember::Spec(_) => {
                     // no-op
                 }
+                ModuleMember::Constant(constant) => {
+                    self.constant(constant)?;
+                }
             }
         }
         self.modules.insert(ModuleId::new(
@@ -122,6 +125,12 @@ impl DefinitionUses {
             self.uses(u)?;
         }
         self.function(&script.function)
+    }
+
+    /// Extracts dependencies from constant.
+    fn constant(&mut self, constant: &Constant) -> Result<()> {
+        self.type_usages(&constant.signature.value)?;
+        self.expresion_usages(&constant.value.value)
     }
 
     /// Extracts dependencies from use definition.
