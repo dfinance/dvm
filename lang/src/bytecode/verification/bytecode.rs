@@ -1,6 +1,5 @@
 use anyhow::Result;
-use libra::libra_vm::access::ScriptAccess;
-use libra::libra_vm::file_format::{Bytecode, CompiledScript};
+use libra::prelude::*;
 
 /// Validate that script contains only allowed bytecode instructions (load variables, move, copy and method calls).
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
@@ -85,6 +84,7 @@ mod tests {
             script {
             fun main() {
                 if (true) {
+                    assert(false, 10);
                 }
             }
             }

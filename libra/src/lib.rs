@@ -28,8 +28,8 @@ pub mod prelude {
 pub mod module {
     pub use move_core_types::language_storage::ModuleId;
     pub use libra_types::transaction::Module;
-    pub use libra_vm::access::ModuleAccess;
-    pub use libra_vm::file_format::{CompiledScript, CompiledModule};
+    pub use libra_vm::access::{ModuleAccess, ScriptAccess};
+    pub use libra_vm::file_format::{Bytecode, CompiledScript, CompiledModule, ModuleHandle, SignatureToken};
     pub use move_lang::compiled_unit::CompiledUnit;
     pub use move_lang::parser::ast::{Definition, ModuleDefinition, Script};
 }

@@ -4,10 +4,7 @@ use std::fmt::{Display, Error, Formatter};
 use anyhow::Result;
 use maplit::hashmap;
 
-use libra::{libra_types, libra_vm};
-use libra_types::account_address::AccountAddress;
-use libra_vm::access::ScriptAccess;
-use libra_vm::file_format::{CompiledScript, ModuleHandle};
+use libra::prelude::*;
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 struct ImportedModule {
