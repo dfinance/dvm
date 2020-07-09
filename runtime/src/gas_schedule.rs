@@ -1,22 +1,17 @@
-use libra::{
-    prelude::*,
-    gas::*,
-    file_format::*,
-};
+use libra::{prelude::*, gas::*, file_format::*};
 
 /// Specific gas per instruction configuration for dvm.
 pub fn cost_table() -> CostTable {
     use Bytecode::*;
     let mut instrs = vec![
+        (MoveTo(StructDefinitionIndex::new(0)), GasCost::new(825, 1)),
         (
-            MoveTo(StructDefinitionIndex::new(0)),
-            /* MoveToSender + ReadRef == 774 + 51 == 825 */
+            MoveToGeneric(StructDefInstantiationIndex::new(0)),
             GasCost::new(825, 1),
         ),
         (
-            MoveToGeneric(StructDefInstantiationIndex::new(0)),
-            /* MoveToSender + ReadRef == 774 + 51 == 825 */
-            GasCost::new(825, 1),
+            MoveFrom(StructDefinitionIndex::new(0)),
+            GasCost::new(917, 1),
         ),
         (
             MoveFromGeneric(StructDefInstantiationIndex::new(0)),

@@ -1,11 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use libra::{
-    prelude::*,
-    vm::*,
-    gas::*
-};
+use libra::{prelude::*, vm::*, gas::*};
 
 // use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
 //
@@ -251,10 +247,7 @@ pub mod tests {
     use compiler::Compiler;
     use ds::{DataAccess, MockDataSource};
     use lang::{stdlib::zero_std};
-    use libra::{
-        prelude::*,
-        vm::*
-    };
+    use libra::{prelude::*, vm::*};
     use crate::move_vm::{Dvm, ExecutionMeta, Script, U64Store};
 
     #[test]
@@ -311,8 +304,8 @@ pub mod tests {
             "
             script {{
             use 0x{}::Store;
-            fun main(val: u64) {{
-                Store::store_u64(val);
+            fun main(account: &signer, val: u64) {{
+                Store::store_u64(account, val);
             }}
             }}
         ",
