@@ -2,20 +2,16 @@ use runtime::{
     move_vm::{Dvm, ExecutionMeta, Script, VmResult},
     resources::{block_metadata, time_metadata, BlockMetadata, CurrentTimestamp},
 };
+use data_source::MockDataSource;
+use libra::prelude::*;
 use libra::lcs;
-use data_source::{MockDataSource, MergeWriteSet};
-use libra::libra_types::access_path::AccessPath;
-use libra::libra_types::account_config::CORE_CODE_ADDRESS;
-use libra::libra_types::vm_error::StatusCode;
+use libra::oracle;
 use compiler::Compiler;
-use libra::libra_types::write_set::WriteSet;
 use anyhow::Result;
 use crate::test_suite::pipeline::{TestPipeline, TestStep, TestMeta, ExecutionResult};
-use libra::libra_types::{account_address::AccountAddress, transaction::Module};
 use std::collections::HashMap;
 use crate::str_xxhash;
 use byteorder::{LittleEndian, ByteOrder};
-use libra::move_vm_natives::oracle;
 
 /// Test pipeline state.
 pub struct TestState {

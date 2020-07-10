@@ -1,18 +1,17 @@
-use libra::{
-    prelude::*,
-    vm::*
-};
+use libra::{prelude::*, vm::*};
 use serde_derive::{Deserialize, Serialize};
 
 /// Height of the current block.
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct BlockMetadata {
+    /// Block height.
     pub height: u64,
 }
 
 /// A singleton resource holding the current Unix time in seconds.
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct CurrentTimestamp {
+    /// Unix time stamp in seconds
     pub seconds: u64,
 }
 

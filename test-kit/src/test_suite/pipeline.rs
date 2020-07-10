@@ -1,7 +1,7 @@
 use anyhow::{Result, Error};
 use lazy_static::lazy_static;
 use regex::Regex;
-use libra::libra_types::account_address::AccountAddress;
+use libra::prelude::*;
 use std::convert::TryFrom;
 use chrono::{Utc, TimeZone};
 use std::vec::IntoIter;
@@ -329,8 +329,7 @@ impl TryFrom<(&str, &str)> for MetaTag {
 
 #[cfg(test)]
 pub mod tests {
-    use libra::libra_types::account_address::AccountAddress;
-    use libra::libra_types::account_config::CORE_CODE_ADDRESS;
+    use libra::prelude::*;
     use crate::test_suite::pipeline::{MetaTag, TestPipeline, TestStep, TestMeta, ExecutionResult};
     use std::convert::TryFrom;
 

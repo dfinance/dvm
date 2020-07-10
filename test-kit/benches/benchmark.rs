@@ -2,9 +2,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use lang::{stdlib::build_std};
 use data_source::MockDataSource;
 use compiler::{Compiler, disassembler};
-use libra::libra_types::account_address::AccountAddress;
-use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
-use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
+use libra::prelude::*;
 
 /// Prepare compilation benchmark setup;
 fn compiler_setup(ds: &MockDataSource) -> (Compiler<MockDataSource>, &'static str) {
@@ -26,7 +24,7 @@ fn disassemble(bytecode: Vec<u8>) {
 
 /// Performs benchmarks.
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("build_stdlib", |b| b.iter(|| build_std()));
+    c.bench_function("build_stdlib", |b| b.iter(build_std));
 
     let ds = MockDataSource::with_write_set(build_std());
     c.bench_function("compiled_module", |b| {
@@ -68,7 +66,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     include_str!("../../compiler/tests/resources/disassembler/empty_module.move"),
                 )
             },
-            |bytecode| disassemble(bytecode),
+             disassemble,
         )
     });
     c.bench_function("disassemble_functions", |b| {
@@ -81,7 +79,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     ),
                 )
             },
-            |bytecode| disassemble(bytecode),
+            disassemble,
         )
     });
     c.bench_function("disassemble_structs", |b| {
@@ -94,7 +92,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     ),
                 )
             },
-            |bytecode| disassemble(bytecode),
+            disassemble,
         )
     });
 }

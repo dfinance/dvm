@@ -1,12 +1,11 @@
 use byteorder::{LittleEndian, ByteOrder};
-use std::hash::Hasher;
 use libra::{prelude::*, lcs, oracle};
 
-use twox_hash::XxHash64;
 use runtime::move_vm::{U64Store, AddressStore};
 use dvm_net::api::grpc::vm_grpc::{VmArgs, VmTypeTag, ModuleIdent, LcsTag, StructIdent, LcsType};
 use dvm_test_kit::TestKit;
 use dvm_test_kit::*;
+use serde_derive::Serialize;
 
 #[test]
 fn test_oracle() {
