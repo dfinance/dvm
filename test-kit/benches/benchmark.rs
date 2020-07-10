@@ -66,7 +66,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     include_str!("../../compiler/tests/resources/disassembler/empty_module.move"),
                 )
             },
-             disassemble,
+            disassemble,
         )
     });
     c.bench_function("disassemble_functions", |b| {
