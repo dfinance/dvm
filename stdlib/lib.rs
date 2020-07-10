@@ -3,15 +3,13 @@ extern crate include_dir;
 extern crate anyhow;
 extern crate libra;
 
-use libra::libra_types::write_set::{WriteSet, WriteOp};
+use libra::prelude::*;
 use anyhow::Error;
-use libra::libra_types::account_address::AccountAddress;
 use serde::Serialize;
 use std::collections::HashMap;
 use ds::MockDataSource;
 use include_dir::Dir;
 use compiler::Compiler;
-use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 static STDLIB_DIR: Dir = include_dir!("modules");
 

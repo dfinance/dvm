@@ -1,6 +1,5 @@
 use anyhow::Result;
-use libra::libra_vm::access::ScriptAccess;
-use libra::libra_vm::file_format::{Bytecode, CompiledScript};
+use libra::prelude::*;
 
 /// Validate that script contains only allowed bytecode instructions (load variables, move, copy and method calls).
 pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
@@ -32,7 +31,7 @@ pub fn validate_bytecode_instructions(script: &CompiledScript) -> Result<()> {
 mod tests {
     use super::*;
     use crate::bytecode::verification::whitelist::tests::compile_script;
-    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
+    use libra::prelude::CORE_CODE_ADDRESS;
 
     #[test]
     fn test_trivial_script_is_accepted() {
@@ -85,6 +84,7 @@ mod tests {
             script {
             fun main() {
                 if (true) {
+                    assert(false, 10);
                 }
             }
             }

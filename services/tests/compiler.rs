@@ -1,15 +1,14 @@
-use libra::libra_vm;
-use libra_vm::access::ScriptAccess;
-use libra_vm::CompiledModule;
-use libra_vm::file_format::{Bytecode, ModuleHandleIndex, FunctionHandleIndex};
-use libra_vm::file_format::CompiledScript;
-use libra::libra_types::account_address::AccountAddress;
+// use libra::libra_vm;
+// use libra_vm::access::ScriptAccess;
+// use libra_vm::CompiledModule;
+// use libra_vm::file_format::{Bytecode, ModuleHandleIndex, FunctionHandleIndex};
+// use libra_vm::file_format::CompiledScript;
+// use libra::libra_types::account_address::AccountAddress;
+use libra::{prelude::*, file_format::*};
 use dvm_net::{tonic, api};
 use tonic::{Request, Response, Status};
-
 use lang::{stdlib::build_std};
 use compiler::Compiler;
-
 use data_source::MockDataSource;
 use api::grpc::vm_grpc::{CompilationResult, SourceFile};
 use dvm_services::compiler::CompilerService;

@@ -1,37 +1,14 @@
-use libra::move_core_types::gas_schedule::{CostTable, GasCost};
-use libra::libra_vm::{
-    file_format::{
-        Bytecode, ConstantPoolIndex, FieldHandleIndex, FieldInstantiationIndex,
-        FunctionHandleIndex, FunctionInstantiationIndex, StructDefInstantiationIndex,
-        StructDefinitionIndex, NUMBER_OF_NATIVE_FUNCTIONS,
-    },
-    file_format_common::instruction_key,
-};
-use libra::move_vm_types::gas_schedule::*;
+use libra::{prelude::*, gas::*, file_format::*};
 
 /// Specific gas per instruction configuration for dvm.
 pub fn cost_table() -> CostTable {
     use Bytecode::*;
     let mut instrs = vec![
-        (
-            MoveToSender(StructDefinitionIndex::new(0)),
-            GasCost::new(774, 1),
-        ),
-        (
-            MoveToSenderGeneric(StructDefInstantiationIndex::new(0)),
-            GasCost::new(774, 1),
-        ),
-        (
-            MoveTo(StructDefinitionIndex::new(0)),
-            /* MoveToSender + ReadRef == 774 + 51 == 825 */
-            GasCost::new(825, 1),
-        ),
+        (MoveTo(StructDefinitionIndex::new(0)), GasCost::new(825, 1)),
         (
             MoveToGeneric(StructDefInstantiationIndex::new(0)),
-            /* MoveToSender + ReadRef == 774 + 51 == 825 */
             GasCost::new(825, 1),
         ),
-        (GetTxnSenderAddress, GasCost::new(30, 1)),
         (
             MoveFrom(StructDefinitionIndex::new(0)),
             GasCost::new(917, 1),

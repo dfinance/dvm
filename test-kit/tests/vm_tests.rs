@@ -1,10 +1,7 @@
-use libra::libra_types;
-use libra_types::account_address::AccountAddress;
+use libra::{prelude::*, lcs};
 use dvm_test_kit::*;
 use runtime::move_vm::{U64Store, AddressStore, VectorU8Store};
-use libra::lcs;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
-use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
 #[test]
 fn test_address_as_argument() {
@@ -15,8 +12,8 @@ fn test_address_as_argument() {
         script {
         use 0x1::Store;
 
-        fun main(addr: address) {
-            Store::store_address(addr);
+        fun main(account: &signer, addr: address) {
+            Store::store_address(account, addr);
         }
         }
     ";
@@ -41,8 +38,8 @@ fn test_vector_as_argument() {
         script {
         use 0x1::Store;
 
-        fun main(vec: vector<u8>) {
-            Store::store_vector_u8(vec);
+        fun main(account: &signer, vec: vector<u8>) {
+            Store::store_vector_u8(account, vec);
         }
         }
     ";
@@ -69,8 +66,8 @@ fn test_update_std_module() {
         use 0x1::Foo;
         use 0x1::Store;
 
-        fun main() {
-            Store::store_u64(Foo::foo());
+        fun main(account: &signer) {
+            Store::store_u64(account, Foo::foo());
         }
         }
     ";
@@ -92,8 +89,8 @@ fn test_update_std_module() {
         use 0x1::Foo;
         use 0x1::Store;
 
-        fun main() {
-            Store::store_u64(Foo::foo());
+        fun main(account: &signer) {
+            Store::store_u64(account, Foo::foo());
         }
         }
     ";

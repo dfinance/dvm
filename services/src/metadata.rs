@@ -1,5 +1,4 @@
-use libra::libra_vm;
-use libra_vm::file_format::SignatureToken;
+use libra::prelude::*;
 use lang::bytecode::extract_script_params;
 use crate::{tonic, api};
 use tonic::{Request, Response, Status};

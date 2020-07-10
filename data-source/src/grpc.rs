@@ -1,3 +1,5 @@
+use libra::prelude::*;
+
 use std::convert::TryInto;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
@@ -7,17 +9,10 @@ use anyhow::Error;
 use api::grpc::ds_grpc::{ds_raw_response::ErrorCode, ds_service_client::DsServiceClient, DsAccessPath};
 use crossbeam::channel::{bounded, Receiver, Sender};
 use http::Uri;
-use libra_state_view::StateView;
-use libra_types::access_path::AccessPath;
-use libra_types::vm_error::{StatusCode, VMStatus};
-use move_vm_runtime::data_cache::RemoteCache;
 use tokio::runtime::Runtime;
-
 use dvm_net::api;
 use dvm_net::prelude::*;
 use dvm_net::tonic;
-use libra::{libra_state_view, libra_types, move_vm_runtime};
-use libra::libra_vm::errors::VMResult;
 
 use crate::{Clear, DataSource};
 

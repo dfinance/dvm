@@ -2,10 +2,7 @@ use anyhow::Error;
 
 use dvm_info::metrics::execution::ExecutionResult;
 use dvm_info::metrics::meter::ScopeMeter;
-use libra::libra_state_view::StateView;
-use libra::libra_types::access_path::AccessPath;
-use libra::libra_vm::errors::VMResult;
-use libra::move_vm_runtime::data_cache::RemoteCache;
+use libra::prelude::*;
 
 use crate::{Clear, DataSource};
 
@@ -22,7 +19,7 @@ impl<D> DsMeter<D>
 where
     D: DataSource,
 {
-    /// Contructor
+    /// Constructor
     pub fn new(inner: D) -> DsMeter<D> {
         DsMeter { inner }
     }

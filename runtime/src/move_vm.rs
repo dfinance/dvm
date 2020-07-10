@@ -1,28 +1,14 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use libra_types::{account_address::AccountAddress, transaction::Module};
-use libra_types::account_config::CORE_CODE_ADDRESS;
-use libra_types::contract_event::ContractEvent;
-use libra_types::transaction::TransactionStatus;
-use libra_types::vm_error::{StatusCode, VMStatus};
-use libra_types::write_set::WriteSet;
-use libra_vm::CompiledModule;
-use libra_vm::errors::{Location, vm_error, VMResult};
-use move_vm_runtime::{loader::ModuleCache};
-use move_vm_runtime::data_cache::TransactionDataCache;
-use move_vm_runtime::loader::ScriptCache;
-use move_vm_runtime::move_vm::MoveVM;
-use move_vm_types::data_store::DataStore;
-use move_vm_types::gas_schedule::CostStrategy;
+use libra::{prelude::*, vm::*, gas::*};
+
+// use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
+//
+
 use serde::Deserialize;
 
 use ds::DataSource;
-use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
-use libra::move_core_types::gas_schedule::{AbstractMemorySize, CostTable, GasAlgebra, GasUnits};
-use libra::move_core_types::language_storage::TypeTag;
-use libra::move_vm_types::values::Value;
-
 use crate::gas_schedule;
 
 /// Stores metadata for vm execution.
@@ -137,7 +123,7 @@ where
         let res = CompiledModule::deserialize(module.code()).and_then(|compiled_module| {
             let module_id = compiled_module.self_id();
             if meta.sender != *module_id.address() {
-                return Err(vm_error(
+                return Err(vm_status(
                     Location::default(),
                     StatusCode::MODULE_ADDRESS_DOES_NOT_MATCH_SENDER,
                 ));
@@ -150,7 +136,7 @@ where
                 *loader.libra_cache.lock().unwrap() = HashMap::new();
                 *loader.module_cache.lock().unwrap() = ModuleCache::new();
             } else if cache.exists_module(&module_id) {
-                return Err(vm_error(
+                return Err(vm_status(
                     Location::default(),
                     StatusCode::DUPLICATE_MODULE_NAME,
                 ));
@@ -261,16 +247,7 @@ pub mod tests {
     use compiler::Compiler;
     use ds::{DataAccess, MockDataSource};
     use lang::{stdlib::zero_std};
-    use libra::{
-        lcs,
-        libra_types::{
-            account_address::AccountAddress, transaction::Module, vm_error::StatusCode,
-            write_set::WriteOp,
-        },
-    };
-    use libra::libra_vm::CompiledModule;
-    use libra::move_vm_types::values::Value;
-
+    use libra::{prelude::*, vm::*};
     use crate::move_vm::{Dvm, ExecutionMeta, Script, U64Store};
 
     #[test]
@@ -327,8 +304,8 @@ pub mod tests {
             "
             script {{
             use 0x{}::Store;
-            fun main(val: u64) {{
-                Store::store_u64(val);
+            fun main(account: &signer, val: u64) {{
+                Store::store_u64(account, val);
             }}
             }}
         ",

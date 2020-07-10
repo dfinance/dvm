@@ -1,3 +1,4 @@
+use libra::{prelude::*, vm::*};
 use std::sync::Arc;
 use data_source::DataSource;
 use info::heartbeat::HeartRateMonitor;
@@ -9,19 +10,11 @@ use dvm_net::api::grpc::vm_grpc::{
     VmEvent, ModuleIdent, LcsTag, LcsType, VmPublishModule,
 };
 use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
-use libra::libra_types::account_address::AccountAddress;
 use std::convert::TryFrom;
-use libra::libra_types::vm_error::{VMStatus, StatusCode};
-use libra::move_vm_types::values::Value;
 use anyhow::Error;
 use byteorder::{LittleEndian, ByteOrder};
 use info::metrics::meter::ScopeMeter;
-use libra::move_core_types::identifier::Identifier;
-use libra::move_core_types::language_storage::{TypeTag, StructTag};
-use libra::libra_types::write_set::{WriteOp, WriteSet};
-use libra::libra_types::transaction::{Module, TransactionStatus};
 use info::metrics::execution::ExecutionResult as ActionResult;
-use libra::libra_types::contract_event::ContractEvent;
 use dvm_net::api::grpc::vm_grpc::vm_module_publisher_server::VmModulePublisher;
 
 /// Virtual machine service.

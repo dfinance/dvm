@@ -1,14 +1,9 @@
 use anyhow::Result;
-use libra::libra_vm::CompiledModule;
+use libra::{prelude::*, file_format::*};
 use std::fmt::Display;
 use serde::export::Formatter;
 use core::fmt;
 use std::collections::BTreeMap;
-use libra::move_core_types::language_storage::ModuleId;
-use libra::libra_vm::file_format::{
-    StructFieldInformation, Kind, SignatureToken, StructHandleIndex, CompiledModuleMut, Signature,
-};
-use libra::libra_types::account_address::AccountAddress;
 
 const PHANTOM_RESOURCE_NAME: &str = "X_phantom_resource_X_";
 const GENERIC_PREFIX: &str = "__G_";
@@ -672,11 +667,10 @@ impl ModuleSignature {}
 
 #[cfg(test)]
 mod tests {
-    use libra::libra_types::account_address::AccountAddress;
+    use libra::prelude::*;
     use ds::MockDataSource;
     use crate::embedded::Compiler;
     use crate::mv::disassembler::module_signature;
-    use libra::move_core_types::language_storage::CORE_CODE_ADDRESS;
 
     #[test]
     pub fn test_module_signature() {

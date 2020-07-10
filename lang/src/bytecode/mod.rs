@@ -1,7 +1,6 @@
 use anyhow::Error;
 
-use libra::libra_vm::access::ScriptAccess;
-use libra::libra_vm::file_format::{CompiledScript, SignatureToken};
+use libra::prelude::*;
 
 /// Procedures for verification of bytecode (restricted set of instructions and modules).
 pub mod verification;
