@@ -1,14 +1,14 @@
-extern crate move_lang;
-extern crate libra_vm;
-extern crate move_core_types;
-extern crate move_vm_types;
-extern crate libra_state_view;
-extern crate libra_types;
-extern crate lcs as _lcs;
-extern crate compiler as libra_compiler;
-extern crate libra_logger;
-extern crate move_vm_runtime;
-extern crate move_vm_natives;
+pub extern crate move_lang;
+pub extern crate libra_vm;
+pub extern crate move_core_types;
+pub extern crate move_vm_types;
+pub extern crate libra_state_view;
+pub extern crate libra_types;
+pub extern crate lcs as _lcs;
+pub extern crate compiler as libra_compiler;
+pub extern crate libra_logger;
+pub extern crate move_vm_runtime;
+pub extern crate move_vm_natives;
 
 pub mod prelude {
     pub use crate::account::*;
