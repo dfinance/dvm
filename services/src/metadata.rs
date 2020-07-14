@@ -1,4 +1,4 @@
-use libra::prelude::*;
+use libra::{prelude::*, vm::*};
 use lang::bytecode::extract_script_params;
 use crate::{tonic, api};
 use tonic::{Request, Response, Status};
@@ -8,9 +8,6 @@ use api::grpc::vm_grpc::{Signature, VmScript, VmTypeTag};
 use info::metrics::meter::ScopeMeter;
 use info::metrics::execution::ExecutionResult;
 use dvm_net::api::grpc::vm_grpc::{AccessVector, StructIdent, LcsTag, LcsType};
-use libra::move_core_types::language_storage::{TypeTag, StructTag};
-use libra::libra_types::account_address::AccountAddress;
-use libra::move_core_types::identifier::Identifier;
 use std::convert::TryFrom;
 use anyhow::Error;
 
