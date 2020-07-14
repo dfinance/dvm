@@ -28,7 +28,7 @@ tiny-keccak = { version = "2.0.2", default-features = false, features = ["sha3"]
 rand = "0.7.3"
 log = "0.4.8"
 termcolor = "1.1.0"
-reqwest = { version = "0.10.4", features = ["blocking"] }
+reqwest = { version = "0.10.4", features = ["blocking", "json"] }
 
 [dev-dependencies]
 ds = { path = "../data-source", package = "dvm-data-source" }

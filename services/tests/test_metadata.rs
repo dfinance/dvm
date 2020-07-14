@@ -1,4 +1,4 @@
-use libra::prelude::*;
+use libra::{prelude::*, vm::*};
 use dvm_net::{tonic, api};
 use tonic::{Request, Code};
 
@@ -9,9 +9,6 @@ use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadata;
 use compiler::Compiler;
 use api::grpc::vm_grpc::vm_access_vector_server::VmAccessVector;
 use api::grpc::vm_grpc::StructIdent;
-use libra::move_core_types::language_storage::{TypeTag, StructTag};
-use libra::move_core_types::identifier::Identifier;
-use libra_types::account_config::CORE_CODE_ADDRESS;
 use dvm_net::api::grpc::vm_grpc::{LcsTag, LcsType};
 
 #[tokio::test]
