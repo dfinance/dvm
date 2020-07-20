@@ -1,19 +1,11 @@
-use std::hash::Hasher;
 use byteorder::{LittleEndian, ByteOrder};
 use libra::{prelude::*, lcs, oracle};
 
-use twox_hash::XxHash64;
-use serde_derive::Serialize;
 use runtime::move_vm::{U64Store, AddressStore};
 use dvm_net::api::grpc::vm_grpc::{VmArgs, VmTypeTag, ModuleIdent, LcsTag, StructIdent, LcsType};
 use dvm_test_kit::TestKit;
 use dvm_test_kit::*;
-
-fn str_xxhash(ticker: &str) -> u64 {
-    let mut hash = XxHash64::default();
-    Hasher::write(&mut hash, ticker.as_bytes());
-    Hasher::finish(&hash)
-}
+use serde_derive::Serialize;
 
 #[test]
 fn test_oracle() {

@@ -11,3 +11,5 @@ mod mv;
 pub use mv::*;
 pub use embedded::Compiler;
 pub use embedded::compile;
+#[cfg(test)]
+pub use disassembler;

@@ -94,9 +94,33 @@ pub fn zero_std() -> WriteSet {
 #[cfg(test)]
 pub mod tests {
     use super::build_std;
+    use test_kit::test_suite::{run_test_suite};
+    use include_dir::Dir;
+    use std::collections::HashMap;
 
     #[test]
     fn test_build_std() {
         build_std();
+    }
+
+    static BASE_TESTS_DIR: Dir = include_dir!("tests/base");
+    static STDLIB_TESTS_DIR: Dir = include_dir!("tests/stdlib");
+
+    #[test]
+    fn test_move() {
+        run_test_suite(dir_content(BASE_TESTS_DIR));
+        run_test_suite(dir_content(STDLIB_TESTS_DIR));
+    }
+
+    fn dir_content(dir: Dir) -> HashMap<String, String> {
+        dir.files()
+            .iter()
+            .map(|f| {
+                (
+                    f.path().file_name().unwrap().to_str().unwrap().to_owned(),
+                    f.contents_utf8().unwrap().to_owned(),
+                )
+            })
+            .collect()
     }
 }
