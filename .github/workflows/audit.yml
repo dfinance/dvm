@@ -33,13 +33,17 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    - name: cargo-audit
-      uses: actions-rs/install@v0.1
-      continue-on-error: true
-      with:
-        crate: cargo-audit
-        version: latest
-        use-tool-cache: true
+    # - name: cargo-audit
+    #   uses: actions-rs/install@v0.1
+    #   continue-on-error: true
+    #   with:
+    #     crate: cargo-audit
+    #     version: latest
+    #     # use-tool-cache: true
 
-    - name: Audit dependencies
-      run: cargo audit # --deny-warnings
+    # - name: Audit dependencies
+    #   run: cargo audit # --deny-warnings
+
+    - uses: actions-rs/audit-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
