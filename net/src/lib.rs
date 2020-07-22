@@ -17,7 +17,7 @@ pub mod transport {
     #[cfg(any(unix, macos))]
     pub use super::unix::*;
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     compile_error!("windows platform is not supported");
 }
 

@@ -35,7 +35,7 @@ pub fn init_sigterm_handler() -> std::sync::mpsc::Receiver<signal_notify::Signal
 
 pub fn init_sigterm_handler_fut<F>(f: F) -> impl Future<Output = ()> + Send
 where
-    F: Send + FnOnce() -> (),
+    F: Send + FnOnce(),
 {
     let rx = init_sigterm_handler();
     lazy(move |_| rx.recv()).map(|sig| {
