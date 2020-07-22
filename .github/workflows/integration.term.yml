@@ -19,6 +19,10 @@ jobs:
         os:
         - macos-latest
         - ubuntu-latest
+        rust:
+        - "1.44.0"
+        # - "stable"
+        # - "nightly
 
     env:
       RUSTFLAGS: -D warnings
@@ -34,7 +38,7 @@ jobs:
     - name: Rust Toolchain
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: ${{ matrix.rust }}
         profile: minimal
         override: true
         components: rustfmt
