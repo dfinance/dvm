@@ -10,12 +10,10 @@ pub type StdError = Box<dyn std::error::Error + Send + Sync>;
 pub mod endpoint;
 pub mod serve;
 
-#[allow(clippy::mismatched_target_os)]
 #[cfg(any(unix, macos))]
 mod unix;
 
 pub mod transport {
-    #![allow(clippy::mismatched_target_os)]
     #[cfg(any(unix, macos))]
     pub use super::unix::*;
 
