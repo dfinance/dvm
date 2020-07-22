@@ -353,7 +353,7 @@ where
                     .and_then(|addr| Address::parse_str(&addr).map_err(|err| anyhow!(err)))
             }
         }) {
-            Some(r) => r.and_then(|a| Ok(Some(a))),
+            Some(r) => r.map(Some),
             None => Ok(None),
         }
     }

@@ -93,10 +93,9 @@ mod support_libra_logger {
 
 /// Try init `env_logger` and then Libra's logger.
 pub fn init_logging(opts: &LoggingOptions) -> Result<(), log::SetLoggerError> {
-    logging_builder(opts).try_init().and_then(|_| {
-        support_libra_logger::init();
-        Ok(())
-    })
+    logging_builder(opts)
+        .try_init()
+        .map(|_| support_libra_logger::init())
 }
 
 /// Create and preconfigure `env_logger::Builder` using `LoggingOptions`
