@@ -34,12 +34,6 @@ jobs:
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
     - name: cargo-audit
-      uses: actions-rs/install@v0.1
-      continue-on-error: true
+      uses: actions-rs/audit-check@v1
       with:
-        crate: cargo-audit
-        version: latest
-        use-tool-cache: true
-
-    - name: Audit dependencies
-      run: cargo audit # --deny-warnings
+        token: ${{ secrets.GITHUB_TOKEN }}
