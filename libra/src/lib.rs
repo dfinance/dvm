@@ -1,14 +1,5 @@
-extern crate move_lang;
-extern crate libra_vm;
-extern crate move_core_types;
-extern crate move_vm_types;
-extern crate libra_state_view;
-extern crate libra_types;
 extern crate lcs as _lcs;
 extern crate compiler as libra_compiler;
-extern crate libra_logger;
-extern crate move_vm_runtime;
-extern crate move_vm_natives;
 
 pub mod prelude {
     pub use crate::account::*;
@@ -36,8 +27,8 @@ pub mod account {
 }
 
 pub mod result {
-    pub use libra_types::vm_status::{StatusCode, VMStatus};
-    pub use libra_vm::errors::{Location, vm_status, VMResult};
+    pub use move_core_types::vm_status::{StatusCode, VMStatus};
+    pub use libra_vm::errors::{Location, VMResult};
 }
 
 pub mod ds {
