@@ -87,8 +87,16 @@ impl<D> RemoteCache for ModuleCache<D>
 where
     D: DataSource,
 {
-    fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        RemoteCache::get(&self.inner, access_path)
+    fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
+        RemoteStorage::new(self).get_module(module_id)
+    }
+
+    fn get_resource(&self, address: &AccountAddress, tag: &TypeTag) -> PartialVMResult<Option<Vec<u8>>> {
+        RemoteStorage::new(self).get_resource(address, tag)
+    }
+
+    fn get_raw(&self, path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
+        StateView::get(self, path).map_err(|_|  PartialVMError::new(StatusCode::STORAGE_ERROR).finish(Location::Undefined))
     }
 }
 

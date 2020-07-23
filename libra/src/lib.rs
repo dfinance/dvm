@@ -12,8 +12,8 @@ pub mod prelude {
 pub mod module {
     pub use move_core_types::language_storage::ModuleId;
     pub use libra_types::transaction::Module;
-    pub use libra_vm::access::{ModuleAccess, ScriptAccess};
-    pub use libra_vm::file_format::{
+    pub use vm::access::{ModuleAccess, ScriptAccess};
+    pub use vm::file_format::{
         Bytecode, CompiledScript, CompiledModule, ModuleHandle, SignatureToken,
     };
     pub use move_lang::compiled_unit::CompiledUnit;
@@ -28,7 +28,7 @@ pub mod account {
 
 pub mod result {
     pub use move_core_types::vm_status::{StatusCode, VMStatus};
-    pub use libra_vm::errors::{Location, VMResult};
+    pub use vm::errors::{Location, VMResult, PartialVMResult, PartialVMError};
 }
 
 pub mod ds {
@@ -40,6 +40,8 @@ pub mod ds {
     pub use move_vm_runtime::data_cache::TransactionDataCache;
     pub use move_vm_runtime::loader::ScriptCache;
     pub use move_vm_types::data_store::DataStore;
+    pub use libra_vm::data_cache::RemoteStorage;
+    pub use move_core_types::language_storage::TypeTag;
 }
 
 pub mod compiler {
@@ -52,15 +54,15 @@ pub mod compiler {
 }
 
 pub mod file_format {
-    pub use libra_vm::file_format::*;
-    pub use libra_vm::file_format_common::*;
+    pub use vm::file_format::*;
+    pub use vm::file_format_common::*;
 }
 
 pub mod vm {
     pub use libra_types::contract_event::ContractEvent;
     pub use libra_types::transaction::TransactionStatus;
     pub use move_vm_runtime::move_vm::MoveVM;
-    pub use move_core_types::language_storage::{TypeTag, StructTag};
+    pub use move_core_types::language_storage::StructTag;
     pub use move_vm_types::values::Value;
 }
 

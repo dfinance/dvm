@@ -941,6 +941,7 @@ dependencies = [
  "libra-logger",
  "libra-state-view",
  "libra-types",
+ "libra-vm",
  "move-core-types",
  "move-lang",
  "move-vm-natives",
@@ -1793,6 +1794,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "libra-metrics"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/libra.git?branch=22.07.2020#91114148491e8030c1424a6de47891f9f10fb40c"
+dependencies = [
+ "anyhow",
+ "futures",
+ "hyper",
+ "libra-logger",
+ "libra-workspace-hack",
+ "once_cell",
+ "prometheus",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "libra-network-address"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=22.07.2020#91114148491e8030c1424a6de47891f9f10fb40c"
@@ -1839,6 +1856,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "libra-trace"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/libra.git?branch=22.07.2020#91114148491e8030c1424a6de47891f9f10fb40c"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "libra-logger",
+ "libra-metrics",
+ "libra-workspace-hack",
+ "once_cell",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "structopt",
+ "tokio",
+]
+
+[[package]]
 name = "libra-types"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=22.07.2020#91114148491e8030c1424a6de47891f9f10fb40c"
@@ -1863,6 +1898,31 @@ dependencies = [
  "serde_bytes",
  "thiserror",
  "tiny-keccak",
+]
+
+[[package]]
+name = "libra-vm"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/libra.git?branch=22.07.2020#91114148491e8030c1424a6de47891f9f10fb40c"
+dependencies = [
+ "anyhow",
+ "libra-canonical-serialization",
+ "libra-crypto",
+ "libra-logger",
+ "libra-metrics",
+ "libra-state-view",
+ "libra-trace",
+ "libra-types",
+ "libra-workspace-hack",
+ "mirai-annotations",
+ "move-core-types",
+ "move-vm-runtime",
+ "move-vm-types",
+ "once_cell",
+ "rayon",
+ "serde",
+ "serde_json",
+ "vm",
 ]
 
 [[package]]

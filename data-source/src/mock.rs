@@ -40,7 +40,7 @@ impl MockDataSource {
 
     /// Add module to internal state.
     pub fn publish_module(&self, module: Vec<u8>) -> Result<ModuleId, Error> {
-        let id = CompiledModule::deserialize(&module)?.self_id();
+        let id = CompiledModule::deserialize(&module).map_err(|e| e.finish(Location::Undefined).into_vm_status())?.self_id();
         self.publish_module_with_id(id.clone(), module)?;
         Ok(id)
     }
@@ -109,8 +109,16 @@ impl MockDataSource {
 }
 
 impl RemoteCache for MockDataSource {
-    fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        Ok(StateView::get(self, access_path).unwrap())
+    fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
+        RemoteStorage::new(self).get_module(module_id)
+    }
+
+    fn get_resource(&self, address: &AccountAddress, tag: &TypeTag) -> PartialVMResult<Option<Vec<u8>>> {
+        RemoteStorage::new(self).get_resource(address, tag)
+    }
+
+    fn get_raw(&self, path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
+        StateView::get(self, path).map_err(|_| PartialVMError::new(StatusCode::STORAGE_ERROR).finish(Location::Undefined))
     }
 }
 
