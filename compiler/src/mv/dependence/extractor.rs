@@ -40,7 +40,10 @@ pub fn extract_from_source(
 /// Extract dependencies from bytecode.
 pub fn extract_from_bytecode(bytecode: &[u8]) -> Result<HashSet<ModuleId>> {
     let mut extractor = BytecodeUses::default();
-    extractor.extract(CompiledModule::deserialize(bytecode)?)?;
+    extractor.extract(
+        CompiledModule::deserialize(bytecode)
+            .map_err(|e| e.finish(Location::Undefined).into_vm_status())?,
+    )?;
     Ok(extractor.imports())
 }
 

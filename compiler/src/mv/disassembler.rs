@@ -48,7 +48,8 @@ pub fn module_signature_with_configuration(
     bytecode: &[u8],
     config: Config,
 ) -> Result<ModuleSignature> {
-    let module = CompiledModule::deserialize(&bytecode)?;
+    let module = CompiledModule::deserialize(&bytecode)
+        .map_err(|e| e.finish(Location::Undefined).into_vm_status())?;
     let id = module.self_id();
 
     let mut imports = Imports::new();
