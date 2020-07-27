@@ -1,10 +1,6 @@
 use std::fmt;
 
 use libra::{prelude::*, vm::*, gas::*};
-
-// use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
-//
-
 use serde::Deserialize;
 
 use ds::DataSource;
