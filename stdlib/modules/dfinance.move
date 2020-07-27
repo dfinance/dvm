@@ -69,7 +69,11 @@ module Dfinance {
 
     /// Created Info resource must be attached to 0x1 address.
     /// Keeping this public until native function is ready.
-    native fun register_token_info<Coin: resource>(info: Info<Coin>);
+    fun register_token_info<Coin: resource>(info: Info<Coin>) {
+        let sig = create_signer(0x1);
+        move_to<Info<Coin>>(&sig, info);
+        destroy_signer(sig);
+    }
 
     /// Working with CoinInfo - coin registration procedure, 0x1 account used
 
@@ -122,5 +126,9 @@ module Dfinance {
     fun assert_can_register_coin(account: &signer) {
         assert(Signer::address_of(account) == 0x1, 1);
     }
+
+    native fun create_signer(addr: address): signer;
+
+    native fun destroy_signer(sig: signer);
 }
 }

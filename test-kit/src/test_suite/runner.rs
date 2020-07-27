@@ -91,7 +91,7 @@ impl TestState {
             let mut price_buff = vec![0; 8];
             LittleEndian::write_u64(&mut price_buff, *price);
             ds.insert(
-                oracle::make_path(str_xxhash(&ticker.to_lowercase())).unwrap(),
+                oracle::make_path(str_xxhash(&ticker.to_lowercase())),
                 price_buff,
             );
         }
@@ -123,8 +123,8 @@ impl TestState {
         match expected_result {
             ExecutionResult::Success => match result {
                 Ok(result) => {
-                    let status = result.status.vm_status();
-                    if status.major_status == StatusCode::EXECUTED {
+                    let major_status = result.status.major_status();
+                    if major_status == StatusCode::EXECUTED {
                         ds.merge_write_set(result.write_set);
                         Ok(())
                     } else {
@@ -144,11 +144,11 @@ impl TestState {
                 additional_status,
             } => {
                 let status = match result {
-                    Ok(result) => result.status.vm_status(),
+                    Ok(result) => result.status.into_vm_status(),
                     Err(status) => status,
                 };
 
-                if status.major_status == StatusCode::EXECUTED {
+                if status.status_code() == StatusCode::EXECUTED {
                     return Err(anyhow!(
                         "Unexpected execution result [{:?}]. Error status is expected.",
                         status
@@ -156,17 +156,17 @@ impl TestState {
                 }
 
                 if let Some(major_status) = main_status {
-                    if status.major_status as u64 != *major_status {
+                    if status.status_code() as u64 != *major_status {
                         return Err(anyhow!("Unexpected execution result [{:?}]. {:?} major status status is expected.", status, major_status));
                     }
                 }
 
                 if let Some(additional_status) = additional_status {
-                    if status.sub_status != Some(*additional_status) {
+                    if status.move_abort_code() != Some(*additional_status) {
                         return Err(anyhow!("Unexpected execution result [{:?}]. {:?} additional status status is expected.", status, additional_status));
                     }
 
-                    if *main_status == None && status.major_status != StatusCode::ABORTED {
+                    if *main_status == None && status.status_code() != StatusCode::ABORTED {
                         return Err(anyhow!("Unexpected execution result [{:?}]. ABORTED major status status is expected.", status));
                     }
                 }

@@ -254,7 +254,7 @@ impl TestMeta {
     fn take(meta: &mut MetaState, address: AccountAddress) -> TestMeta {
         TestMeta {
             address: meta.address.take().unwrap_or_else(|| address),
-            gas: meta.gas.take().unwrap_or_else(u64::max_value),
+            gas: meta.gas.take().unwrap_or_else(|| 100_000_000),
             expected_result: meta
                 .expected_result
                 .take()
@@ -383,7 +383,7 @@ pub mod tests {
                     TestStep::PublishModule((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
                             time: 1593017400,
@@ -394,7 +394,7 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
                             time: 1593017400,
@@ -405,7 +405,7 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Error {
                                 main_status: None,
                                 additional_status: Some(100),
@@ -419,7 +419,7 @@ pub mod tests {
                     TestStep::PublishModule((
                         TestMeta {
                             address: AccountAddress::from_hex_literal("0x02").unwrap(),
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
                             time: 1593017400,
@@ -444,7 +444,7 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 1,
                             time: 1592978400,
@@ -455,7 +455,7 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Error {
                                 main_status: None,
                                 additional_status: None,

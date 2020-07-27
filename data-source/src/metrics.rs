@@ -76,7 +76,11 @@ where
         RemoteCache::get_module(&self.inner, module_id)
     }
 
-    fn get_resource(&self, address: &AccountAddress, tag: &TypeTag) -> PartialVMResult<Option<Vec<u8>>> {
+    fn get_resource(
+        &self,
+        address: &AccountAddress,
+        tag: &TypeTag,
+    ) -> PartialVMResult<Option<Vec<u8>>> {
         RemoteCache::get_resource(&self.inner, address, tag)
     }
 

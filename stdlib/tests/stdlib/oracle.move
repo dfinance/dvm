@@ -6,7 +6,7 @@ address 0x2 {
     }
 }
 
-//#status:2008
+//#status:4016
 script {
     use 0x01::Oracle;
     use 0x02::Currency;

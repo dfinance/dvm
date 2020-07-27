@@ -169,12 +169,17 @@ impl RemoteCache for GrpcDataSource {
         RemoteStorage::new(self).get_module(module_id)
     }
 
-    fn get_resource(&self, address: &AccountAddress, tag: &TypeTag) -> PartialVMResult<Option<Vec<u8>>> {
+    fn get_resource(
+        &self,
+        address: &AccountAddress,
+        tag: &TypeTag,
+    ) -> PartialVMResult<Option<Vec<u8>>> {
         RemoteStorage::new(self).get_resource(address, tag)
     }
 
     fn get_raw(&self, path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        StateView::get(self, path).map_err(|_|  PartialVMError::new(StatusCode::STORAGE_ERROR).finish(Location::Undefined))
+        StateView::get(self, path)
+            .map_err(|_| PartialVMError::new(StatusCode::STORAGE_ERROR).finish(Location::Undefined))
     }
 }
 
