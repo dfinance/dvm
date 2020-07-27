@@ -71,13 +71,11 @@ impl ExecutionResult {
                     PartialVMError::new(err.status_code()).finish(Location::Undefined)
                 })
             })
-            .and_then(|(write_set, events)| {
-                Ok(ExecutionResult {
-                    write_set,
-                    events,
-                    gas_used,
-                    status: PartialVMError::new(StatusCode::EXECUTED).finish(Location::Undefined),
-                })
+            .map(|(write_set, events)| ExecutionResult {
+                write_set,
+                events,
+                gas_used,
+                status: PartialVMError::new(StatusCode::EXECUTED).finish(Location::Undefined),
             })
             .unwrap_or_else(|status| ExecutionResult {
                 write_set: WriteSetMut::default().freeze().expect("Impossible error."),
