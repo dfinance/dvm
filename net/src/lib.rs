@@ -10,11 +10,11 @@ pub type StdError = Box<dyn std::error::Error + Send + Sync>;
 pub mod endpoint;
 pub mod serve;
 
-#[cfg(any(target_os = "unix", target_os = "macos"))]
+#[cfg(any(unix, macos))]
 mod unix;
 
 pub mod transport {
-    #[cfg(any(target_os = "unix", target_os = "macos"))]
+    #[cfg(any(unix, macos))]
     pub use super::unix::*;
 
     #[cfg(target_os = "windows")]
