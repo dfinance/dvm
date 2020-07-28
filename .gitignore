@@ -3,4 +3,4 @@
 .vscode
 *.iml
 # compiler's output
-/target
+*/target
