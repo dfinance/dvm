@@ -3,7 +3,7 @@ use std::fmt;
 use libra::{prelude::*, vm::*, gas::*};
 use serde::Deserialize;
 
-use ds::DataSource;
+use ds::{DataSource, BlackListDataSource};
 use crate::gas_schedule;
 
 /// Stores metadata for vm execution.
@@ -112,7 +112,6 @@ where
 
     /// Publishes module to the chain.
     pub fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
-        let mut session = self.vm.new_session(&self.ds);
         let mut cost_strategy =
             CostStrategy::transaction(&self.cost_table, GasUnits::new(meta.max_gas_amount));
 
@@ -130,19 +129,29 @@ where
                     .finish(Location::Module(module_id)));
                 }
 
+                cost_strategy
+                    .charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))?;
+
                 if meta.sender == CORE_CODE_ADDRESS {
                     self.ds.clear();
                     let loader = &self.vm.runtime.loader;
                     *loader.scripts.lock().unwrap() = ScriptCache::new();
                     *loader.type_cache.lock().unwrap() = TypeCache::new();
                     *loader.module_cache.lock().unwrap() = ModuleCache::new();
-                }
 
-                cost_strategy
-                    .charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))?;
-                session
-                    .publish_module(module.code().to_vec(), meta.sender, &mut cost_strategy)
-                    .and_then(|_| session.finish())
+                    let mut blacklist = BlackListDataSource::new(self.ds.clone());
+                    blacklist.add_module(&module_id);
+                    let mut session = self.vm.new_session(&blacklist);
+
+                    session
+                        .publish_module(module.code().to_vec(), meta.sender, &mut cost_strategy)
+                        .and_then(|_| session.finish())
+                } else {
+                    let mut session = self.vm.new_session(&self.ds);
+                    session
+                        .publish_module(module.code().to_vec(), meta.sender, &mut cost_strategy)
+                        .and_then(|_| session.finish())
+                }
             });
 
         Ok(ExecutionResult::new(cost_strategy, meta, res))

@@ -19,6 +19,9 @@ pub mod mock;
 /// Defines `ModuleCache` which implements caching for fetching modules from `dnode`.
 pub mod module_cache;
 
+/// Defines `BlackListDataSource` which provides implements blacklist of access path.
+pub mod blacklist;
+
 use libra::prelude::*;
 
 use anyhow::Error;
@@ -27,6 +30,7 @@ pub use mock::MockDataSource;
 pub use module_cache::ModuleCache;
 pub use metrics::DsMeter;
 pub use grpc::GrpcDataSource;
+pub use blacklist::{BlackListDataSource};
 
 /// Thread-safe `StateView`.
 pub trait DataSource: StateView + RemoteCache + Clear + Clone + Send + Sync + 'static {}

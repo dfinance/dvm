@@ -40,7 +40,7 @@ pub mod ds {
     pub use move_vm_runtime::loader::TypeCache;
     pub use move_vm_types::data_store::DataStore;
     pub use libra_vm::data_cache::RemoteStorage;
-    pub use move_core_types::language_storage::TypeTag;
+    pub use move_core_types::language_storage::{TypeTag, ResourceKey};
 }
 
 pub mod compiler {
