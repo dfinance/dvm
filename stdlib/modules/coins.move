@@ -7,5 +7,17 @@ module Coins {
     struct ETH {}
     struct BTC {}
     struct USDT {}
+
+    resource struct Price<Curr1, Curr2> {
+        value: u64
+    }
+
+    public fun get_price<Curr1, Curr2>(): u64 acquires Price {
+        borrow_global<Price<Curr1, Curr2>>(0x1).value
+    }
+
+    public fun has_price<Curr1, Curr2>(): bool {
+        exists<Price<Curr1, Curr2>>(0x1)
+    }
 }
 }

@@ -1,6 +1,14 @@
 use libra::{prelude::*, vm::*};
 use serde_derive::{Deserialize, Serialize};
 
+const COIN_MODULE: &str = "Coins";
+const PRICE_STRUCT: &str = "Price";
+
+const DFI_MODULE: &str = "DFI";
+const DFI_RESOURCE: &str = "T";
+
+const BLOCK_RESOURCE: &str = "BlockMetadata";
+
 /// Height of the current block.
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct BlockMetadata {
@@ -23,25 +31,31 @@ pub struct Price {
 }
 
 /// Returns oracle metadata struct tag.
-pub fn oracle_metadata(first: String, second: String) -> StructTag {
+pub fn oracle_metadata(first: &str, second: &str) -> StructTag {
     StructTag {
         address: CORE_CODE_ADDRESS,
-        name: Identifier::new("Price").expect("Valid module name."),
-        module: Identifier::new("Currency").expect("Valid module name."),
-        type_params: vec![
-            TypeTag::Struct(StructTag {
-                address: CORE_CODE_ADDRESS,
-                name: Identifier::new("Currency").expect("Valid module name."),
-                module: Identifier::new(first).expect("Valid currency name."),
-                type_params: vec![],
-            }),
-            TypeTag::Struct(StructTag {
-                address: CORE_CODE_ADDRESS,
-                name: Identifier::new("Currency").expect("Valid module name."),
-                module: Identifier::new(second).expect("Valid currency name."),
-                type_params: vec![],
-            }),
-        ],
+        name: Identifier::new(PRICE_STRUCT).expect("Valid struct name."),
+        module: Identifier::new(COIN_MODULE).expect("Valid module name."),
+        type_params: vec![currency_type(first), currency_type(second)],
+    }
+}
+
+fn currency_type(curr: &str) -> TypeTag {
+    let curr = curr.to_uppercase();
+    if curr == DFI_MODULE {
+        TypeTag::Struct(StructTag {
+            address: CORE_CODE_ADDRESS,
+            name: Identifier::new(DFI_RESOURCE).expect("Valid module name."),
+            module: Identifier::new(DFI_MODULE).expect("Valid currency name."),
+            type_params: vec![],
+        })
+    } else {
+        TypeTag::Struct(StructTag {
+            address: CORE_CODE_ADDRESS,
+            name: Identifier::new(curr).expect("Valid module name."),
+            module: Identifier::new(COIN_MODULE).expect("Valid currency name."),
+            type_params: vec![],
+        })
     }
 }
 
@@ -49,7 +63,7 @@ pub fn oracle_metadata(first: String, second: String) -> StructTag {
 pub fn block_metadata() -> StructTag {
     StructTag {
         address: CORE_CODE_ADDRESS,
-        name: Identifier::new("BlockMetadata").expect("Valid module name."),
+        name: Identifier::new(BLOCK_RESOURCE).expect("Valid module name."),
         module: Identifier::new("Block").expect("Valid module name."),
         type_params: vec![],
     }

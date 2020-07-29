@@ -46,7 +46,7 @@ impl TestState {
 
         for step in pipeline.steps() {
             Self::perform_step(&self.ds, &step, &byte_code_map)
-                .map_err(|err| anyhow!("{}: Step:[{}]", err, step.unit()))?;
+                .map_err(|err| anyhow!("Step:[{}] - {} ", step.unit(), err))?;
         }
         Ok(())
     }
@@ -90,7 +90,7 @@ impl TestState {
             ds.insert(
                 AccessPath::new(
                     CORE_CODE_ADDRESS,
-                    oracle_metadata(ticker.0.to_string(), ticker.1.to_string()).access_vector(),
+                    oracle_metadata(&ticker.0, &ticker.1).access_vector(),
                 ),
                 lcs::to_bytes(&Price { price: *price })?,
             );
