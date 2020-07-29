@@ -80,7 +80,3 @@ pub mod lcs {
 pub mod logger {
     pub use libra_logger::*;
 }
-
-pub mod oracle {
-    pub use move_vm_natives::oracle::*;
-}

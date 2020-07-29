@@ -122,11 +122,6 @@ impl RemoteCache for MockDataSource {
     ) -> PartialVMResult<Option<Vec<u8>>> {
         RemoteStorage::new(self).get_resource(address, tag)
     }
-
-    fn get_raw(&self, path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        StateView::get(self, path)
-            .map_err(|_| PartialVMError::new(StatusCode::STORAGE_ERROR).finish(Location::Undefined))
-    }
 }
 
 impl Clear for MockDataSource {

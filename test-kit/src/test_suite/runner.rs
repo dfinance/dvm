@@ -1,17 +1,16 @@
 use runtime::{
     move_vm::{Dvm, ExecutionMeta, Script, VmResult},
-    resources::{block_metadata, time_metadata, BlockMetadata, CurrentTimestamp},
+    resources::{
+        block_metadata, time_metadata, oracle_metadata, BlockMetadata, Price, CurrentTimestamp,
+    },
 };
 use data_source::MockDataSource;
 use libra::prelude::*;
 use libra::lcs;
-use libra::oracle;
 use compiler::Compiler;
 use anyhow::Result;
 use crate::test_suite::pipeline::{TestPipeline, TestStep, TestMeta, ExecutionResult};
 use std::collections::HashMap;
-use crate::str_xxhash;
-use byteorder::{LittleEndian, ByteOrder};
 
 /// Test pipeline state.
 pub struct TestState {
@@ -88,11 +87,12 @@ impl TestState {
     /// Store mete resources.
     fn store_meta_resources(test_meta: &TestMeta, ds: &MockDataSource) -> Result<()> {
         for (ticker, price) in &test_meta.oracle_price_list {
-            let mut price_buff = vec![0; 8];
-            LittleEndian::write_u64(&mut price_buff, *price);
             ds.insert(
-                oracle::make_path(str_xxhash(&ticker.to_lowercase())),
-                price_buff,
+                AccessPath::new(
+                    CORE_CODE_ADDRESS,
+                    oracle_metadata(ticker.0.to_string(), ticker.1.to_string()).access_vector(),
+                ),
+                lcs::to_bytes(&Price { price: *price })?,
             );
         }
 

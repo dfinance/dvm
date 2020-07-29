@@ -83,10 +83,6 @@ where
     ) -> PartialVMResult<Option<Vec<u8>>> {
         RemoteCache::get_resource(&self.inner, address, tag)
     }
-
-    fn get_raw(&self, path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        RemoteCache::get_raw(&self.inner, path)
-    }
 }
 
 impl<D> DataSource for DsMeter<D> where D: DataSource {}

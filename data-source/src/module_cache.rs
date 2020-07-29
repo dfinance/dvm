@@ -98,11 +98,6 @@ where
     ) -> PartialVMResult<Option<Vec<u8>>> {
         RemoteStorage::new(self).get_resource(address, tag)
     }
-
-    fn get_raw(&self, path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        StateView::get(self, path)
-            .map_err(|_| PartialVMError::new(StatusCode::STORAGE_ERROR).finish(Location::Undefined))
-    }
 }
 
 impl<D> DataSource for ModuleCache<D> where D: DataSource {}
