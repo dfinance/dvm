@@ -27,7 +27,7 @@ pub struct CurrentTimestamp {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct Price {
     /// Currency price.
-    pub price: u64,
+    pub price: u128,
 }
 
 /// Returns oracle metadata struct tag.

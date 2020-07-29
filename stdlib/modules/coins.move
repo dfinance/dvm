@@ -9,10 +9,10 @@ module Coins {
     struct USDT {}
 
     resource struct Price<Curr1, Curr2> {
-        value: u64
+        value: u128
     }
 
-    public fun get_price<Curr1, Curr2>(): u64 acquires Price {
+    public fun get_price<Curr1, Curr2>(): u128 acquires Price {
         borrow_global<Price<Curr1, Curr2>>(0x1).value
     }
 

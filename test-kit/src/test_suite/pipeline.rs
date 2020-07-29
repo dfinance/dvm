@@ -235,7 +235,7 @@ struct MetaState {
     expected_result: Option<ExecutionResult>,
     block: Option<u64>,
     time: Option<u64>,
-    oracle_price_list: Option<Vec<((String, String), u64)>>,
+    oracle_price_list: Option<Vec<((String, String), u128)>>,
 }
 
 /// Test metadata.
@@ -246,7 +246,7 @@ pub struct TestMeta {
     pub expected_result: ExecutionResult,
     pub block: u64,
     pub time: u64,
-    pub oracle_price_list: Vec<((String, String), u64)>,
+    pub oracle_price_list: Vec<((String, String), u128)>,
 }
 
 impl TestMeta {
@@ -297,7 +297,7 @@ pub enum MetaTag {
     /// Block number.
     Block(u64),
     /// Oracle price.
-    Price(((String, String), u64)),
+    Price(((String, String), u128)),
 }
 
 impl TryFrom<(&str, &str)> for MetaTag {
