@@ -158,6 +158,14 @@ jobs:
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
         make
 
+
+    - name: print versions
+      run: |
+        echo `rustc -V`
+        echo `dvm -V`
+        echo `dnode version`
+
+
     - name: Tests
       run: |
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
