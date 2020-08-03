@@ -1,14 +1,9 @@
-use std::collections::HashMap;
 use std::fmt;
 
 use libra::{prelude::*, vm::*, gas::*};
-
-// use libra::{libra_types, libra_vm, move_vm_runtime, move_vm_types};
-//
-
 use serde::Deserialize;
 
-use ds::DataSource;
+use ds::{DataSource, BlackListDataSource};
 use crate::gas_schedule;
 
 /// Stores metadata for vm execution.
@@ -23,7 +18,7 @@ pub struct ExecutionMeta {
 }
 
 impl ExecutionMeta {
-    /// Contructor.
+    /// Constructor.
     pub fn new(max_gas_amount: u64, gas_unit_price: u64, sender: AccountAddress) -> ExecutionMeta {
         ExecutionMeta {
             max_gas_amount,
@@ -51,31 +46,39 @@ pub struct ExecutionResult {
     pub events: Vec<ContractEvent>,
     /// Number of gas units used for execution.
     pub gas_used: u64,
-    /// Status of execution (success, failure or retry).
-    pub status: TransactionStatus,
+    /// Status of execution.
+    pub status: VMError,
 }
 
 impl ExecutionResult {
     /// Creates `ExecutionResult` out of resulting chain data cache and `vm_result`.
     fn new(
-        mut data_cache: TransactionDataCache,
         cost_strategy: CostStrategy,
         txn_meta: ExecutionMeta,
-        vm_result: VMResult<()>,
-    ) -> VmResult {
+        vm_result: VMResult<TransactionEffects>,
+    ) -> ExecutionResult {
         let gas_used = GasUnits::new(txn_meta.max_gas_amount)
             .sub(cost_strategy.remaining_gas())
             .get();
 
-        Ok(ExecutionResult {
-            write_set: data_cache.make_write_set()?,
-            events: data_cache.event_data().to_vec(),
-            gas_used,
-            status: match vm_result {
-                Ok(()) => TransactionStatus::from(VMStatus::new(StatusCode::EXECUTED)),
-                Err(err) => TransactionStatus::from(err),
-            },
-        })
+        vm_result
+            .and_then(|effects| {
+                txn_effects_to_writeset_and_events_cached(&mut (), effects).map_err(|err| {
+                    PartialVMError::new(err.status_code()).finish(Location::Undefined)
+                })
+            })
+            .map(|(write_set, events)| ExecutionResult {
+                write_set,
+                events,
+                gas_used,
+                status: PartialVMError::new(StatusCode::EXECUTED).finish(Location::Undefined),
+            })
+            .unwrap_or_else(|status| ExecutionResult {
+                write_set: WriteSetMut::default().freeze().expect("Impossible error."),
+                events: vec![],
+                gas_used,
+                status,
+            })
     }
 }
 
@@ -99,7 +102,6 @@ where
     /// Create a new virtual machine with the given data source.
     pub fn new(ds: D) -> Dvm<D> {
         let vm = MoveVM::new();
-
         trace!("vm service is ready.");
         Dvm {
             vm,
@@ -108,65 +110,66 @@ where
         }
     }
 
-    /// Creates cache for script execution.
-    fn make_data_cache(&self) -> TransactionDataCache {
-        TransactionDataCache::new(&self.ds)
-    }
-
     /// Publishes module to the chain.
     pub fn publish_module(&self, meta: ExecutionMeta, module: Module) -> VmResult {
-        let mut cache = self.make_data_cache();
         let mut cost_strategy =
             CostStrategy::transaction(&self.cost_table, GasUnits::new(meta.max_gas_amount));
 
-        cost_strategy.charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))?;
-        let res = CompiledModule::deserialize(module.code()).and_then(|compiled_module| {
-            let module_id = compiled_module.self_id();
-            if meta.sender != *module_id.address() {
-                return Err(vm_status(
-                    Location::default(),
-                    StatusCode::MODULE_ADDRESS_DOES_NOT_MATCH_SENDER,
-                ));
-            }
+        cost_strategy
+            .charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))
+            .map_err(|err| err.into_vm_status())?;
+        let res = CompiledModule::deserialize(module.code())
+            .map_err(|e| e.finish(Location::Undefined))
+            .and_then(|compiled_module| {
+                let module_id = compiled_module.self_id();
+                if meta.sender != *module_id.address() {
+                    return Err(PartialVMError::new(
+                        StatusCode::MODULE_ADDRESS_DOES_NOT_MATCH_SENDER,
+                    )
+                    .finish(Location::Module(module_id)));
+                }
 
-            if meta.sender == CORE_CODE_ADDRESS {
-                self.ds.clear();
-                let loader = &self.vm.runtime.loader;
-                *loader.scripts.lock().unwrap() = ScriptCache::new();
-                *loader.libra_cache.lock().unwrap() = HashMap::new();
-                *loader.module_cache.lock().unwrap() = ModuleCache::new();
-            } else if cache.exists_module(&module_id) {
-                return Err(vm_status(
-                    Location::default(),
-                    StatusCode::DUPLICATE_MODULE_NAME,
-                ));
-            }
+                cost_strategy
+                    .charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))?;
 
-            cost_strategy
-                .charge_intrinsic_gas(AbstractMemorySize::new(module.code.len() as u64))?;
-            cache.publish_module(module_id, module.code)
-        });
+                if meta.sender == CORE_CODE_ADDRESS {
+                    self.ds.clear();
+                    let loader = &self.vm.runtime.loader;
+                    *loader.scripts.lock().unwrap() = ScriptCache::new();
+                    *loader.type_cache.lock().unwrap() = TypeCache::new();
+                    *loader.module_cache.lock().unwrap() = ModuleCache::new();
 
-        ExecutionResult::new(cache, cost_strategy, meta, res)
+                    let mut blacklist = BlackListDataSource::new(self.ds.clone());
+                    blacklist.add_module(&module_id);
+                    let mut session = self.vm.new_session(&blacklist);
+
+                    session
+                        .publish_module(module.code().to_vec(), meta.sender, &mut cost_strategy)
+                        .and_then(|_| session.finish())
+                } else {
+                    let mut session = self.vm.new_session(&self.ds);
+                    session
+                        .publish_module(module.code().to_vec(), meta.sender, &mut cost_strategy)
+                        .and_then(|_| session.finish())
+                }
+            });
+
+        Ok(ExecutionResult::new(cost_strategy, meta, res))
     }
 
     /// Executes passed script on the chain.
     pub fn execute_script(&self, meta: ExecutionMeta, script: Script) -> VmResult {
-        let mut cache = self.make_data_cache();
+        let mut session = self.vm.new_session(&self.ds);
 
         let (script, args, type_args) = script.into_inner();
         let mut cost_strategy =
             CostStrategy::transaction(&self.cost_table, GasUnits::new(meta.max_gas_amount));
 
-        let res = self.vm.execute_script(
-            script,
-            type_args,
-            args,
-            meta.sender,
-            &mut cache,
-            &mut cost_strategy,
-        );
-        ExecutionResult::new(cache, cost_strategy, meta, res)
+        let res = session
+            .execute_script(script, type_args, args, meta.sender, &mut cost_strategy)
+            .and_then(|_| session.finish());
+
+        Ok(ExecutionResult::new(cost_strategy, meta, res))
     }
 }
 
@@ -265,13 +268,12 @@ pub mod tests {
 
         let compiled_module = CompiledModule::deserialize(&module.code()).unwrap();
         let module_id = compiled_module.self_id();
-
-        assert!(ds.get_module(&module_id).unwrap().is_none());
+        assert!(DataAccess::get_module(&ds, &module_id).unwrap().is_none());
 
         ds.merge_write_set(output.write_set);
-        assert_eq!(output.gas_used, 1200);
+        assert_ne!(output.gas_used, 0);
 
-        let loaded_module = ds.get_module(&module_id).unwrap().unwrap();
+        let loaded_module = DataAccess::get_module(&ds, &module_id).unwrap().unwrap();
         assert_eq!(loaded_module, module);
 
         //try public module duplicate;
@@ -280,8 +282,7 @@ pub mod tests {
             vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
                 .unwrap()
                 .status
-                .vm_status()
-                .major_status
+                .major_status()
         );
     }
 

@@ -27,14 +27,14 @@ pub use genesis::genesis_write_set;
 use anyhow::Error;
 use crate::compiled_protos::vm_grpc::{VmArgs, VmPublishModule, VmExecuteResponse};
 use dvm_net::api::grpc::vm_grpc::{VmExecuteScript, StructIdent};
-use twox_hash::XxHash64;
-use std::hash::Hasher;
+
 /// gRPC protocol API.
 pub mod compiled_protos {
     extern crate dvm_net;
 
     pub use dvm_net::api::grpc::*;
 }
+
 /// gRPC server ports pool.
 pub const PORT_RANGE: Range<u32> = 3000..5000;
 /// Arc<Mutex<>> type alias.
@@ -187,11 +187,4 @@ pub fn meta(addr: &AccountAddress) -> ExecutionMeta {
 /// Create a new account address from hex string.
 pub fn account(addr: &str) -> AccountAddress {
     AccountAddress::from_hex_literal(addr).unwrap()
-}
-
-/// Makes string xx_hash.
-pub fn str_xxhash(ticker: &str) -> u64 {
-    let mut hash = XxHash64::default();
-    Hasher::write(&mut hash, ticker.as_bytes());
-    Hasher::finish(&hash)
 }

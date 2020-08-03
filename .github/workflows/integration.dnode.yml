@@ -158,6 +158,14 @@ jobs:
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
         make
 
+
+    - name: print versions
+      run: |
+        echo `rustc -V`
+        echo `dvm -V`
+        echo `dnode version`
+
+
     - name: Tests
       run: |
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
@@ -165,4 +173,4 @@ jobs:
       env:
         GO111MODULE: "on"
         DN_DVM_INTEG_TESTS_USE: "binary"
-        DN_DVM_INTEG_TESTS_BINARY_PATH: ${{ steps.VARS.outputs.DVM_BIN }}
+        # DN_DVM_INTEG_TESTS_BINARY_PATH: ${{ steps.VARS.outputs.DVM_BIN }}

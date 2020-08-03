@@ -1,17 +1,16 @@
 use runtime::{
     move_vm::{Dvm, ExecutionMeta, Script, VmResult},
-    resources::{block_metadata, time_metadata, BlockMetadata, CurrentTimestamp},
+    resources::{
+        block_metadata, time_metadata, oracle_metadata, BlockMetadata, Price, CurrentTimestamp,
+    },
 };
 use data_source::MockDataSource;
 use libra::prelude::*;
 use libra::lcs;
-use libra::oracle;
 use compiler::Compiler;
 use anyhow::Result;
 use crate::test_suite::pipeline::{TestPipeline, TestStep, TestMeta, ExecutionResult};
 use std::collections::HashMap;
-use crate::str_xxhash;
-use byteorder::{LittleEndian, ByteOrder};
 
 /// Test pipeline state.
 pub struct TestState {
@@ -47,7 +46,7 @@ impl TestState {
 
         for step in pipeline.steps() {
             Self::perform_step(&self.ds, &step, &byte_code_map)
-                .map_err(|err| anyhow!("{}: Step:[{}]", err, step.unit()))?;
+                .map_err(|err| anyhow!("Step:[{}] - {} ", step.unit(), err))?;
         }
         Ok(())
     }
@@ -88,11 +87,12 @@ impl TestState {
     /// Store mete resources.
     fn store_meta_resources(test_meta: &TestMeta, ds: &MockDataSource) -> Result<()> {
         for (ticker, price) in &test_meta.oracle_price_list {
-            let mut price_buff = vec![0; 8];
-            LittleEndian::write_u64(&mut price_buff, *price);
             ds.insert(
-                oracle::make_path(str_xxhash(&ticker.to_lowercase())).unwrap(),
-                price_buff,
+                AccessPath::new(
+                    CORE_CODE_ADDRESS,
+                    oracle_metadata(&ticker.0, &ticker.1).access_vector(),
+                ),
+                lcs::to_bytes(&Price { price: *price })?,
             );
         }
 
@@ -123,8 +123,8 @@ impl TestState {
         match expected_result {
             ExecutionResult::Success => match result {
                 Ok(result) => {
-                    let status = result.status.vm_status();
-                    if status.major_status == StatusCode::EXECUTED {
+                    let major_status = result.status.major_status();
+                    if major_status == StatusCode::EXECUTED {
                         ds.merge_write_set(result.write_set);
                         Ok(())
                     } else {
@@ -144,11 +144,11 @@ impl TestState {
                 additional_status,
             } => {
                 let status = match result {
-                    Ok(result) => result.status.vm_status(),
+                    Ok(result) => result.status.into_vm_status(),
                     Err(status) => status,
                 };
 
-                if status.major_status == StatusCode::EXECUTED {
+                if status.status_code() == StatusCode::EXECUTED {
                     return Err(anyhow!(
                         "Unexpected execution result [{:?}]. Error status is expected.",
                         status
@@ -156,17 +156,17 @@ impl TestState {
                 }
 
                 if let Some(major_status) = main_status {
-                    if status.major_status as u64 != *major_status {
+                    if status.status_code() as u64 != *major_status {
                         return Err(anyhow!("Unexpected execution result [{:?}]. {:?} major status status is expected.", status, major_status));
                     }
                 }
 
                 if let Some(additional_status) = additional_status {
-                    if status.sub_status != Some(*additional_status) {
+                    if status.move_abort_code() != Some(*additional_status) {
                         return Err(anyhow!("Unexpected execution result [{:?}]. {:?} additional status status is expected.", status, additional_status));
                     }
 
-                    if *main_status == None && status.major_status != StatusCode::ABORTED {
+                    if *main_status == None && status.status_code() != StatusCode::ABORTED {
                         return Err(anyhow!("Unexpected execution result [{:?}]. ABORTED major status status is expected.", status));
                     }
                 }

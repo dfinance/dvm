@@ -106,7 +106,7 @@ async fn test_cannot_deserialize_bytecode() {
     assert_eq!(err_status.code(), Code::InvalidArgument);
     assert_eq!(
         err_status.message(),
-        "Cannot deserialize script from provided bytecode. Error:[status UNKNOWN_SERIALIZED_TYPE of type Deserialization]"
+        "Cannot deserialize script from provided bytecode. Error:[PartialVMError with status UNKNOWN_SERIALIZED_TYPE]"
     );
 }
 

@@ -165,8 +165,16 @@ struct Request {
 }
 
 impl RemoteCache for GrpcDataSource {
-    fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        StateView::get(self, access_path).map_err(|_| VMStatus::new(StatusCode::STORAGE_ERROR))
+    fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
+        RemoteStorage::new(self).get_module(module_id)
+    }
+
+    fn get_resource(
+        &self,
+        address: &AccountAddress,
+        tag: &TypeTag,
+    ) -> PartialVMResult<Option<Vec<u8>>> {
+        RemoteStorage::new(self).get_resource(address, tag)
     }
 }
 

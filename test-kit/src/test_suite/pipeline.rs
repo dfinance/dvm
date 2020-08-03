@@ -235,7 +235,7 @@ struct MetaState {
     expected_result: Option<ExecutionResult>,
     block: Option<u64>,
     time: Option<u64>,
-    oracle_price_list: Option<Vec<(String, u64)>>,
+    oracle_price_list: Option<Vec<((String, String), u128)>>,
 }
 
 /// Test metadata.
@@ -246,7 +246,7 @@ pub struct TestMeta {
     pub expected_result: ExecutionResult,
     pub block: u64,
     pub time: u64,
-    pub oracle_price_list: Vec<(String, u64)>,
+    pub oracle_price_list: Vec<((String, String), u128)>,
 }
 
 impl TestMeta {
@@ -254,7 +254,7 @@ impl TestMeta {
     fn take(meta: &mut MetaState, address: AccountAddress) -> TestMeta {
         TestMeta {
             address: meta.address.take().unwrap_or_else(|| address),
-            gas: meta.gas.take().unwrap_or_else(u64::max_value),
+            gas: meta.gas.take().unwrap_or_else(|| 100_000_000),
             expected_result: meta
                 .expected_result
                 .take()
@@ -297,7 +297,7 @@ pub enum MetaTag {
     /// Block number.
     Block(u64),
     /// Oracle price.
-    Price((String, u64)),
+    Price(((String, String), u128)),
 }
 
 impl TryFrom<(&str, &str)> for MetaTag {
@@ -322,7 +322,18 @@ impl TryFrom<(&str, &str)> for MetaTag {
                 Ok(MetaTag::Time(date_time.timestamp() as u64))
             }
             "success" => Ok(MetaTag::Success),
-            _ => Ok(MetaTag::Price((key.to_owned(), value.parse()?))),
+            _ => {
+                let mut split = key.split_terminator('_');
+                let first = split
+                    .next()
+                    .ok_or_else(|| Error::msg("Failed to parse oracle price."))?
+                    .to_uppercase();
+                let second = split
+                    .next()
+                    .ok_or_else(|| Error::msg("Failed to parse oracle price."))?
+                    .to_uppercase();
+                Ok(MetaTag::Price(((first, second), value.parse()?)))
+            }
         }
     }
 }
@@ -383,7 +394,7 @@ pub mod tests {
                     TestStep::PublishModule((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
                             time: 1593017400,
@@ -394,7 +405,7 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
                             time: 1593017400,
@@ -405,7 +416,7 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Error {
                                 main_status: None,
                                 additional_status: Some(100),
@@ -419,7 +430,7 @@ pub mod tests {
                     TestStep::PublishModule((
                         TestMeta {
                             address: AccountAddress::from_hex_literal("0x02").unwrap(),
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
                             time: 1593017400,
@@ -444,7 +455,7 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 1,
                             time: 1592978400,
@@ -455,14 +466,14 @@ pub mod tests {
                     TestStep::ExecuteScript((
                         TestMeta {
                             address: CORE_CODE_ADDRESS,
-                            gas: 18446744073709551615,
+                            gas: 100000000,
                             expected_result: ExecutionResult::Error {
                                 main_status: None,
                                 additional_status: None,
                             },
                             block: 100,
                             time: 1593017461,
-                            oracle_price_list: vec![("usd_btc".to_owned(), 80)],
+                            oracle_price_list: vec![(("USD".to_owned(), "BTC".to_owned()), 80)],
                         },
                         "main5".to_owned()
                     )),
@@ -502,7 +513,7 @@ pub mod tests {
             MetaTag::try_from(("time", "24.06.2020T06:00:0")).unwrap()
         );
         assert_eq!(
-            MetaTag::Price(("usd_btc".to_owned(), 100)),
+            MetaTag::Price((("USD".to_owned(), "BTC".to_owned()), 100)),
             MetaTag::try_from(("usd_btc", "100")).unwrap()
         );
     }

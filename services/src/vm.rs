@@ -7,7 +7,7 @@ use tonic::{Request, Response, Status};
 use api::grpc::vm_grpc::vm_script_executor_server::VmScriptExecutor;
 use dvm_net::api::grpc::vm_grpc::{
     VmExecuteScript, VmExecuteResponse, VmTypeTag, VmStatus, StructIdent, VmValue, VmAccessPath,
-    VmEvent, ModuleIdent, LcsTag, LcsType, VmPublishModule,
+    VmEvent, ModuleIdent, LcsTag, LcsType, VmPublishModule, ContractStatus,
 };
 use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
 use std::convert::TryFrom;
@@ -54,8 +54,10 @@ where
         let request = request.into_inner();
         let response = ExecuteScript::try_from(request)
             .map_err(|err| {
-                VMStatus::new(StatusCode::INVALID_DATA)
+                PartialVMError::new(StatusCode::INVALID_DATA)
                     .with_message(format!("Invalid contract args [{:?}].", err))
+                    .finish(Location::Undefined)
+                    .into_vm_status()
             })
             .and_then(|contract| self.vm.execute_script(contract.meta, contract.script));
         Ok(Response::new(store_metric(
@@ -69,16 +71,11 @@ where
 fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmExecuteResponse {
     match res {
         Ok(res) => {
-            let (status, status_struct) = match res.status {
-                TransactionStatus::Discard(status) => (0, Some(convert_status(status))),
-                TransactionStatus::Keep(status) => (1, Some(convert_status(status))),
-                TransactionStatus::Retry => (2, None),
-            };
-
+            let (status, status_struct) = convert_vm_error_status(res.status);
             VmExecuteResponse {
                 gas_used: res.gas_used,
-                status,
-                status_struct,
+                status: status as i32,
+                status_struct: Some(status_struct),
                 events: convert_events(res.events),
                 write_set: convert_write_set(res.write_set),
             }
@@ -96,12 +93,35 @@ fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmEx
     }
 }
 
+/// Converts libra `VmError` into gRPC (`ContractStatus`, `VMStatus`).
+fn convert_vm_error_status(status: VMError) -> (ContractStatus, VmStatus) {
+    let major_status = status.major_status();
+    let sub_status = status.sub_status();
+    let msg = status.message().map(|m| m.to_owned());
+
+    let status = match status.into_vm_status().keep_or_discard() {
+        Ok(_) => ContractStatus::Keep,
+        Err(_) => ContractStatus::Discard,
+    };
+    (
+        status,
+        VmStatus {
+            major_status: major_status as u64,
+            sub_status: sub_status.unwrap_or(0),
+            message: msg.unwrap_or_default(),
+        },
+    )
+}
+
 /// Converts libra `VMStatus` into gRPC `VMStatus`.
 fn convert_status(status: VMStatus) -> VmStatus {
     VmStatus {
-        major_status: status.major_status as u64,
-        sub_status: status.sub_status.map(|status| status as u64).unwrap_or(0),
-        message: status.message.unwrap_or_default(),
+        major_status: status.status_code() as u64,
+        sub_status: status
+            .move_abort_code()
+            .map(|status| status as u64)
+            .unwrap_or(0),
+        message: String::default(),
     }
 }
 
@@ -321,8 +341,10 @@ where
         let request = request.into_inner();
         let response = PublishModule::try_from(request)
             .map_err(|err| {
-                VMStatus::new(StatusCode::INVALID_DATA)
+                PartialVMError::new(StatusCode::INVALID_DATA)
                     .with_message(format!("Invalid publish module args [{:?}].", err))
+                    .finish(Location::Undefined)
+                    .into_vm_status()
             })
             .and_then(|contract| self.vm.publish_module(contract.meta, contract.module));
         Ok(Response::new(store_metric(

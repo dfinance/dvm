@@ -72,8 +72,16 @@ impl<D> RemoteCache for DsMeter<D>
 where
     D: DataSource,
 {
-    fn get(&self, access_path: &AccessPath) -> VMResult<Option<Vec<u8>>> {
-        RemoteCache::get(&self.inner, access_path)
+    fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
+        RemoteCache::get_module(&self.inner, module_id)
+    }
+
+    fn get_resource(
+        &self,
+        address: &AccountAddress,
+        tag: &TypeTag,
+    ) -> PartialVMResult<Option<Vec<u8>>> {
+        RemoteCache::get_resource(&self.inner, address, tag)
     }
 }
 
