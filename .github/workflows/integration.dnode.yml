@@ -173,4 +173,4 @@ jobs:
       env:
         GO111MODULE: "on"
         DN_DVM_INTEG_TESTS_USE: "binary"
-        DN_DVM_INTEG_TESTS_BINARY_PATH: ${{ steps.VARS.outputs.DVM_BIN }}
+        # DN_DVM_INTEG_TESTS_BINARY_PATH: ${{ steps.VARS.outputs.DVM_BIN }}
