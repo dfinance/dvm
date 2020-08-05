@@ -45,7 +45,7 @@ impl<'a> Encode for Ret<'a> {
                 //no-op
             }
             1 => {
-                self.ret_list[0].encode(w, indent)?;
+                self.ret_list[0].encode(w, 0)?;
             }
             _ => {
                 write_array(w, "(", ", ", &self.ret_list, ")")?;

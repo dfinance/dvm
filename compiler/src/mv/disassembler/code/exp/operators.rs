@@ -120,7 +120,7 @@ impl<'a> SourceRange for Abort<'a> {
 impl<'a> Encode for Abort<'a> {
     fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
         w.write_str("abort ")?;
-        self.exp.encode(w, indent)
+        self.exp.encode(w, 0)
     }
 }
 
@@ -144,6 +144,6 @@ impl<'a> SourceRange for Not<'a> {
 impl<'a> Encode for Not<'a> {
     fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
         w.write_str("!")?;
-        self.exp.encode(w, indent)
+        self.exp.encode(w, 0)
     }
 }

@@ -151,8 +151,8 @@ impl<'a> SourceRange for WriteRef<'a> {
 impl<'a> Encode for WriteRef<'a> {
     fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
         w.write_str("*")?;
-        self.val_ref.encode(w, indent)?;
+        self.val_ref.encode(w, 0)?;
         w.write_str(" = ")?;
-        self.val.encode(w, indent)
+        self.val.encode(w, 0)
     }
 }

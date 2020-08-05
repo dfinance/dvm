@@ -188,16 +188,19 @@ mod tests {
         perform_test(include_str!("assets/code/loc.move"));
     }
 
+    #[ignore]
     #[test]
     pub fn test_loop() {
         perform_test(include_str!("assets/code/loop.move"));
     }
 
+    #[ignore]
     #[test]
     pub fn test_while() {
         perform_test(include_str!("assets/code/while.move"));
     }
 
+    #[ignore]
     #[test]
     pub fn test_if() {
         perform_test(include_str!("assets/code/if.move"));
