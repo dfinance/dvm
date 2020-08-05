@@ -9,6 +9,10 @@ pub mod prelude {
     pub use crate::lcs;
 }
 
+pub mod bf {
+    pub use bytecode_verifier::control_flow_graph::{VMControlFlowGraph, ControlFlowGraph, BlockId};
+}
+
 pub mod module {
     pub use move_core_types::language_storage::ModuleId;
     pub use libra_types::transaction::Module;
@@ -16,6 +20,7 @@ pub mod module {
     pub use vm::file_format::{Bytecode, CompiledScript, CompiledModule, ModuleHandle, SignatureToken};
     pub use move_lang::compiled_unit::CompiledUnit;
     pub use move_lang::parser::ast::{Definition, ModuleDefinition, Script};
+    pub use move_core_types::value::MoveValue;
 }
 
 pub mod account {
@@ -55,6 +60,7 @@ pub mod compiler {
 pub mod file_format {
     pub use vm::file_format::*;
     pub use vm::file_format_common::*;
+    pub use vm::access::ModuleAccess;
 }
 
 pub mod vm {

@@ -671,7 +671,7 @@ mod tests {
     use libra::prelude::*;
     use ds::MockDataSource;
     use crate::embedded::Compiler;
-    use crate::mv::disassembler::module_signature;
+    use crate::mv::disassembler1::module_signature;
 
     #[test]
     pub fn test_module_signature() {

@@ -14,10 +14,11 @@ move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "29.07
 move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
 libra-state-view = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
 libra-types = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
-lcs = { git = "https://github.com/dfinance/libra.git", package = "libra-canonical-serialization", branch = "29.07.2020" }
+lcs = { git = "https://github.com/dfinance/libra.git", package = "libra-canonical-serialization", branch = "09.07.2020" }
 compiler = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
 libra-logger = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
 vm = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
 libra-vm = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
 move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
 move-vm-natives = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }
+bytecode-verifier = { git = "https://github.com/dfinance/libra.git", branch = "29.07.2020" }

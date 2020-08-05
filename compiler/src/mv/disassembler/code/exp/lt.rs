@@ -1,0 +1,48 @@
+use crate::mv::disassembler::code::locals::Local;
+use crate::mv::disassembler::code::exp::{ExpLoc, Exp, SourceRange};
+use crate::mv::disassembler::code::translator::Context;
+use crate::mv::disassembler::Encode;
+use anyhow::Error;
+use std::fmt::Write;
+
+#[derive(Debug)]
+pub struct Let<'a> {
+    local: Local<'a>,
+    exp: ExpLoc<'a>,
+}
+
+impl<'a> Let<'a> {
+    pub fn new(index: u8, ctx: &mut impl Context<'a>) -> Exp<'a> {
+        let local = ctx.local_var(index);
+
+        if let Some(exp) = ctx.last() {
+            let exp = match exp.as_ref() {
+                Exp::Let(_) => ExpLoc::new(ctx.opcode_offset(), Exp::Nop),
+                _ => ctx.pop_exp(),
+            };
+            Exp::Let(Let { local, exp })
+        } else {
+            Exp::Let(Let {
+                local,
+                exp: ExpLoc::new(ctx.opcode_offset(), Exp::Nop),
+            })
+        }
+    }
+}
+
+impl<'a> SourceRange for Let<'a> {
+    fn source_range(&self) -> Option<(usize, usize)> {
+        self.exp.source_range()
+    }
+}
+
+impl<'a> Encode for Let<'a> {
+    fn encode<W: Write>(&self, w: &mut W, _: usize) -> Result<(), Error> {
+        self.local.write_name(w)?;
+        if !self.exp.as_ref().is_nop() {
+            w.write_str(" = ")?;
+            self.exp.encode(w, 0)?;
+        }
+        Ok(())
+    }
+}
