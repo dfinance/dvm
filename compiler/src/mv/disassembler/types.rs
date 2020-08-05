@@ -6,6 +6,7 @@ use crate::mv::disassembler::imports::{Import, Imports};
 use libra::file_format::*;
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Extract type signature.
 pub fn extract_type_signature<'a>(
     unit: &'a impl UnitAccess,
     signature: &'a SignatureToken,
@@ -54,6 +55,7 @@ pub fn extract_type_signature<'a>(
     }
 }
 
+/// Extract struct name.
 pub fn extract_struct_name<'a>(
     unit: &'a impl UnitAccess,
     struct_index: &'a StructHandleIndex,
@@ -68,11 +70,9 @@ pub fn extract_struct_name<'a>(
 
     imports
         .get_import(address, module_name)
-        .and_then(|import| {
-            Some(FullStructName {
-                name: type_name,
-                import: Some(import),
-            })
+        .map(|import| FullStructName {
+            name: type_name,
+            import: Some(import),
         })
         .unwrap_or_else(|| FullStructName {
             name: type_name,
@@ -80,14 +80,22 @@ pub fn extract_struct_name<'a>(
         })
 }
 
+/// Type.
 #[derive(Debug)]
 pub enum FType<'a> {
+    /// Generic type.
     Generic(Generic),
+    /// Primitive type.
     Primitive(&'static str),
+    /// Reference type.
     Ref(Box<FType<'a>>),
+    /// Mutable reference type.
     RefMut(Box<FType<'a>>),
+    /// Vector type.
     Vec(Box<FType<'a>>),
+    /// Struct type.
     Struct(FullStructName<'a>),
+    /// Struct instantiation instance.
     StructInst(FullStructName<'a>, Vec<FType<'a>>),
 }
 
@@ -135,6 +143,7 @@ impl<'a> Encode for FType<'a> {
     }
 }
 
+/// Full structure name.
 #[derive(Debug)]
 pub struct FullStructName<'a> {
     name: &'a str,

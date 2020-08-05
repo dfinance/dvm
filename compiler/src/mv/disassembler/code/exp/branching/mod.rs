@@ -5,6 +5,7 @@ use crate::mv::disassembler::code::translator::Context;
 use crate::embedded::Bytecode;
 use crate::mv::disassembler::code::exp::block::Block;
 
+/// Handles `BrTrue` instruction.
 pub fn br_true<'a>(true_offset: usize, ctx: &mut impl Context<'a>) -> Exp<'a> {
     let next = ctx.opcode_by_relative_offset(1).clone();
     let false_offset_start = if let Bytecode::Branch(false_offset) = next {
@@ -92,9 +93,12 @@ pub fn br_true<'a>(true_offset: usize, ctx: &mut impl Context<'a>) -> Exp<'a> {
     Exp::If(ctx.pop_exp(), Block::new(true_branch, true), false_branch)
 }
 
+/// Handles `BrFalse` instruction.
 pub fn br_false<'a>(index: usize, _ctx: &mut impl Context<'a>) -> Exp<'a> {
     Exp::Error(Bytecode::BrFalse(index as u16))
 }
+
+/// Handles `Branch` instruction.
 pub fn br<'a>(offset: usize, ctx: &mut impl Context<'a>) -> Exp<'a> {
     if offset > ctx.opcode_offset() {
         Exp::Nop

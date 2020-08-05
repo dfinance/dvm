@@ -2,24 +2,26 @@ use libra::file_format::*;
 use libra::prelude::*;
 use anyhow::Error;
 use crate::mv::disassembler::{Encode};
-use crate::mv::disassembler::imports::Imports;
-use crate::mv::disassembler::generics::Generics;
 use crate::mv::disassembler::script::Script as ScriptAst;
 use crate::mv::disassembler::module::Module as ModuleAst;
 use std::fmt::{Write, Debug};
 
+/// Undefined bytecode abstraction.
 #[derive(Debug)]
 pub enum CompiledUnit {
+    /// Compiled script.
     Script(CompiledScript),
+    /// Compiled module.
     Module(CompiledModule),
 }
 
 impl CompiledUnit {
+    /// Create a new CompiledUnit with the given bytecode.
     pub fn new(bytecode: &[u8]) -> Result<CompiledUnit, Error> {
         CompiledScript::deserialize(bytecode)
             .map_err(|err| err.finish(Location::Undefined).into_vm_status().into())
             .and_then(|s| {
-                if CompiledUnit::is_script(&s) {
+                if CompiledUnit::check_is_script(&s) {
                     Ok(CompiledUnit::Script(s))
                 } else {
                     CompiledUnit::load_as_module(bytecode)
@@ -28,7 +30,7 @@ impl CompiledUnit {
             .or_else(|_| CompiledUnit::load_as_module(bytecode))
     }
 
-    fn is_script(s: &CompiledScript) -> bool {
+    fn check_is_script(s: &CompiledScript) -> bool {
         !s.as_inner().code.code.is_empty()
     }
 
@@ -40,75 +42,69 @@ impl CompiledUnit {
     }
 }
 
-pub struct Disassembler<'a> {
-    unit: &'a CompiledUnit,
-    imports: Imports<'a>,
-    generics: Generics,
-}
-
-impl<'a> Disassembler<'a> {
-    pub fn new(unit: &'a CompiledUnit) -> Disassembler<'a> {
-        let imports = Imports::new(unit);
-        let generics = Generics::new(unit);
-
-        Disassembler {
-            unit,
-            imports,
-            generics,
-        }
-    }
-
-    pub fn as_source_unit(&'a self) -> SourceUnit<'a> {
-        if self.unit.is_script() {
-            SourceUnit::Script(ScriptAst::new(self.unit, &self.imports, &self.generics))
-        } else {
-            SourceUnit::Module(ModuleAst::new(self.unit, &self.imports, &self.generics))
-        }
-    }
-}
-
+/// Undefined bytecode accessor.
 pub trait UnitAccess: Debug {
+    /// Returns true if the bytecode is script bytecode.
     fn is_script(&self) -> bool;
 
+    /// Returns script-specific data.
     fn script_info(&self) -> Option<(&CodeUnit, &Vec<Kind>, SignatureIndex)>;
 
+    /// Returns unit id.
     fn self_id(&self) -> ModuleId;
 
+    /// Returns modules handlers.
     fn module_handles(&self) -> &[ModuleHandle];
 
+    /// Returns module handle by its index.
     fn module_handle(&self, idx: ModuleHandleIndex) -> &ModuleHandle;
 
+    /// Returns identifiers.
     fn identifiers(&self) -> &[Identifier];
 
+    /// Returns identifier by its index.
     fn identifier(&self, index: IdentifierIndex) -> &str;
 
+    /// Returns account address by its index.
     fn address(&self, index: AddressIdentifierIndex) -> &AccountAddress;
 
+    /// Returns self module handle
     fn self_module_handle_idx(&self) -> Option<ModuleHandleIndex>;
 
+    /// Returns functions definition.
     fn function_defs(&self) -> &[FunctionDefinition];
 
+    /// Returns function definition by its index.
     fn function_handle(&self, idx: FunctionHandleIndex) -> &FunctionHandle;
 
+    /// Returns function instruction by its index.
     fn function_instantiation(&self, idx: FunctionInstantiationIndex) -> &FunctionInstantiation;
 
+    /// Returns signature by its index.
     fn signature(&self, idx: SignatureIndex) -> &Signature;
 
+    /// Returns structures definition.
     fn struct_defs(&self) -> &[StructDefinition];
 
+    /// Returns struct definition by its index.
     fn struct_def(&self, idx: StructDefinitionIndex) -> Option<&StructDefinition>;
 
+    /// Returns struct handle by its index.
     fn struct_handle(&self, idx: StructHandleIndex) -> &StructHandle;
 
+    /// Returns struct definition instruction by its index.
     fn struct_def_instantiation(
         &self,
         idx: StructDefInstantiationIndex,
     ) -> Option<&StructDefInstantiation>;
 
+    /// Returns field instruction by its index.
     fn field_instantiation(&self, idx: FieldInstantiationIndex) -> Option<&FieldInstantiation>;
 
+    /// Returns constant by its index.
     fn constant(&self, idx: ConstantPoolIndex) -> &Constant;
 
+    /// Returns field handle by its index.
     fn field_handle(&self, idx: FieldHandleIndex) -> Option<&FieldHandle>;
 }
 
@@ -264,12 +260,16 @@ impl UnitAccess for CompiledUnit {
     }
 }
 
+/// Restored move ast.
 pub enum SourceUnit<'a> {
+    /// Script ast.
     Script(ScriptAst<'a>),
+    /// Module ast.
     Module(ModuleAst<'a>),
 }
 
 impl<'a> SourceUnit<'a> {
+    /// Writes source code to the given writer.
     pub fn write_code<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         match self {
             SourceUnit::Script(script) => script.encode(writer, 0),
@@ -277,6 +277,7 @@ impl<'a> SourceUnit<'a> {
         }
     }
 
+    /// Returns source code.
     pub fn code_string(&self) -> Result<String, Error> {
         let mut code = String::new();
         self.write_code(&mut code)?;

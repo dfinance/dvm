@@ -3,6 +3,7 @@ use std::path::Path;
 use crate::manifest::MoveToml;
 use std::fs;
 
+/// Execute update dependencies command.
 pub fn execute(project_dir: &Path, manifest: MoveToml) -> Result<(), Error> {
     let cache_path = manifest
         .layout

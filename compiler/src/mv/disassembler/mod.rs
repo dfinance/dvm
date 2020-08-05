@@ -1,37 +1,106 @@
 use anyhow::Error;
 use std::fmt::Write;
-use crate::mv::disassembler::unit::{CompiledUnit as Unit, Disassembler};
+use crate::mv::disassembler::unit::{CompiledUnit as Unit, CompiledUnit, SourceUnit, UnitAccess};
+use crate::mv::disassembler::imports::Imports;
+use crate::mv::disassembler::generics::Generics;
+use crate::mv::disassembler::module::Module as ModuleAst;
+use crate::mv::disassembler::script::Script as ScriptAst;
 
+/// Code disassembler.
 pub mod code;
-pub mod field;
+/// Function disassembler.
 pub mod functions;
+/// Generic disassembler.
 pub mod generics;
+/// Imports disassembler.
 pub mod imports;
+/// Module disassembler.
 pub mod module;
+/// Struct disassembler.
 pub mod script;
+/// Struct disassembler.
 pub mod structs;
+/// Common types.
 pub mod types;
+/// Bytecode abstractions.
 pub mod unit;
 
+/// Code indent.
 pub const INDENT: usize = 4;
 
-pub fn disasm<W: Write>(bytecode: &[u8], writer: &mut W) -> Result<(), Error> {
+/// Disassemble bytecode with config and write source code to writer.
+pub fn disasm<W: Write>(bytecode: &[u8], writer: &mut W, config: Config) -> Result<(), Error> {
     let unit = Unit::new(bytecode)?;
-    let disasm = Disassembler::new(&unit);
-    let ast = disasm.as_source_unit();
+
+    let disasm = Disassembler::new(&unit, config);
+    let ast = disasm.make_source_unit();
     ast.write_code(writer)
 }
 
-pub fn disasm_str(bytecode: &[u8]) -> Result<String, Error> {
+/// Disassemble bytecode with config.
+pub fn disasm_str(bytecode: &[u8], config: Config) -> Result<String, Error> {
     let mut code = String::new();
-    disasm(bytecode, &mut code)?;
+    disasm(bytecode, &mut code, config)?;
     Ok(code)
 }
 
+/// Disassembler configuration.
+#[derive(Debug)]
+pub struct Config {
+    /// Use light disassembler version.
+    pub light_version: bool,
+}
+
+/// Move disassembler.
+#[derive(Debug)]
+pub struct Disassembler<'a> {
+    unit: &'a CompiledUnit,
+    imports: Imports<'a>,
+    generics: Generics,
+    config: Config,
+}
+
+impl<'a> Disassembler<'a> {
+    /// Create a new disassembler.
+    pub fn new(unit: &'a CompiledUnit, config: Config) -> Disassembler<'a> {
+        let imports = Imports::new(unit);
+        let generics = Generics::new(unit);
+
+        Disassembler {
+            unit,
+            imports,
+            generics,
+            config,
+        }
+    }
+
+    /// Convert a CompiledUnit to the SourceUnit.
+    pub fn make_source_unit(&'a self) -> SourceUnit<'a> {
+        if self.unit.is_script() {
+            SourceUnit::Script(ScriptAst::new(
+                self.unit,
+                &self.imports,
+                &self.generics,
+                &self.config,
+            ))
+        } else {
+            SourceUnit::Module(ModuleAst::new(
+                self.unit,
+                &self.imports,
+                &self.generics,
+                &self.config,
+            ))
+        }
+    }
+}
+
+/// Encode to move code.
 pub trait Encode {
+    /// Writes component source representation into writer with given indent.
     fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error>;
 }
 
+/// Encode encodable array.
 pub fn write_array<E: Encode, W: Write>(
     w: &mut W,
     prefix: &str,
@@ -56,7 +125,7 @@ mod tests {
     use ds::MockDataSource;
     use libra::prelude::*;
     use libra::file_format::*;
-    use crate::mv::disassembler::disasm_str;
+    use crate::mv::disassembler::{disasm_str, Config};
 
     pub fn perform_test(source: &str) {
         let ds = MockDataSource::new();
@@ -76,7 +145,11 @@ mod tests {
         .unwrap();
 
         let original_bytecode = compiler.compile(source, Some(CORE_CODE_ADDRESS)).unwrap();
-        let restored_source = disasm_str(&original_bytecode).unwrap();
+
+        let config = Config {
+            light_version: false,
+        };
+        let restored_source = disasm_str(&original_bytecode, config).unwrap();
         println!("{}", restored_source);
 
         let original_bytecode = CompiledModule::deserialize(&original_bytecode).unwrap();

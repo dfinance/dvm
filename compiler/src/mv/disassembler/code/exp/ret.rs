@@ -4,14 +4,18 @@ use crate::mv::disassembler::{Encode, write_array};
 use std::fmt::Write;
 use anyhow::Error;
 
+/// Return expression.
 #[derive(Debug)]
 pub struct Ret<'a> {
+    /// Result tuple.
     pub ret_list: Vec<ExpLoc<'a>>,
+    /// is explicit return required.
     pub explicit_keyword: bool,
 }
 
 impl<'a> Ret<'a> {
-    pub fn new(ret_len: usize, ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new `Ret` expression.
+    pub fn exp(ret_len: usize, ctx: &mut impl Context<'a>) -> Exp<'a> {
         let params = (0..ret_len).map(|_| ctx.pop_exp()).collect::<Vec<_>>();
         Exp::Ret(Ret {
             ret_list: params.into_iter().rev().collect(),
@@ -19,10 +23,12 @@ impl<'a> Ret<'a> {
         })
     }
 
+    /// Returns `true` if the function empty tuple.
     pub fn is_empty(&self) -> bool {
         self.ret_list.is_empty()
     }
 
+    /// Returns `true` if the explicit return keyword required.
     pub fn is_explicit(&self) -> bool {
         self.explicit_keyword
     }
@@ -35,7 +41,7 @@ impl<'a> SourceRange for Ret<'a> {
 }
 
 impl<'a> Encode for Ret<'a> {
-    fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
+    fn encode<W: Write>(&self, w: &mut W, _: usize) -> Result<(), Error> {
         if self.explicit_keyword {
             w.write_str("return ")?;
         }

@@ -7,6 +7,7 @@ use libra::file_format::*;
 use crate::mv::disassembler::code::locals::Local;
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Field reference.
 #[derive(Debug)]
 pub struct FieldRef<'a> {
     is_mut: bool,
@@ -15,7 +16,8 @@ pub struct FieldRef<'a> {
 }
 
 impl<'a> FieldRef<'a> {
-    pub fn new(
+    /// Field reference.
+    pub fn exp(
         index: &FieldHandleIndex,
         is_mut: bool,
         ctx: &mut impl Context<'a>,
@@ -72,6 +74,7 @@ impl<'a> Encode for FieldRef<'a> {
     }
 }
 
+/// Reference.
 #[derive(Debug)]
 pub struct Ref<'a> {
     is_mut: bool,
@@ -79,7 +82,8 @@ pub struct Ref<'a> {
 }
 
 impl<'a> Ref<'a> {
-    pub fn new(index: u8, is_mut: bool, ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new reference expression.
+    pub fn exp(index: u8, is_mut: bool, ctx: &mut impl Context<'a>) -> Exp<'a> {
         let local = ctx.local_var(index);
         local.mark_as_used();
 
@@ -104,13 +108,15 @@ impl<'a> Encode for Ref<'a> {
     }
 }
 
+///Dereference expressions.
 #[derive(Debug)]
 pub struct Deref<'a> {
     exp: ExpLoc<'a>,
 }
 
 impl<'a> Deref<'a> {
-    pub fn new(ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new `Deref` expressions.
+    pub fn exp(ctx: &mut impl Context<'a>) -> Exp<'a> {
         Exp::Deref(Deref { exp: ctx.pop_exp() })
     }
 }
@@ -129,6 +135,7 @@ impl<'a> Encode for Deref<'a> {
     }
 }
 
+/// Write reference representation.
 #[derive(Debug)]
 pub struct WriteRef<'a> {
     val: ExpLoc<'a>,
@@ -136,7 +143,8 @@ pub struct WriteRef<'a> {
 }
 
 impl<'a> WriteRef<'a> {
-    pub fn new(ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new `WriteRef` expressions.
+    pub fn exp(ctx: &mut impl Context<'a>) -> Exp<'a> {
         let (val, val_ref) = ctx.pop2_exp();
         Exp::WriteRef(WriteRef { val, val_ref })
     }
@@ -149,7 +157,7 @@ impl<'a> SourceRange for WriteRef<'a> {
 }
 
 impl<'a> Encode for WriteRef<'a> {
-    fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
+    fn encode<W: Write>(&self, w: &mut W, _: usize) -> Result<(), Error> {
         w.write_str("*")?;
         self.val_ref.encode(w, 0)?;
         w.write_str(" = ")?;

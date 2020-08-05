@@ -11,17 +11,23 @@ const GENERICS_PREFIX: [&str; 22] = [
     "X", "Y", "Z",
 ];
 
+/// Generics template.
 #[derive(Clone, Debug)]
 pub struct Generics(Rc<GenericPrefix>);
 
+/// Generics prefix.
 #[derive(Debug)]
 pub enum GenericPrefix {
+    /// Simple generic prefix.
+    /// Prefix from generic prefix table.
     SimplePrefix(&'static str),
+    /// Random generic prefix.
     Generated(u16),
 }
 
 impl Generics {
-    pub fn new<'a>(unit: &impl UnitAccess) -> Generics {
+    /// Create a new generics.
+    pub fn new(unit: &impl UnitAccess) -> Generics {
         let identifiers: HashSet<&str> = unit.identifiers().iter().map(|i| i.as_str()).collect();
 
         let generic = if let Some(prefix) = GENERICS_PREFIX
@@ -36,6 +42,7 @@ impl Generics {
         Generics(Rc::new(generic))
     }
 
+    /// Create generic.
     pub fn create_generic(&self, index: usize, kind: Kind) -> Generic {
         Generic {
             prefix: self.clone(),
@@ -45,6 +52,7 @@ impl Generics {
     }
 }
 
+/// Generic representation.
 #[derive(Clone, Debug)]
 pub struct Generic {
     prefix: Generics,
@@ -53,6 +61,7 @@ pub struct Generic {
 }
 
 impl Generic {
+    ///Returns generic name.
     pub fn as_name(&self) -> GenericName {
         GenericName(&self)
     }
@@ -85,6 +94,7 @@ impl Encode for Generic {
     }
 }
 
+/// Generic name.
 pub struct GenericName<'a>(&'a Generic);
 
 impl<'a> Encode for GenericName<'a> {
@@ -99,6 +109,7 @@ impl<'a> Encode for GenericName<'a> {
     }
 }
 
+/// Extract type parameters.
 pub fn extract_type_params(params: &[Kind], generics: &Generics) -> Vec<Generic> {
     params
         .iter()
@@ -107,6 +118,7 @@ pub fn extract_type_params(params: &[Kind], generics: &Generics) -> Vec<Generic>
         .collect()
 }
 
+/// Write type parameters to writer.
 pub fn write_type_parameters<W: Write>(w: &mut W, type_params: &[Generic]) -> Result<(), Error> {
     if !type_params.is_empty() {
         write_array(w, "<", ", ", type_params, ">")?;

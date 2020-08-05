@@ -1,14 +1,27 @@
+#[allow(dead_code)]
+/// Block of expressions in curly braces.
 pub mod block;
+/// Branching algorithms.
 pub mod branching;
+/// Cast.
 pub mod cast;
+/// Function call.
 pub mod function;
+/// Load literal or constant.
 pub mod ld;
+/// Load local variable.
 pub mod loc;
+/// Local variable assignment.
 pub mod lt;
+/// Build in operators.
 pub mod operators;
+/// Struct constructor.
 pub mod pack;
+/// Return statement.
 pub mod ret;
+/// Reference.
 pub mod rf;
+/// Struct destructor.
 pub mod unpack;
 
 use crate::mv::disassembler::Encode;
@@ -28,6 +41,7 @@ use crate::mv::disassembler::code::exp::unpack::Unpack;
 use crate::mv::disassembler::code::exp::rf::{FieldRef, Ref, Deref, WriteRef};
 use crate::mv::disassembler::code::exp::block::Block;
 
+/// Expression wrapper that adds bytecode location of this expression.
 #[derive(Debug)]
 pub struct ExpLoc<'a> {
     index: usize,
@@ -35,6 +49,7 @@ pub struct ExpLoc<'a> {
 }
 
 impl<'a> ExpLoc<'a> {
+    /// Create a new `ExpLoc`.
     pub fn new(index: usize, val: Exp<'a>) -> ExpLoc<'a> {
         ExpLoc {
             index,
@@ -42,10 +57,12 @@ impl<'a> ExpLoc<'a> {
         }
     }
 
+    /// Returns expression start index in the bytecode.
     pub fn index(&self) -> usize {
         self.index
     }
 
+    /// Returns index range of the expression.
     pub fn range(&self) -> (usize, usize) {
         if let Some((mut l, mut r)) = self.exp.source_range() {
             if self.index < l {
@@ -62,6 +79,7 @@ impl<'a> ExpLoc<'a> {
         }
     }
 
+    /// Returns inner expression.
     pub fn val(self) -> Exp<'a> {
         *self.exp
     }
@@ -91,7 +109,9 @@ impl<'a> SourceRange for Option<(usize, usize)> {
     }
 }
 
+/// Range in the bytecode.
 pub trait SourceRange {
+    /// Returns index range.
     fn source_range(&self) -> Option<(usize, usize)>;
 }
 
@@ -113,34 +133,60 @@ impl<'a> Encode for ExpLoc<'a> {
     }
 }
 
+/// Move expression.
 #[derive(Debug)]
 pub enum Exp<'a> {
+    /// Abort. (abort)
     Abort(Abort<'a>),
+    /// Load literal or constant. (5)
     Ld(Ld),
+    /// Disassembler error.
     Error(Bytecode),
+    /// Local variable.
     Local(Loc<'a>),
+    /// Cast types. (as)
     Cast(Cast<'a>),
+    /// Binary operation.
     BinaryOp(BinaryOp<'a>),
+    /// Expression in parentheses.
     Basket(ExpLoc<'a>),
+    /// Logical negation.
     Not(Not<'a>),
+    /// Function call.
     FnCall(FnCall<'a>),
+    /// Local variable assignment.
     Let(Let<'a>),
+    /// Struct constructor.
     Pack(Pack<'a>),
+    /// Struct destructor.
     Unpack(Unpack<'a>),
+    /// Return.
     Ret(Ret<'a>),
+    /// Structures field access.
     FieldRef(FieldRef<'a>),
+    /// Reference.
     Ref(Ref<'a>),
+    /// Dereference.
     Deref(Deref<'a>),
+    /// Assign reference.
     WriteRef(WriteRef<'a>),
+    /// Infinite Loop.
+    #[allow(dead_code)]
     Loop(Block<'a>),
+    /// While loop.
     While(ExpLoc<'a>, Block<'a>),
+    /// If else expression.
     If(ExpLoc<'a>, Block<'a>, Option<Block<'a>>),
+    /// Break.
     Break,
+    /// Continue.
     Continue,
+    /// Nothing.
     Nop,
 }
 
 impl<'a> Exp<'a> {
+    /// Returns `true` if the current expression is `Exp::Nop`.
     pub fn is_nop(&self) -> bool {
         match self {
             Exp::Nop => true,
@@ -148,6 +194,7 @@ impl<'a> Exp<'a> {
         }
     }
 
+    /// Returns bytecode range of the curent expression.
     pub fn source_range(&self) -> Option<(usize, usize)> {
         match self {
             Exp::Abort(a) => a.source_range(),
@@ -245,6 +292,7 @@ impl<'a> Encode for Exp<'a> {
     }
 }
 
+/// Returns bytecode range of the given expressions.
 pub fn find_range<T, S>(range_list: T) -> Option<(usize, usize)>
 where
     T: IntoIterator<Item = S>,

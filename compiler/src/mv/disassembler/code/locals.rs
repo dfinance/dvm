@@ -10,12 +10,15 @@ use libra::file_format::*;
 use crate::mv::disassembler::types::{FType, extract_type_signature};
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Local variable representation.
 #[derive(Debug)]
 pub struct Locals<'a> {
+    /// Local variables.
     pub inner: Vec<Local<'a>>,
 }
 
 impl<'a> Locals<'a> {
+    /// Create a new local variables.
     pub fn new(
         params: &[Param<'a>],
         unit: &'a impl UnitAccess,
@@ -44,11 +47,19 @@ impl<'a> Locals<'a> {
         Locals { inner: locals }
     }
 
+    /// Returns local variables by its index.
     pub fn get(&self, index: usize) -> Local<'a> {
         self.inner[index].clone()
     }
+
+    /// Returns the empty locals variables list.
+    /// Used for light disassembler version.
+    pub fn mock() -> Locals<'static> {
+        Locals { inner: vec![] }
+    }
 }
 
+/// Variable.
 #[derive(Debug, Clone)]
 pub struct Var<'a> {
     used: Rc<AtomicBool>,
@@ -57,10 +68,12 @@ pub struct Var<'a> {
 }
 
 impl<'a> Var<'a> {
+    /// Makes variable as used.
     pub fn mark_as_used(&self) {
         self.used.store(true, Ordering::Relaxed);
     }
 
+    /// Writes variable name to the given writer.
     pub fn write_name<W: Write>(&self, w: &mut W) -> Result<(), Error> {
         if !self.used.load(Ordering::Relaxed) {
             w.write_str("_")?;
@@ -82,13 +95,17 @@ impl<'a> Encode for Var<'a> {
     }
 }
 
+/// Local variable.
 #[derive(Debug, Clone)]
 pub enum Local<'a> {
+    /// Function parameters.
     Param(Param<'a>),
+    /// Variable.
     Var(Var<'a>),
 }
 
 impl<'a> Local<'a> {
+    /// Makes local variable as used.
     pub fn mark_as_used(&self) {
         match self {
             Local::Param(p) => p.mark_as_used(),
@@ -96,6 +113,7 @@ impl<'a> Local<'a> {
         }
     }
 
+    /// Writes local variable name to the given writer.
     pub fn write_name<W: Write>(&self, w: &mut W) -> Result<(), Error> {
         match self {
             Local::Param(p) => p.write_name(w),

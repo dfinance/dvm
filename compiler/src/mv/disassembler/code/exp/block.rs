@@ -1,9 +1,12 @@
 use crate::mv::disassembler::code::exp::{SourceRange, ExpLoc, find_range};
+use crate::mv::disassembler::code::exp::ld::Ld;
+use crate::mv::disassembler::code::exp::operators::Abort;
 use crate::mv::disassembler::{Encode, INDENT};
 use std::fmt::Write;
 use anyhow::Error;
 use super::Exp;
 
+/// Block of expressions in curly braces.
 #[derive(Debug)]
 pub struct Block<'a> {
     exp: Vec<ExpLoc<'a>>,
@@ -11,8 +14,18 @@ pub struct Block<'a> {
 }
 
 impl<'a> Block<'a> {
+    /// Create a new Block.
     pub fn new(exp: Vec<ExpLoc<'a>>, basket: bool) -> Block<'a> {
         Block { exp, basket }
+    }
+
+    /// Returns block with abort instruction.
+    /// Used for light disassembler version.
+    pub fn mock() -> Block<'static> {
+        Block {
+            exp: vec![ExpLoc::new(1, Abort::mock(ExpLoc::new(0, Ld::u64(1))))],
+            basket: false,
+        }
     }
 }
 

@@ -1,7 +1,10 @@
-mod body;
-mod exp;
-mod iter;
-mod locals;
-mod translator;
-
-pub use body::Body;
+/// Function body representation.
+pub mod body;
+/// Code expression.
+pub mod exp;
+/// Bytecode iterator.
+pub mod iter;
+/// Local variables.
+pub mod locals;
+/// Bytecode translator.
+pub mod translator;

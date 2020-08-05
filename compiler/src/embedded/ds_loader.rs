@@ -1,4 +1,4 @@
-use crate::mv::dependence::loader::BytecodeSource;
+use crate::mv::dependence::loader::BytecodeLoader;
 use anyhow::Result;
 use libra::prelude::*;
 
@@ -16,7 +16,7 @@ where
     }
 }
 
-impl<S> BytecodeSource for StateViewLoader<S>
+impl<S> BytecodeLoader for StateViewLoader<S>
 where
     S: StateView + Clone,
 {

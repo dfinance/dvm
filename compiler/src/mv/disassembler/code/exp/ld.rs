@@ -6,34 +6,46 @@ use anyhow::Error;
 use std::fmt::Write;
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Load literal or constant.
 #[derive(Debug)]
 pub enum Ld {
+    /// U8 literal.
     U8(u8),
+    /// U64 literal.
     U64(u64),
+    /// U128 literal.
     U128(u128),
+    /// Bool literal.
     Bool(bool),
+    /// Address constant.
     Address(AccountAddress),
+    /// Vector constant.
     Vector(Vec<u8>),
 }
 
 impl Ld {
+    /// Locals u8 literal.
     pub fn u8<'a>(val: u8) -> Exp<'a> {
         Exp::Ld(Ld::U8(val))
     }
 
+    /// Locals u64 literal.
     pub fn u64<'a>(val: u64) -> Exp<'a> {
         Exp::Ld(Ld::U64(val))
     }
 
+    /// Locals u128 literal.
     pub fn u128<'a>(val: u128) -> Exp<'a> {
         Exp::Ld(Ld::U128(val))
     }
 
+    /// Locals bool literal.
     pub fn bool<'a>(val: bool) -> Exp<'a> {
         Exp::Ld(Ld::Bool(val))
     }
 
-    pub fn ld_const<'a>(index: ConstantPoolIndex, unit: &'a impl UnitAccess) -> Exp<'a> {
+    /// Locals constant.
+    pub fn ld_const(index: ConstantPoolIndex, unit: &impl UnitAccess) -> Exp {
         let constant = &unit.constant(index);
         if let Some(constant) = constant.deserialize_constant() {
             match constant {

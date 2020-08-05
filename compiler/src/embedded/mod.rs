@@ -13,6 +13,7 @@ use crate::manifest::{MoveToml, Layout};
 use std::fs::OpenOptions;
 use std::io::Write;
 
+/// Embedded move compiler.
 #[derive(Clone)]
 pub struct Compiler<S: StateView + Clone> {
     loader: Option<Loader<StateViewLoader<S>>>,
@@ -22,12 +23,14 @@ impl<S> Compiler<S>
 where
     S: StateView + Clone,
 {
+    /// Create move compiler.
     pub fn new(view: S) -> Compiler<S> {
         Compiler {
             loader: Some(Loader::new(None, StateViewLoader::new(view))),
         }
     }
 
+    /// Compile multiple sources.
     pub fn compile_source_map(
         &self,
         source_map: HashMap<String, String>,
@@ -69,6 +72,7 @@ where
         builder.verify(text_source, units)
     }
 
+    /// Compiler source codes.
     pub fn compile(&self, code: &str, address: Option<AccountAddress>) -> Result<Vec<u8>> {
         let mut source_map = HashMap::new();
         source_map.insert("source".to_string(), code.to_string());
@@ -81,11 +85,14 @@ where
     }
 }
 
+/// Temp directory.
+/// Random temporary directory which will be removed when 'TempDir' drop.
 pub struct TempDir {
     path: PathBuf,
 }
 
 impl TempDir {
+    /// Create a new temporary directory.
     pub fn new() -> Result<TempDir> {
         let dir = env::temp_dir();
         let mut rng = rand::thread_rng();
@@ -98,6 +105,7 @@ impl TempDir {
         Ok(TempDir { path })
     }
 
+    /// Returns the directory path.
     pub fn path(&self) -> &Path {
         &self.path
     }
@@ -116,11 +124,13 @@ impl Drop for TempDir {
     }
 }
 
+/// Compiler string with move source code.
 pub fn compile(code: &str, address: Option<AccountAddress>) -> Result<Vec<u8>> {
     let compiler = Compiler::new(ZeroStateView);
     compiler.compile(code, address)
 }
 
+/// State view mock.
 #[derive(Clone)]
 struct ZeroStateView;
 

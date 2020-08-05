@@ -4,7 +4,6 @@ use crate::mv::disassembler::generics::Generic;
 use crate::mv::disassembler::types::{extract_type_signature, FType};
 
 use libra::prelude::*;
-use libra::bf::*;
 use libra::file_format::*;
 
 use crate::mv::disassembler::code::locals::{Locals, Local};
@@ -22,44 +21,65 @@ use crate::mv::disassembler::code::exp::unpack::Unpack;
 use crate::mv::disassembler::code::exp::branching::{br_true, br_false, br};
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Transaction context.
+/// Provides functions for bytecode transactions.
 pub trait Context<'a> {
+    /// Removes the last element from a expression list and returns it, or [`Exp::Non`] if it
+    /// is empty.
     fn pop_exp(&mut self) -> ExpLoc<'a>;
 
+    /// Returns reference to the last element of a expression list or [`None`] if it
+    /// is empty.
     fn last_exp(&self) -> Option<&ExpLoc<'a>>;
 
+    /// Removes the two last elements from a expression list and returns it, or [`Exp::Non`] if it
+    /// is empty.
     fn pop2_exp(&mut self) -> (ExpLoc<'a>, ExpLoc<'a>);
 
+    /// Removes the `exp_count` last elements from a expression list and returns it.
     fn pop_exp_vec(&mut self, exp_count: usize) -> Vec<ExpLoc<'a>>;
 
+    /// Returns module Import by its handle reference.
     fn module_import(&self, module: &ModuleHandle) -> Option<Import<'a>>;
 
+    /// Extracts signature by its index.
     fn extract_signature(&self, type_params: Option<&SignatureIndex>) -> Vec<FType<'a>>;
 
+    /// Returns local variable by its index.
     fn local_var(&self, index: u8) -> Local<'a>;
 
+    /// Returns current bytecode offset.
     fn opcode_offset(&self) -> usize;
 
-    fn last(&self) -> Option<&ExpLoc<'a>>;
-
+    /// Returns struct fields by its definition.
     fn pack_fields(&mut self, def: &StructDefinition) -> Vec<PackField<'a>>;
 
+    /// Translates next `block_size` bytecode instructions and returns it.
     fn translate_block(&mut self, block_size: usize) -> Vec<ExpLoc<'a>>;
 
+    /// Returns next bytecode instruction and updates bytecode iterator state.
     fn next_opcode(&mut self) -> Option<&Bytecode>;
 
+    /// Wraps the given expression at the current location.
     fn loc(&self, exp: Exp<'a>) -> ExpLoc<'a>;
 
+    /// Returns the bytecode instruction by relative index.
     fn opcode_by_relative_offset(&self, offset: isize) -> &Bytecode;
 
+    /// Returns the bytecode instruction by absolute index.
     fn opcode_by_absolute_offset(&self, offset: usize) -> &Bytecode;
 
+    /// Returns the last bytecode offset of the current context.
     fn end_offset(&self) -> usize;
 
+    /// Returns remaining bytecode instructions.
     fn remaining_code(&self) -> &[Bytecode];
 
+    /// Returns error expression.
     fn err(&self) -> Exp<'a>;
 }
 
+/// Bytecode translator.
 pub struct Translator<'a, 'b, 'c, A>
 where
     A: UnitAccess,
@@ -70,7 +90,6 @@ where
     imports: &'a Imports<'a>,
     type_params: &'b [Generic],
     opcode_iter: &'c mut BytecodeIterator<'a>,
-    flow_graph: &'c VMControlFlowGraph,
     end_offset: usize,
     ret_len: usize,
 }
@@ -79,6 +98,7 @@ impl<'a, 'b, 'c, A> Translator<'a, 'b, 'c, A>
 where
     A: UnitAccess,
 {
+    /// Creates a new translator.
     pub fn new(
         opcode_iter: &'c mut BytecodeIterator<'a>,
         ret_len: usize,
@@ -87,7 +107,6 @@ where
         unit: &'a A,
         imports: &'a Imports<'a>,
         type_params: &'b [Generic],
-        flow_graph: &'c VMControlFlowGraph,
     ) -> Translator<'a, 'b, 'c, A> {
         let start_offset = opcode_iter.index();
         Translator {
@@ -99,10 +118,10 @@ where
             type_params,
             ret_len,
             end_offset: start_offset + opcodes_count,
-            flow_graph,
         }
     }
 
+    /// Translates bytecode instructions.
     pub fn translate(&mut self) {
         loop {
             if self.end_offset > self.opcode_iter.index() {
@@ -119,34 +138,34 @@ where
         }
     }
 
-    pub fn next_exp(&mut self, opcode: &Bytecode) -> Exp<'a> {
+    fn next_exp(&mut self, opcode: &Bytecode) -> Exp<'a> {
         match opcode {
             Bytecode::Pop => pop(),
-            Bytecode::Not => Not::new(self),
-            Bytecode::Abort => Abort::new(self),
-            Bytecode::Add => BinaryOp::new(Op::Add, self),
-            Bytecode::Sub => BinaryOp::new(Op::Sub, self),
-            Bytecode::Mul => BinaryOp::new(Op::Mul, self),
-            Bytecode::Mod => BinaryOp::new(Op::Mod, self),
-            Bytecode::Div => BinaryOp::new(Op::Div, self),
-            Bytecode::BitOr => BinaryOp::new(Op::BitOr, self),
-            Bytecode::BitAnd => BinaryOp::new(Op::BitAnd, self),
-            Bytecode::Xor => BinaryOp::new(Op::Xor, self),
-            Bytecode::Or => BinaryOp::new(Op::Or, self),
-            Bytecode::And => BinaryOp::new(Op::And, self),
-            Bytecode::Eq => BinaryOp::new(Op::Eq, self),
-            Bytecode::Neq => BinaryOp::new(Op::Neq, self),
-            Bytecode::Lt => BinaryOp::new(Op::Lt, self),
-            Bytecode::Gt => BinaryOp::new(Op::Gt, self),
-            Bytecode::Le => BinaryOp::new(Op::Le, self),
-            Bytecode::Ge => BinaryOp::new(Op::Ge, self),
-            Bytecode::Shl => BinaryOp::new(Op::Shl, self),
-            Bytecode::Shr => BinaryOp::new(Op::Shr, self),
+            Bytecode::Not => Not::exp(self),
+            Bytecode::Abort => Abort::exp(self),
+            Bytecode::Add => BinaryOp::exp(Op::Add, self),
+            Bytecode::Sub => BinaryOp::exp(Op::Sub, self),
+            Bytecode::Mul => BinaryOp::exp(Op::Mul, self),
+            Bytecode::Mod => BinaryOp::exp(Op::Mod, self),
+            Bytecode::Div => BinaryOp::exp(Op::Div, self),
+            Bytecode::BitOr => BinaryOp::exp(Op::BitOr, self),
+            Bytecode::BitAnd => BinaryOp::exp(Op::BitAnd, self),
+            Bytecode::Xor => BinaryOp::exp(Op::Xor, self),
+            Bytecode::Or => BinaryOp::exp(Op::Or, self),
+            Bytecode::And => BinaryOp::exp(Op::And, self),
+            Bytecode::Eq => BinaryOp::exp(Op::Eq, self),
+            Bytecode::Neq => BinaryOp::exp(Op::Neq, self),
+            Bytecode::Lt => BinaryOp::exp(Op::Lt, self),
+            Bytecode::Gt => BinaryOp::exp(Op::Gt, self),
+            Bytecode::Le => BinaryOp::exp(Op::Le, self),
+            Bytecode::Ge => BinaryOp::exp(Op::Ge, self),
+            Bytecode::Shl => BinaryOp::exp(Op::Shl, self),
+            Bytecode::Shr => BinaryOp::exp(Op::Shr, self),
             Bytecode::Nop => nop(),
-            Bytecode::Ret => Ret::new(self.ret_len, self),
-            Bytecode::CastU8 => Cast::new(CastType::U8, self),
-            Bytecode::CastU64 => Cast::new(CastType::U64, self),
-            Bytecode::CastU128 => Cast::new(CastType::U128, self),
+            Bytecode::Ret => Ret::exp(self.ret_len, self),
+            Bytecode::CastU8 => Cast::exp(CastType::U8, self),
+            Bytecode::CastU64 => Cast::exp(CastType::U64, self),
+            Bytecode::CastU128 => Cast::exp(CastType::U128, self),
             Bytecode::LdU8(val) => Ld::u8(*val),
             Bytecode::LdU64(val) => Ld::u64(*val),
             Bytecode::LdU128(val) => Ld::u128(*val),
@@ -159,69 +178,69 @@ where
                 FnCall::plain(&inst.handle, Some(&inst.type_parameters), self, self.unit)
             }
             Bytecode::Exists(index) => {
-                FnCall::build_in(BuildIn::Exists, index, None, 1, self, self.unit)
+                FnCall::build_in(BuildIn::Exists, index, None, self, self.unit)
             }
-            Bytecode::ExistsGeneric(index) => self.build_in(*index, BuildIn::Exists, 1, opcode),
+            Bytecode::ExistsGeneric(index) => self.build_in(*index, BuildIn::Exists, opcode),
             Bytecode::MoveFrom(index) => {
-                FnCall::build_in(BuildIn::MoveFrom, index, None, 1, self, self.unit)
+                FnCall::build_in(BuildIn::MoveFrom, index, None, self, self.unit)
             }
-            Bytecode::MoveFromGeneric(index) => self.build_in(*index, BuildIn::MoveFrom, 1, opcode),
+            Bytecode::MoveFromGeneric(index) => self.build_in(*index, BuildIn::MoveFrom, opcode),
             Bytecode::MoveTo(index) => {
-                FnCall::build_in(BuildIn::MoveTo, index, None, 2, self, self.unit)
+                FnCall::build_in(BuildIn::MoveTo, index, None, self, self.unit)
             }
-            Bytecode::MoveToGeneric(index) => self.build_in(*index, BuildIn::MoveTo, 2, opcode),
+            Bytecode::MoveToGeneric(index) => self.build_in(*index, BuildIn::MoveTo, opcode),
             Bytecode::ImmBorrowGlobal(index) => {
-                FnCall::build_in(BuildIn::BorrowGlobal, index, None, 1, self, self.unit)
+                FnCall::build_in(BuildIn::BorrowGlobal, index, None, self, self.unit)
             }
             Bytecode::ImmBorrowGlobalGeneric(index) => {
-                self.build_in(*index, BuildIn::BorrowGlobal, 1, opcode)
+                self.build_in(*index, BuildIn::BorrowGlobal, opcode)
             }
             Bytecode::MutBorrowGlobal(index) => {
-                FnCall::build_in(BuildIn::BorrowGlobalMut, index, None, 1, self, self.unit)
+                FnCall::build_in(BuildIn::BorrowGlobalMut, index, None, self, self.unit)
             }
             Bytecode::MutBorrowGlobalGeneric(index) => {
-                self.build_in(*index, BuildIn::BorrowGlobalMut, 1, opcode)
+                self.build_in(*index, BuildIn::BorrowGlobalMut, opcode)
             }
-            Bytecode::CopyLoc(index) => Loc::new(false, LocAccess::Copy, *index, self),
-            Bytecode::MoveLoc(index) => Loc::new(false, LocAccess::Move, *index, self),
-            Bytecode::StLoc(index) => Let::new(*index, self),
-            Bytecode::Pack(index) => Pack::new(index, None, self, self.unit),
+            Bytecode::CopyLoc(index) => Loc::exp(false, LocAccess::Copy, *index, self),
+            Bytecode::MoveLoc(index) => Loc::exp(false, LocAccess::Move, *index, self),
+            Bytecode::StLoc(index) => Let::exp(*index, self),
+            Bytecode::Pack(index) => Pack::exp(index, None, self, self.unit),
             Bytecode::PackGeneric(index) => {
                 if let Some(inst) = self.unit.struct_def_instantiation(*index) {
-                    Pack::new(&inst.def, Some(&inst.type_parameters), self, self.unit)
+                    Pack::exp(&inst.def, Some(&inst.type_parameters), self, self.unit)
                 } else {
                     Exp::Error(opcode.clone())
                 }
             }
-            Bytecode::Unpack(def) => Unpack::new(def, None, self, self.unit),
+            Bytecode::Unpack(def) => Unpack::exp(def, None, self, self.unit),
             Bytecode::UnpackGeneric(index) => {
                 if let Some(inst) = self.unit.struct_def_instantiation(*index) {
-                    Unpack::new(&inst.def, Some(&inst.type_parameters), self, self.unit)
+                    Unpack::exp(&inst.def, Some(&inst.type_parameters), self, self.unit)
                 } else {
                     Exp::Error(opcode.clone())
                 }
             }
-            Bytecode::MutBorrowField(index) => FieldRef::new(index, true, self, self.unit),
+            Bytecode::MutBorrowField(index) => FieldRef::exp(index, true, self, self.unit),
             Bytecode::MutBorrowFieldGeneric(index) => {
                 if let Some(field_index) = self.unit.field_instantiation(*index) {
-                    FieldRef::new(&field_index.handle, true, self, self.unit)
+                    FieldRef::exp(&field_index.handle, true, self, self.unit)
                 } else {
                     Exp::Error(opcode.clone())
                 }
             }
-            Bytecode::ImmBorrowField(index) => FieldRef::new(index, false, self, self.unit),
+            Bytecode::ImmBorrowField(index) => FieldRef::exp(index, false, self, self.unit),
             Bytecode::ImmBorrowFieldGeneric(index) => {
                 if let Some(field_index) = self.unit.field_instantiation(*index) {
-                    FieldRef::new(&field_index.handle, false, self, self.unit)
+                    FieldRef::exp(&field_index.handle, false, self, self.unit)
                 } else {
                     Exp::Error(opcode.clone())
                 }
             }
             Bytecode::FreezeRef => self.pop_exp().val(),
-            Bytecode::MutBorrowLoc(index) => Ref::new(*index, true, self),
-            Bytecode::ImmBorrowLoc(index) => Ref::new(*index, false, self),
-            Bytecode::ReadRef => Deref::new(self),
-            Bytecode::WriteRef => WriteRef::new(self),
+            Bytecode::MutBorrowLoc(index) => Ref::exp(*index, true, self),
+            Bytecode::ImmBorrowLoc(index) => Ref::exp(*index, false, self),
+            Bytecode::ReadRef => Deref::exp(self),
+            Bytecode::WriteRef => WriteRef::exp(self),
 
             Bytecode::BrTrue(true_offset) => br_true(*true_offset as usize, self),
             Bytecode::BrFalse(offset) => br_false(*offset as usize, self),
@@ -229,6 +248,7 @@ where
         }
     }
 
+    /// Returns transaction results.
     pub fn expressions(self) -> Vec<ExpLoc<'a>> {
         self.expressions
     }
@@ -237,33 +257,22 @@ where
         &mut self,
         index: StructDefInstantiationIndex,
         kind: BuildIn,
-        params_count: usize,
         opcode: &Bytecode,
     ) -> Exp<'a> {
         if let Some(def) = self.unit.struct_def_instantiation(index) {
-            FnCall::build_in(
-                kind,
-                &def.def,
-                Some(&def.type_parameters),
-                params_count,
-                self,
-                self.unit,
-            )
+            FnCall::build_in(kind, &def.def, Some(&def.type_parameters), self, self.unit)
         } else {
             Exp::Error(opcode.clone())
         }
     }
 
+    #[allow(dead_code)]
     fn take_by_offset(&mut self, offset: usize) -> Vec<ExpLoc<'a>> {
         let mut buffer = Vec::new();
-        loop {
-            if let Some(exp) = self.expressions.last() {
-                if exp.index() >= offset {
-                    if let Some(exp) = self.expressions.pop() {
-                        buffer.insert(0, exp);
-                    } else {
-                        break;
-                    }
+        while let Some(exp) = self.expressions.last() {
+            if exp.index() >= offset {
+                if let Some(exp) = self.expressions.pop() {
+                    buffer.insert(0, exp);
                 } else {
                     break;
                 }
@@ -328,7 +337,7 @@ where
                     .map(|t| extract_type_signature(self.unit, t, self.imports, self.type_params))
                     .collect::<Vec<_>>()
             })
-            .unwrap_or_else(|| vec![])
+            .unwrap_or_else(Vec::new)
     }
 
     fn local_var(&self, index: u8) -> Local<'a> {
@@ -337,10 +346,6 @@ where
 
     fn opcode_offset(&self) -> usize {
         self.opcode_iter.index()
-    }
-
-    fn last(&self) -> Option<&ExpLoc<'a>> {
-        self.expressions.last()
     }
 
     fn pack_fields(&mut self, def: &StructDefinition) -> Vec<PackField<'a>> {
@@ -367,7 +372,6 @@ where
             self.unit,
             self.imports,
             self.type_params,
-            self.flow_graph,
         );
         translator.translate();
         translator.expressions

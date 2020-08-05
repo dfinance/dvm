@@ -4,6 +4,7 @@ use crate::mv::disassembler::Encode;
 use std::fmt::Write;
 use anyhow::Error;
 
+/// Cast representation.
 #[derive(Debug)]
 pub struct Cast<'a> {
     exp: ExpLoc<'a>,
@@ -11,7 +12,8 @@ pub struct Cast<'a> {
 }
 
 impl<'a> Cast<'a> {
-    pub fn new(ty: CastType, ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new cast expression.
+    pub fn exp(ty: CastType, ctx: &mut impl Context<'a>) -> Exp<'a> {
         Exp::Cast(Cast {
             exp: ctx.pop_exp(),
             ty,
@@ -36,10 +38,14 @@ impl<'a> Encode for Cast<'a> {
     }
 }
 
+/// Cast types.
 #[derive(Debug)]
 pub enum CastType {
+    /// Cast to u8.
     U8,
+    /// Cast to u64.
     U64,
+    /// Cast to u128.
     U128,
 }
 

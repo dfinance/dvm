@@ -1,12 +1,13 @@
-use crate::mv::disassembler::{Encode, INDENT};
+use crate::mv::disassembler::{Encode, INDENT, Config};
 use anyhow::Error;
 use std::fmt::Write;
 use crate::mv::disassembler::generics::{Generics, Generic, extract_type_params, write_type_parameters};
 use libra::file_format::*;
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::types::{FType, extract_type_signature};
-use crate::mv::disassembler::unit::UnitAccess;
+use crate::mv::disassembler::unit::{UnitAccess};
 
+/// Struct representation.
 pub struct StructDef<'a> {
     is_nominal_resource: bool,
     is_native: bool,
@@ -16,11 +17,13 @@ pub struct StructDef<'a> {
 }
 
 impl<'a> StructDef<'a> {
+    /// Create a new struct.
     pub fn new(
         def: &'a StructDefinition,
         unit: &'a impl UnitAccess,
         generic: &'a Generics,
         imports: &'a Imports<'a>,
+        _config: &'a Config,
     ) -> StructDef<'a> {
         let handler = unit.struct_handle(def.struct_handle);
         let name = unit.identifier(handler.name);
@@ -106,6 +109,7 @@ impl<'a> Encode for StructDef<'a> {
     }
 }
 
+/// Struct field representation.
 pub struct Field<'a> {
     name: &'a str,
     f_type: FType<'a>,

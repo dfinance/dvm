@@ -5,6 +5,7 @@ use crate::mv::disassembler::Encode;
 use anyhow::Error;
 use std::fmt::Write;
 
+/// Assign local variable expression.
 #[derive(Debug)]
 pub struct Let<'a> {
     local: Local<'a>,
@@ -12,10 +13,11 @@ pub struct Let<'a> {
 }
 
 impl<'a> Let<'a> {
-    pub fn new(index: u8, ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new `Let` expressions.
+    pub fn exp(index: u8, ctx: &mut impl Context<'a>) -> Exp<'a> {
         let local = ctx.local_var(index);
 
-        if let Some(exp) = ctx.last() {
+        if let Some(exp) = ctx.last_exp() {
             let exp = match exp.as_ref() {
                 Exp::Let(_) => ExpLoc::new(ctx.opcode_offset(), Exp::Nop),
                 _ => ctx.pop_exp(),

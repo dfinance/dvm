@@ -1,13 +1,14 @@
 use crate::disassembler::structs::StructDef;
 use anyhow::Error;
-use crate::mv::disassembler::{Encode, INDENT};
+use crate::mv::disassembler::{Encode, INDENT, Config};
 use libra::prelude::*;
 use std::fmt::Write;
 use crate::mv::disassembler::generics::Generics;
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::functions::FunctionsDef;
-use crate::mv::disassembler::unit::UnitAccess;
+use crate::mv::disassembler::unit::{UnitAccess};
 
+/// Module representation.
 pub struct Module<'a> {
     address: Option<AccountAddress>,
     name: String,
@@ -17,21 +18,23 @@ pub struct Module<'a> {
 }
 
 impl<'a> Module<'a> {
+    /// Creates a new module.
     pub fn new(
         unit: &'a impl UnitAccess,
         imports: &'a Imports<'a>,
         generics: &'a Generics,
+        config: &'a Config,
     ) -> Module<'a> {
         let structs = unit
             .struct_defs()
             .iter()
-            .map(|def| StructDef::new(def, unit, generics, imports))
+            .map(|def| StructDef::new(def, unit, generics, imports, config))
             .collect();
 
         let functions = unit
             .function_defs()
             .iter()
-            .map(|def| FunctionsDef::new(def, unit, generics, imports))
+            .map(|def| FunctionsDef::new(def, unit, generics, imports, config))
             .collect();
 
         let id = unit.self_id();
@@ -68,7 +71,7 @@ impl<'a> Encode for Module<'a> {
 
         writeln!(w, "}}")?;
 
-        if let Some(_) = self.address {
+        if self.address.is_some() {
             writeln!(w, "}}")?;
         }
         Ok(())

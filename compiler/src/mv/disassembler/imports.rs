@@ -6,11 +6,14 @@ use anyhow::Error;
 use std::fmt::Write;
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Unit imports table.
+#[derive(Debug)]
 pub struct Imports<'a> {
     imports: BTreeMap<&'a str, BTreeMap<AccountAddress, Import<'a>>>,
 }
 
 impl<'a> Imports<'a> {
+    /// Create a new imports table.
     pub fn new(unit: &'a impl UnitAccess) -> Imports<'a> {
         let mut imports = BTreeMap::new();
 
@@ -19,7 +22,7 @@ impl<'a> Imports<'a> {
             if self_module_handle_idx != Some(index) {
                 let module_name = unit.identifier(handler.name);
                 let entry = imports.entry(module_name);
-                let name_map = entry.or_insert_with(|| BTreeMap::new());
+                let name_map = entry.or_insert_with(BTreeMap::new);
                 let count = name_map.len();
                 let address_entry = name_map.entry(*unit.address(handler.address));
                 address_entry.or_insert_with(|| {
@@ -35,22 +38,28 @@ impl<'a> Imports<'a> {
         Imports { imports }
     }
 
+    /// Returns import by address and module name.
     pub fn get_import(&self, address: &AccountAddress, name: &str) -> Option<Import<'a>> {
         self.imports
             .get(name)
-            .and_then(|imports| imports.get(&address).map(|info| info.clone()))
+            .and_then(|imports| imports.get(&address).cloned())
     }
 
+    /// Returns `true` if the import contains no elements.
     pub fn is_empty(&self) -> bool {
         self.imports.is_empty()
     }
 }
 
+/// Import representation.
 pub type Import<'a> = Rc<ImportName<'a>>;
 
+/// Import name.
 #[derive(Debug)]
 pub enum ImportName<'a> {
+    /// Simple module name.
     Name(&'a str),
+    /// Import alias.
     Alias(&'a str, usize),
 }
 

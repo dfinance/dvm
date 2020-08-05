@@ -9,17 +9,24 @@ use crate::mv::disassembler::code::translator::Context;
 use libra::file_format::*;
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Unpack expressions.
 #[derive(Debug)]
 pub struct Unpack<'a> {
+    /// Struct import.
     pub module: Option<Import<'a>>,
+    /// Struct name.
     pub name: &'a str,
+    /// Struct type parameters.
     pub type_params: Vec<FType<'a>>,
+    /// Struct fields.
     pub fields: Vec<PackField<'a>>,
+    /// Struct instance.
     pub source: ExpLoc<'a>,
 }
 
 impl<'a> Unpack<'a> {
-    pub fn new(
+    /// Creates a new `Unpack` expressions;
+    pub fn exp(
         index: &StructDefinitionIndex,
         type_params: Option<&SignatureIndex>,
         ctx: &mut impl Context<'a>,

@@ -5,6 +5,7 @@ use crate::mv::disassembler::code::locals::Local;
 use crate::mv::disassembler::code::exp::{Exp, SourceRange};
 use crate::mv::disassembler::code::translator::Context;
 
+/// Local variable assignment.
 #[derive(Debug)]
 pub struct Loc<'a> {
     explicit_keyword: bool,
@@ -13,7 +14,8 @@ pub struct Loc<'a> {
 }
 
 impl<'a> Loc<'a> {
-    pub fn new(
+    /// Create a new loc expression.
+    pub fn exp(
         explicit_keyword: bool,
         access: LocAccess,
         index: u8,
@@ -53,9 +55,12 @@ impl<'a> Encode for Loc<'a> {
     }
 }
 
+/// Access type.
 #[derive(Debug)]
 pub enum LocAccess {
+    /// Move local.
     Move,
+    /// Copy local.
     Copy,
 }
 

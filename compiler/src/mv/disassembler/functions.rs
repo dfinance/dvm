@@ -1,7 +1,7 @@
 use libra::file_format::*;
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::generics::{Generics, Generic, extract_type_params, write_type_parameters};
-use crate::mv::disassembler::{Encode, write_array};
+use crate::mv::disassembler::{Encode, write_array, Config};
 use anyhow::Error;
 use std::fmt::Write;
 use crate::mv::disassembler::types::{
@@ -9,9 +9,10 @@ use crate::mv::disassembler::types::{
 };
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::rc::Rc;
-use crate::mv::disassembler::code::Body;
-use crate::mv::disassembler::unit::UnitAccess;
+use crate::mv::disassembler::code::body::Body;
+use crate::mv::disassembler::unit::{UnitAccess};
 
+/// Function representation.
 pub struct FunctionsDef<'a> {
     is_public: bool,
     is_native: bool,
@@ -24,16 +25,17 @@ pub struct FunctionsDef<'a> {
 }
 
 impl<'a> FunctionsDef<'a> {
+    /// Returns module function representation.
     pub fn new(
         def: &'a FunctionDefinition,
         unit: &'a impl UnitAccess,
         generics: &'a Generics,
         imports: &'a Imports,
+        config: &'a Config,
     ) -> FunctionsDef<'a> {
         let handler = unit.function_handle(def.function);
         let name = unit.identifier(handler.name);
         let type_params = extract_type_params(&handler.type_parameters, generics);
-
         let ret = FunctionsDef::ret(unit, imports, unit.signature(handler.return_), &type_params);
         let params = FunctionsDef::params(
             unit,
@@ -42,31 +44,44 @@ impl<'a> FunctionsDef<'a> {
             &type_params,
         );
 
-        print!("{} = ", name);
-        let body = def
-            .code
-            .as_ref()
-            .map(|code| Body::new(code, ret.len(), unit, &params, &imports, &type_params));
+        if config.light_version {
+            FunctionsDef {
+                is_public: def.is_public(),
+                is_native: def.is_native(),
+                name,
+                type_params,
+                ret,
+                params,
+                acquires: vec![],
+                body: Some(Body::mock()),
+            }
+        } else {
+            let body = def
+                .code
+                .as_ref()
+                .map(|code| Body::new(code, ret.len(), unit, &params, &imports, &type_params));
 
-        let acquires = def
-            .acquires_global_resources
-            .iter()
-            .filter_map(|di| unit.struct_def(*di))
-            .map(|sd| extract_struct_name(unit, &sd.struct_handle, imports))
-            .collect();
+            let acquires = def
+                .acquires_global_resources
+                .iter()
+                .filter_map(|di| unit.struct_def(*di))
+                .map(|sd| extract_struct_name(unit, &sd.struct_handle, imports))
+                .collect();
 
-        FunctionsDef {
-            is_public: def.is_public(),
-            is_native: def.is_native(),
-            name,
-            type_params,
-            ret,
-            params,
-            acquires,
-            body,
+            FunctionsDef {
+                is_public: def.is_public(),
+                is_native: def.is_native(),
+                name,
+                type_params,
+                ret,
+                params,
+                acquires,
+                body,
+            }
         }
     }
 
+    /// Returns script main function representation.
     pub fn script(
         unit: &'a impl UnitAccess,
         imports: &'a Imports<'a>,
@@ -166,6 +181,7 @@ impl<'a> Encode for FunctionsDef<'a> {
     }
 }
 
+/// Function parameter representation.
 #[derive(Debug, Clone)]
 pub struct Param<'a> {
     used: Rc<AtomicBool>,
@@ -174,10 +190,12 @@ pub struct Param<'a> {
 }
 
 impl<'a> Param<'a> {
+    /// Marks a parameter as used.
     pub fn mark_as_used(&self) {
         self.used.store(true, Ordering::Relaxed);
     }
 
+    /// Writes parameter name.
     pub fn write_name<W: Write>(&self, w: &mut W) -> Result<(), Error> {
         if !self.used.load(Ordering::Relaxed) {
             w.write_str("_")?;

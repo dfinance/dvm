@@ -6,26 +6,37 @@ use libra::file_format::{FunctionHandleIndex, SignatureIndex, StructDefinitionIn
 use crate::mv::disassembler::{Encode, write_array};
 use anyhow::Error;
 use std::fmt::Write;
-use crate::embedded::Bytecode;
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Function call representation.
 #[derive(Debug)]
 pub enum FnCall<'a> {
+    /// Call build-in function.
     BuildIn {
+        /// Build-in function kind.
         kind: BuildIn,
+        /// Type parameter.
         type_param_name: StructName<'a>,
+        /// Type parameters of type parameter.
         type_params: Vec<FType<'a>>,
+        /// Parameters.
         params: Vec<ExpLoc<'a>>,
     },
+    /// Call plain function.
     Plain {
+        /// Function module.
         module: Option<Import<'a>>,
+        /// Function name.
         name: &'a str,
+        /// Type parameters.
         type_params: Vec<FType<'a>>,
+        /// Parameters.
         params: Vec<ExpLoc<'a>>,
     },
 }
 
 impl<'a> FnCall<'a> {
+    /// Creates a new call plain function expression.
     pub fn plain(
         f_index: &FunctionHandleIndex,
         type_params: Option<&SignatureIndex>,
@@ -51,11 +62,11 @@ impl<'a> FnCall<'a> {
         })
     }
 
+    /// Creates a new call build-in function expression.
     pub fn build_in(
         kind: BuildIn,
         index: &StructDefinitionIndex,
         type_params: Option<&SignatureIndex>,
-        params_count: usize,
         ctx: &mut impl Context<'a>,
         unit: &'a impl UnitAccess,
     ) -> Exp<'a> {
@@ -64,7 +75,7 @@ impl<'a> FnCall<'a> {
             let module_handle = unit.module_handle(struct_handler.module);
 
             let import = ctx.module_import(module_handle);
-            let params = ctx.pop_exp_vec(params_count);
+            let params = ctx.pop_exp_vec(kind.parameters_count());
 
             let type_params = ctx.extract_signature(type_params);
 
@@ -78,7 +89,7 @@ impl<'a> FnCall<'a> {
                 params,
             })
         } else {
-            Exp::Error(kind.bytecode(*index))
+            ctx.err()
         }
     }
 }
@@ -140,23 +151,30 @@ impl<'a> Encode for FnCall<'a> {
     }
 }
 
+/// Build-in functions.
 #[derive(Debug)]
 pub enum BuildIn {
+    /// exists
     Exists,
+    /// move_from
     MoveFrom,
+    /// move_to
     MoveTo,
+    /// borrow_global
     BorrowGlobal,
+    /// borrow_global_mut
     BorrowGlobalMut,
 }
 
 impl BuildIn {
-    pub fn bytecode(&self, index: StructDefinitionIndex) -> Bytecode {
+    /// Returns parameters count.
+    pub fn parameters_count(&self) -> usize {
         match self {
-            BuildIn::Exists => Bytecode::Exists(index),
-            BuildIn::MoveFrom => Bytecode::MoveFrom(index),
-            BuildIn::MoveTo => Bytecode::MoveTo(index),
-            BuildIn::BorrowGlobal => Bytecode::ImmBorrowGlobal(index),
-            BuildIn::BorrowGlobalMut => Bytecode::MutBorrowGlobal(index),
+            BuildIn::Exists => 1,
+            BuildIn::MoveFrom => 1,
+            BuildIn::MoveTo => 2,
+            BuildIn::BorrowGlobal => 1,
+            BuildIn::BorrowGlobalMut => 1,
         }
     }
 }
@@ -174,9 +192,12 @@ impl Encode for BuildIn {
     }
 }
 
+/// Struct full name.
 #[derive(Debug)]
 pub struct StructName<'a> {
+    /// Struct name.
     pub name: &'a str,
+    /// Struct import.
     pub import: Option<Import<'a>>,
 }
 

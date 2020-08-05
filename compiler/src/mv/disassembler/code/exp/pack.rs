@@ -8,9 +8,12 @@ use crate::mv::disassembler::code::translator::Context;
 use libra::file_format::*;
 use crate::mv::disassembler::unit::UnitAccess;
 
+/// Pack field.
 #[derive(Debug)]
 pub struct PackField<'a> {
+    /// Field name.
     pub name: &'a str,
+    /// Field value.
     pub value: ExpLoc<'a>,
 }
 
@@ -29,16 +32,22 @@ impl<'a> Encode for PackField<'a> {
     }
 }
 
+/// Struct pack.
 #[derive(Debug)]
 pub struct Pack<'a> {
+    /// Struct import.
     pub module: Option<Import<'a>>,
+    /// Struct name.
     pub name: &'a str,
+    /// Struct type parameters.
     pub type_params: Vec<FType<'a>>,
+    /// Struct fields.
     pub fields: Vec<PackField<'a>>,
 }
 
 impl<'a> Pack<'a> {
-    pub fn new(
+    /// Create a new `Pack` expressions.
+    pub fn exp(
         index: &StructDefinitionIndex,
         type_params: Option<&SignatureIndex>,
         ctx: &mut impl Context<'a>,

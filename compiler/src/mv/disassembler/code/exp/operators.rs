@@ -4,15 +4,20 @@ use crate::mv::disassembler::Encode;
 use anyhow::Error;
 use std::fmt::Write;
 
+/// Binary operation.
 #[derive(Debug)]
 pub struct BinaryOp<'a> {
+    /// Left operand.
     pub left: ExpLoc<'a>,
-    sign: Op,
+    /// Operator.
+    pub sign: Op,
+    /// Right operand.
     pub right: ExpLoc<'a>,
 }
 
 impl<'a> BinaryOp<'a> {
-    pub fn new(sign: Op, ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new `BinaryOp` expressions.
+    pub fn exp(sign: Op, ctx: &mut impl Context<'a>) -> Exp<'a> {
         let (left, right) = ctx.pop2_exp();
         fn basket(exp: ExpLoc) -> ExpLoc {
             let index = exp.index();
@@ -37,32 +42,51 @@ impl<'a> SourceRange for BinaryOp<'a> {
 }
 
 impl<'a> Encode for BinaryOp<'a> {
-    fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
-        self.left.encode(w, indent)?;
-        self.sign.encode(w, indent)?;
-        self.right.encode(w, indent)
+    fn encode<W: Write>(&self, w: &mut W, _: usize) -> Result<(), Error> {
+        self.left.encode(w, 0)?;
+        self.sign.encode(w, 0)?;
+        self.right.encode(w, 0)
     }
 }
 
+/// Binary operation.
 #[derive(Debug)]
 pub enum Op {
+    /// +
     Add,
+    /// -
     Sub,
+    /// *
     Mul,
+    /// %
     Mod,
+    /// /
     Div,
+    /// |
     BitOr,
+    /// &
     BitAnd,
+    /// ^
     Xor,
+    /// ||
     Or,
+    /// &&
     And,
+    /// ==
     Eq,
+    /// !=
     Neq,
+    /// <
     Lt,
+    /// >
     Gt,
+    /// <=
     Le,
+    /// >=
     Ge,
+    /// >>
     Shl,
+    /// <<
     Shr,
 }
 
@@ -92,22 +116,31 @@ impl Encode for Op {
     }
 }
 
+/// Nop.
 pub fn nop<'a>() -> Exp<'a> {
     Exp::Nop
 }
 
+/// Pop stack.
 pub fn pop<'a>() -> Exp<'a> {
     Exp::Nop
 }
 
+/// Abort expression.
 #[derive(Debug)]
 pub struct Abort<'a> {
     exp: ExpLoc<'a>,
 }
 
 impl<'a> Abort<'a> {
-    pub fn new(ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new `Abort` expressions.
+    pub fn exp(ctx: &mut impl Context<'a>) -> Exp<'a> {
         Exp::Abort(Abort { exp: ctx.pop_exp() })
+    }
+
+    /// Returns Abort with the given expression.
+    pub fn mock(exp: ExpLoc<'static>) -> Exp<'static> {
+        Exp::Abort(Abort { exp })
     }
 }
 
@@ -118,19 +151,21 @@ impl<'a> SourceRange for Abort<'a> {
 }
 
 impl<'a> Encode for Abort<'a> {
-    fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
+    fn encode<W: Write>(&self, w: &mut W, _: usize) -> Result<(), Error> {
         w.write_str("abort ")?;
         self.exp.encode(w, 0)
     }
 }
 
+/// Logical negation.
 #[derive(Debug)]
 pub struct Not<'a> {
     exp: ExpLoc<'a>,
 }
 
 impl<'a> Not<'a> {
-    pub fn new(ctx: &mut impl Context<'a>) -> Exp<'a> {
+    /// Create a new `Not` expressions.
+    pub fn exp(ctx: &mut impl Context<'a>) -> Exp<'a> {
         Exp::Not(Not { exp: ctx.pop_exp() })
     }
 }
@@ -142,7 +177,7 @@ impl<'a> SourceRange for Not<'a> {
 }
 
 impl<'a> Encode for Not<'a> {
-    fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
+    fn encode<W: Write>(&self, w: &mut W, _: usize) -> Result<(), Error> {
         w.write_str("!")?;
         self.exp.encode(w, 0)
     }
