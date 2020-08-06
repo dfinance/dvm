@@ -30,7 +30,9 @@ pub mod account {
 }
 
 pub mod result {
-    pub use move_core_types::vm_status::{StatusCode, VMStatus, DiscardedVMStatus, KeptVMStatus};
+    pub use move_core_types::vm_status::{
+        StatusCode, VMStatus, DiscardedVMStatus, KeptVMStatus, AbortLocation as AbortLoc,
+    };
     pub use vm::errors::{Location, VMResult, PartialVMResult, PartialVMError, VMError};
 }
 

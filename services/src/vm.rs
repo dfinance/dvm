@@ -5,10 +5,7 @@ use info::heartbeat::HeartRateMonitor;
 use crate::{tonic, api};
 use tonic::{Request, Response, Status};
 use api::grpc::vm_grpc::vm_script_executor_server::VmScriptExecutor;
-use dvm_net::api::grpc::vm_grpc::{
-    VmExecuteScript, VmExecuteResponse, VmTypeTag, VmStatus, StructIdent, VmValue, VmAccessPath,
-    VmEvent, ModuleIdent, LcsTag, LcsType, VmPublishModule, ContractStatus,
-};
+use dvm_net::api::grpc::vm_grpc::*;
 use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
 use std::convert::TryFrom;
 use anyhow::Error;
@@ -70,58 +67,77 @@ where
 /// Converts execution result to api response.
 fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmExecuteResponse {
     match res {
-        Ok(res) => {
-            let (status, status_struct) = convert_vm_error_status(res.status);
-            VmExecuteResponse {
-                gas_used: res.gas_used,
-                status: status as i32,
-                status_struct: Some(status_struct),
-                events: convert_events(res.events),
-                write_set: convert_write_set(res.write_set),
-            }
-        }
+        Ok(res) => VmExecuteResponse {
+            gas_used: res.gas_used,
+            events: convert_events(res.events),
+            write_set: convert_write_set(res.write_set),
+            status: Some(convert_vm_error_status(res.status)),
+        },
         Err(err) => {
             // This is't execution error!
             VmExecuteResponse {
                 gas_used: 0,
-                status: 0,
-                status_struct: Some(convert_status(err)),
                 events: vec![],
                 write_set: vec![],
+                status: Some(convert_status(err, None)),
             }
         }
     }
 }
 
-/// Converts libra `VmError` into gRPC (`ContractStatus`, `VMStatus`).
-fn convert_vm_error_status(status: VMError) -> (ContractStatus, VmStatus) {
-    let major_status = status.major_status();
-    let sub_status = status.sub_status();
+/// Converts libra `VmError` into gRPC `VMStatus`.
+fn convert_vm_error_status(status: VMError) -> VmStatus {
     let msg = status.message().map(|m| m.to_owned());
-
-    let status = match status.into_vm_status().keep_or_discard() {
-        Ok(_) => ContractStatus::Keep,
-        Err(_) => ContractStatus::Discard,
-    };
-    (
-        status,
-        VmStatus {
-            major_status: major_status as u64,
-            sub_status: sub_status.unwrap_or(0),
-            message: msg.unwrap_or_default(),
-        },
-    )
+    convert_status(status.into_vm_status(), msg)
 }
 
 /// Converts libra `VMStatus` into gRPC `VMStatus`.
-fn convert_status(status: VMStatus) -> VmStatus {
-    VmStatus {
-        major_status: status.status_code() as u64,
-        sub_status: status
-            .move_abort_code()
-            .map(|status| status as u64)
-            .unwrap_or(0),
-        message: String::default(),
+fn convert_status(status: VMStatus, message: Option<String>) -> VmStatus {
+    let message = message.map(|msg| Message { text: msg });
+    match status {
+        VMStatus::Executed => VmStatus {
+            error: None,
+            message,
+        },
+        VMStatus::Error(status_code) => VmStatus {
+            error: Some(vm_status::Error::MoveError(MoveError {
+                status_code: status_code as u64,
+            })),
+            message,
+        },
+        VMStatus::MoveAbort(loc, abort_code) => VmStatus {
+            error: Some(vm_status::Error::Abort(Abort {
+                abort_location: convert_abort_location(loc),
+                abort_code,
+            })),
+            message,
+        },
+        VMStatus::ExecutionFailure {
+            status_code,
+            location,
+            function,
+            code_offset,
+        } => VmStatus {
+            error: Some(vm_status::Error::ExecutionFailure(Failure {
+                status_code: status_code as u64,
+                abort_location: convert_abort_location(location),
+                function_loc: Some(FunctionLoc {
+                    function: function as u64,
+                    code_offset: code_offset as u64,
+                }),
+            })),
+            message,
+        },
+    }
+}
+
+fn convert_abort_location(location: AbortLoc) -> Option<AbortLocation> {
+    match location {
+        AbortLoc::Module(module) => Some(AbortLocation {
+            address: module.address().to_vec(),
+            module: module.name().to_string(),
+        }),
+        AbortLoc::Script => None,
     }
 }
 
@@ -207,13 +223,22 @@ fn convert_event_tag(type_tag: &TypeTag) -> LcsTag {
 
 /// Store execution result to 'scope_meter'.
 fn store_metric(result: VmExecuteResponse, mut scope_meter: ScopeMeter) -> VmExecuteResponse {
-    let status = result
-        .status_struct
-        .as_ref()
-        .map(|status| status.major_status)
-        .unwrap_or(0);
+    let status = match &result.status {
+        Some(status) => match &status.error {
+            Some(vm_status::Error::Abort(_)) => StatusCode::ABORTED as u64,
+            Some(vm_status::Error::MoveError(error)) => error.status_code,
+            Some(vm_status::Error::ExecutionFailure(failure)) => failure.status_code,
+            None => StatusCode::EXECUTED as u64,
+        },
+        None => 0,
+    };
+
     scope_meter.set_result(ActionResult::new(
-        result.status == 1, // 1 == Keep
+        result
+            .status
+            .as_ref()
+            .map(|status| status.error.is_none())
+            .unwrap_or(false),
         status,
         result.gas_used,
     ));
