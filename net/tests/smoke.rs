@@ -253,7 +253,7 @@ mod ipc {
             {
                 let (cl, errs) = client(URI);
                 cl.join().expect("client should not crash");
-                assert_eq!(1, errs.load(Ordering::Acquire));
+                assert!(errs.load(Ordering::Acquire) >= 1);
             }
         }
 
