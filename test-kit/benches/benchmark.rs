@@ -17,9 +17,13 @@ fn prepare_disassembler_setup(compiler: &Compiler<MockDataSource>, source: &str)
 
 /// Perform disassembler benchmark.
 fn disassemble(bytecode: Vec<u8>) {
-    disassembler::module_signature(&bytecode)
-        .unwrap()
-        .to_string();
+    disassembler::disasm_str(
+        &bytecode,
+        disassembler::Config {
+            light_version: false,
+        },
+    )
+    .unwrap();
 }
 
 /// Performs benchmarks.

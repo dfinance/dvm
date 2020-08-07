@@ -4,6 +4,7 @@ use crate::manifest::MoveToml;
 use crate::mv::builder::Builder;
 use crate::mv::dependence::loader::make_rest_loader;
 
+/// Execute build command.
 pub fn execute(project_dir: &Path, manifest: MoveToml) -> Result<()> {
     let loader = make_rest_loader(&project_dir, &manifest)?;
     let builder = Builder::new(project_dir, manifest, &loader, true, true);

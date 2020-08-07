@@ -5,16 +5,18 @@ use walkdir::WalkDir;
 use std::fs::{File, OpenOptions};
 use crate::mv::bech32::bech32_into_libra;
 use std::io::Write;
-use crate::mv::{preprocessor, disassembler};
+use crate::mv::{preprocessor};
 use anyhow::{Result, Error};
 use libra::{prelude::*, compiler::*};
 use crate::mv::dependence::extractor::{extract_from_source, extract_from_bytecode};
-use crate::mv::dependence::loader::{BytecodeSource, Loader};
+use crate::mv::dependence::loader::{BytecodeLoader, Loader};
 use std::collections::{HashMap, HashSet};
 use termcolor::{StandardStream, ColorChoice, Buffer};
+use crate::mv::disassembler::unit::{CompiledUnit as Unit};
+use crate::mv::disassembler::{Config, Disassembler};
 
 /// Move builder.
-pub struct Builder<'a, S: BytecodeSource> {
+pub struct Builder<'a, S: BytecodeLoader> {
     /// movec project directory.
     project_dir: &'a Path,
     /// movec manifest.
@@ -31,7 +33,7 @@ pub struct Builder<'a, S: BytecodeSource> {
 
 impl<'a, S> Builder<'a, S>
 where
-    S: BytecodeSource,
+    S: BytecodeLoader,
 {
     /// Creates a new move builder.
     pub fn new(
@@ -135,7 +137,14 @@ where
         let mut path_list = Vec::with_capacity(bytecode.len());
 
         for (id, bytecode) in bytecode {
-            let signature = disassembler::module_signature(&bytecode)?.to_string();
+            let config = Config {
+                light_version: true,
+            };
+            let unit = Unit::new(&bytecode)?;
+            let disasm = Disassembler::new(&unit, config);
+            let source_unit = disasm.make_source_unit();
+            let signature = source_unit.code_string()?;
+
             let path = deps.join(format!("{}_{}.move", id.address(), id.name().as_str()));
 
             let mut f = OpenOptions::new()
@@ -436,7 +445,7 @@ pub fn convert_path(path_list: &[PathBuf]) -> Result<Vec<String>> {
 
 impl<'a, S> Drop for Builder<'a, S>
 where
-    S: BytecodeSource,
+    S: BytecodeLoader,
 {
     /// Cleans up the builder layout.
     fn drop(&mut self) {

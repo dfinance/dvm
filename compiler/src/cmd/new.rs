@@ -4,6 +4,7 @@ use std::path::Path;
 use std::fs;
 use crate::cmd::init;
 
+/// Execute create project command.
 pub fn execute(
     root: &Path,
     source_dir: String,

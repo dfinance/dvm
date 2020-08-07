@@ -11,31 +11,37 @@ use crate::manifest::MoveToml;
 use std::fs;
 use serde::{Deserialize, Serialize};
 
-pub trait BytecodeSource: Clone {
+/// Module loader.
+pub trait BytecodeLoader: Clone {
+    /// Loads module bytecode by it module id.
     fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>>;
 }
 
+/// Empty module loader.
+/// Mock.
 #[derive(Clone)]
-pub struct ZeroSource;
+pub struct ZeroLoader;
 
-impl BytecodeSource for ZeroSource {
+impl BytecodeLoader for ZeroLoader {
     fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
         Err(anyhow!("Module {:?} not found", module_id))
     }
 }
 
+/// Bytecode loader which loads bytecode by dnode REST api.
 #[derive(Clone)]
-pub struct RestBytecodeSource {
+pub struct RestBytecodeLoader {
     url: Uri,
 }
 
-impl RestBytecodeSource {
-    pub fn new(url: Uri) -> RestBytecodeSource {
-        RestBytecodeSource { url }
+impl RestBytecodeLoader {
+    /// Create a new `RestBytecodeLoader` with dnode api base url.
+    pub fn new(url: Uri) -> RestBytecodeLoader {
+        RestBytecodeLoader { url }
     }
 }
 
-impl BytecodeSource for RestBytecodeSource {
+impl BytecodeLoader for RestBytecodeLoader {
     fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
         let path = AccessPath::code_access_path(module_id);
         let url = format!(
@@ -60,35 +66,45 @@ impl BytecodeSource for RestBytecodeSource {
     }
 }
 
+/// Api response.
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct LoaderResponse {
+    /// Result.
     result: Response,
 }
 
+/// Success response.
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Response {
+    /// Hex encoded bytecode.
     value: String,
 }
 
+///Error response.
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct LoaderErrorResponse {
     error: String,
 }
 
+/// Module loader.
 #[derive(Clone)]
-pub struct Loader<S: BytecodeSource> {
+pub struct Loader<S: BytecodeLoader> {
     cache_path: Option<PathBuf>,
     source: S,
 }
 
 impl<S> Loader<S>
 where
-    S: BytecodeSource,
+    S: BytecodeLoader,
 {
+    /// Create a new module loader with cache path and external module source.
     pub fn new(cache_path: Option<PathBuf>, source: S) -> Loader<S> {
         Loader { cache_path, source }
     }
 
+    /// Loads module by module id.
+    /// Tries to load the module from the local cache.
+    ///  Then tries to load the module from the external module source if the module doesn't exist in cache.
     pub fn get(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
         let name = self.make_local_name(&module_id)?;
 
@@ -123,10 +139,11 @@ where
     }
 }
 
+/// Makes a RestBytecodeLoader with project path and project manifest.
 pub fn make_rest_loader(
     project_dir: &Path,
     cmove: &MoveToml,
-) -> Result<Option<Loader<RestBytecodeSource>>> {
+) -> Result<Option<Loader<RestBytecodeLoader>>> {
     let path = cmove
         .layout
         .as_ref()
@@ -140,7 +157,7 @@ pub fn make_rest_loader(
     Ok(if let Some(uri) = cmove.package.blockchain_api.as_ref() {
         Some(Loader::new(
             Some(cache_path),
-            RestBytecodeSource::new(uri.parse()?),
+            RestBytecodeLoader::new(uri.parse()?),
         ))
     } else {
         None

@@ -4,6 +4,7 @@ use std::path::Path;
 use crate::manifest::{MANIFEST, MoveToml, store_manifest, Layout};
 use std::fs;
 
+/// Execute init command.
 pub fn execute(
     project_dir: &Path,
     source_dir: String,
