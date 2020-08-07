@@ -128,14 +128,20 @@ impl TestKit {
 
     /// Asserts that a response is success.
     pub fn assert_success(&self, res: &VmExecuteResponse) {
-        if res.status == 0
-            || res
-                .status_struct
-                .as_ref()
-                .map(|v| v.major_status != 4001)
-                .unwrap_or(false)
-        {
-            panic!("Error:[{:?}]", res.status_struct);
+        match &res.status {
+            Some(status) => {
+                match &status.error {
+                    None => {
+                        // no-op
+                    }
+                    Some(error) => {
+                        panic!("Error:[{:?}]", error);
+                    }
+                }
+            }
+            None => {
+                panic!("Unexpected status [None]");
+            }
         }
     }
 

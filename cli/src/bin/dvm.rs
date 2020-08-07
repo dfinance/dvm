@@ -31,7 +31,6 @@ use dvm_cli::init;
 use futures::join;
 use dvm_info::config::InfoServiceConfig;
 use dvm_cli::info_service::create_info_service;
-use dvm_net::api::grpc::vm_grpc::vm_access_vector_server::VmAccessVectorServer;
 
 const MODULE_CACHE: usize = 1000;
 
@@ -118,8 +117,7 @@ async fn main_internal(options: Options) -> Result<()> {
         // comp services
         .add_service(VmCompilerServer::new(compiler_service.clone()))
         .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
-        .add_service(VmScriptMetadataServer::new(metadata_service.clone()))
-        .add_service(VmAccessVectorServer::new(metadata_service))
+        .add_service(VmScriptMetadataServer::new(metadata_service))
         // serve
         .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ()))
         .map(|res| {

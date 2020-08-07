@@ -19,7 +19,7 @@ log = "0.4.8"
 
 [dependencies.dvm-api]
 git = "https://github.com/dfinance/dvm-proto.git"
-rev = "bfdcef619a2694c73585be6be5a5665ab23dae92"
+rev = "06b76cf8c1830d6381ea4de3267d1bfc88fd0fb0"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winbase", "winnt", "accctrl", "aclapi", "securitybaseapi", "minwinbase", "winbase"] }
