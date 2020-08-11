@@ -5,26 +5,54 @@ use serde::Deserialize;
 
 use ds::{DataSource, BlackListDataSource};
 use crate::gas_schedule;
+use anyhow::*;
+
+const GAS_AMOUNT_MAX_VALUE: u64 = u64::MAX / 1000;
 
 /// Stores metadata for vm execution.
 #[derive(Debug)]
 pub struct ExecutionMeta {
     /// Max gas units to be used in transaction execution.
-    pub max_gas_amount: u64,
+    max_gas_amount: u64,
     /// Price in `DFI` coins per unit of gas.
-    pub gas_unit_price: u64,
+    gas_unit_price: u64,
     /// Sender address of the transaction owner.
-    pub sender: AccountAddress,
+    sender: AccountAddress,
 }
 
 impl ExecutionMeta {
     /// Constructor.
-    pub fn new(max_gas_amount: u64, gas_unit_price: u64, sender: AccountAddress) -> ExecutionMeta {
-        ExecutionMeta {
+    pub fn new(
+        max_gas_amount: u64,
+        gas_unit_price: u64,
+        sender: AccountAddress,
+    ) -> Result<ExecutionMeta> {
+        ensure!(
+            max_gas_amount < GAS_AMOUNT_MAX_VALUE,
+            "max_gas_amount value must be in the range from 0 to {}",
+            GAS_AMOUNT_MAX_VALUE
+        );
+
+        Ok(ExecutionMeta {
             max_gas_amount,
             gas_unit_price,
             sender,
-        }
+        })
+    }
+
+    /// Returns max gas units to be used in transaction execution.
+    pub fn max_gas_amount(&self) -> u64 {
+        self.max_gas_amount
+    }
+
+    /// Returns price in `DFI` coins per unit of gas.
+    pub fn gas_unit_price(&self) -> u64 {
+        self.gas_unit_price
+    }
+
+    /// Returns sender address of the transaction owner.
+    pub fn sender(&self) -> AccountAddress {
+        self.sender
     }
 
     /// Default metadata for testing.
@@ -263,7 +291,10 @@ pub mod tests {
         let program = "module M {}";
         let module = Module::new(compiler.compile(program, Some(account)).unwrap());
         let output = vm
-            .publish_module(ExecutionMeta::new(1_000_000, 1, account), module.clone())
+            .publish_module(
+                ExecutionMeta::new(1_000_000, 1, account).unwrap(),
+                module.clone(),
+            )
             .unwrap();
 
         let compiled_module = CompiledModule::deserialize(&module.code()).unwrap();
@@ -279,7 +310,7 @@ pub mod tests {
         //try public module duplicate;
         assert_eq!(
             StatusCode::DUPLICATE_MODULE_NAME,
-            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
+            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account).unwrap(), module)
                 .unwrap()
                 .status
                 .major_status()
@@ -296,7 +327,7 @@ pub mod tests {
         let module = include_str!("../../test-kit/tests/resources/store.move");
         let module = Module::new(compiler.compile(module, Some(account)).unwrap());
         ds.merge_write_set(
-            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account), module)
+            vm.publish_module(ExecutionMeta::new(1_000_000, 1, account).unwrap(), module)
                 .unwrap()
                 .write_set,
         );

@@ -347,7 +347,7 @@ impl TryFrom<VmExecuteScript> for ExecuteScript {
                 req.max_gas_amount,
                 req.gas_unit_price,
                 AccountAddress::try_from(req.address)?,
-            ),
+            )?,
             script: Script::new(req.code, args, type_args),
         })
     }
@@ -391,11 +391,11 @@ impl TryFrom<VmPublishModule> for PublishModule {
 
     fn try_from(request: VmPublishModule) -> Result<Self, Self::Error> {
         Ok(PublishModule {
-            meta: ExecutionMeta {
-                max_gas_amount: request.max_gas_amount,
-                gas_unit_price: request.gas_unit_price,
-                sender: AccountAddress::try_from(request.address)?,
-            },
+            meta: ExecutionMeta::new(
+                request.max_gas_amount,
+                request.gas_unit_price,
+                AccountAddress::try_from(request.address)?,
+            )?,
             module: Module::new(request.code),
         })
     }

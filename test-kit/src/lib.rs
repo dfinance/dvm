@@ -86,11 +86,11 @@ impl TestKit {
 
     /// Publish module.
     pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponse {
-        let module = self.compiler.compile(code, Some(meta.sender)).unwrap();
+        let module = self.compiler.compile(code, Some(meta.sender())).unwrap();
         self.client.publish_module(VmPublishModule {
-            address: meta.sender.to_vec(),
-            max_gas_amount: meta.max_gas_amount,
-            gas_unit_price: meta.gas_unit_price,
+            address: meta.sender().to_vec(),
+            max_gas_amount: meta.max_gas_amount(),
+            gas_unit_price: meta.gas_unit_price(),
             code: module,
         })
     }
@@ -114,12 +114,12 @@ impl TestKit {
         args: Vec<VmArgs>,
         type_params: Vec<StructIdent>,
     ) -> VmExecuteResponse {
-        let code = self.compiler.compile(code, Some(meta.sender)).unwrap();
+        let code = self.compiler.compile(code, Some(meta.sender())).unwrap();
 
         self.client.execute_script(VmExecuteScript {
-            address: meta.sender.to_vec(),
-            max_gas_amount: meta.max_gas_amount,
-            gas_unit_price: meta.gas_unit_price,
+            address: meta.sender().to_vec(),
+            max_gas_amount: meta.max_gas_amount(),
+            gas_unit_price: meta.gas_unit_price(),
             code,
             type_params,
             args,
@@ -187,7 +187,7 @@ impl StateView for TestKit {
 
 /// Returns execution meta with given address.
 pub fn meta(addr: &AccountAddress) -> ExecutionMeta {
-    ExecutionMeta::new(500_000, 1, *addr)
+    ExecutionMeta::new(500_000, 1, *addr).unwrap()
 }
 
 /// Create a new account address from hex string.
