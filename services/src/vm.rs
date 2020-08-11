@@ -13,6 +13,7 @@ use byteorder::{LittleEndian, ByteOrder};
 use info::metrics::meter::ScopeMeter;
 use info::metrics::execution::ExecutionResult as ActionResult;
 use dvm_net::api::grpc::vm_grpc::vm_module_publisher_server::VmModulePublisher;
+use dvm_net::api::tonic::Code;
 
 /// Virtual machine service.
 #[derive(Clone)]
@@ -47,16 +48,18 @@ where
         &self,
         request: Request<VmExecuteScript>,
     ) -> Result<Response<VmExecuteResponse>, Status> {
-        let meter = ScopeMeter::new("execute_script");
-        let request = request.into_inner();
-        let response = ExecuteScript::try_from(request)
-            .map_err(|err| {
-                PartialVMError::new(StatusCode::INVALID_DATA)
-                    .with_message(format!("Invalid contract args [{:?}].", err))
-                    .finish(Location::Undefined)
-                    .into_vm_status()
-            })
-            .and_then(|contract| self.vm.execute_script(contract.meta, contract.script));
+        let mut meter = ScopeMeter::new("execute_script");
+
+        let contract = match ExecuteScript::try_from(request.into_inner()) {
+            Ok(contract) => contract,
+            Err(err) => {
+                meter.set_result(ActionResult::new(false, Code::InvalidArgument as u64, 0));
+                return Err(Status::new(Code::InvalidArgument, err.to_string()));
+            }
+        };
+
+        let response = self.vm.execute_script(contract.meta, contract.script);
+
         Ok(Response::new(store_metric(
             vm_result_to_execute_response(response),
             meter,
@@ -362,16 +365,17 @@ where
         &self,
         request: Request<VmPublishModule>,
     ) -> Result<Response<VmExecuteResponse>, Status> {
-        let meter = ScopeMeter::new("publish_module");
-        let request = request.into_inner();
-        let response = PublishModule::try_from(request)
-            .map_err(|err| {
-                PartialVMError::new(StatusCode::INVALID_DATA)
-                    .with_message(format!("Invalid publish module args [{:?}].", err))
-                    .finish(Location::Undefined)
-                    .into_vm_status()
-            })
-            .and_then(|contract| self.vm.publish_module(contract.meta, contract.module));
+        let mut meter = ScopeMeter::new("publish_module");
+
+        let contract = match PublishModule::try_from(request.into_inner()) {
+            Ok(contract) => contract,
+            Err(err) => {
+                meter.set_result(ActionResult::new(false, Code::InvalidArgument as u64, 0));
+                return Err(Status::new(Code::InvalidArgument, err.to_string()));
+            }
+        };
+
+        let response = self.vm.publish_module(contract.meta, contract.module);
         Ok(Response::new(store_metric(
             vm_result_to_execute_response(response),
             meter,
