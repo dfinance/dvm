@@ -81,7 +81,14 @@ pub fn time_metadata() -> StructTag {
 
 #[cfg(test)]
 mod tests {
-    use crate::resources::{time_metadata, block_metadata, oracle_metadata};
+    use crate::resources::*;
+    use libra::prelude::CORE_CODE_ADDRESS;
+
+    const ACCOUNT_MODULE: &str = "Account";
+    const BALANCE_STRUCT: &str = "Balance";
+
+    const DFINANCE_MODULE: &str = "Dfinance";
+    const INFO_STRUCT: &str = "Info";
 
     #[test]
     pub fn test_oracle_metadata() {
@@ -96,6 +103,58 @@ mod tests {
         assert_eq!(
             vector,
             hex::decode("01a7183ec0c4d32fd9a2705e1e6844035c5238598bf45167742e9db3735af96cc1")
+                .unwrap()
+        );
+    }
+
+    #[test]
+    pub fn test_balance_vector() {
+        fn balance_vector(curr: &str) -> StructTag {
+            StructTag {
+                address: CORE_CODE_ADDRESS,
+                name: Identifier::new(BALANCE_STRUCT).expect("Valid struct name."),
+                module: Identifier::new(ACCOUNT_MODULE).expect("Valid module name."),
+                type_params: vec![currency_type(curr)],
+            }
+        }
+
+        let vector = balance_vector("eth").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("0138f4f2895881c804de0e57ced1d44f02e976f9c6561c889f7b7eef8e660d2c9a")
+                .unwrap()
+        );
+
+        let vector = balance_vector("xfi").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("01226844e85ad6e3867f4ff1a4300e71ed6057538631a5a5330512772b7104b585")
+                .unwrap()
+        );
+    }
+
+    #[test]
+    pub fn test_currency_info_vector() {
+        fn currency_info_vector(curr: &str) -> StructTag {
+            StructTag {
+                address: CORE_CODE_ADDRESS,
+                name: Identifier::new(INFO_STRUCT).expect("Valid struct name."),
+                module: Identifier::new(DFINANCE_MODULE).expect("Valid module name."),
+                type_params: vec![currency_type(curr)],
+            }
+        }
+
+        let vector = currency_info_vector("eth").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("012a00668b5325f832c28a24eb83dffa8295170c80345fbfbf99a5263f962c76f4")
+                .unwrap()
+        );
+
+        let vector = currency_info_vector("xfi").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("01b9ed21c23abf8c7a53fb868a36e106d45394c30127fb722f8dd2d45aae719585")
                 .unwrap()
         );
     }
