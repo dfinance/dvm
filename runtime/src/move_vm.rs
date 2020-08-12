@@ -13,9 +13,9 @@ const GAS_AMOUNT_MAX_VALUE: u64 = u64::MAX / 1000;
 #[derive(Debug)]
 pub struct ExecutionMeta {
     /// Max gas units to be used in transaction execution.
-    max_gas_amount: u64,
-    /// Price in `DFI` coins per unit of gas.
-    gas_unit_price: u64,
+    pub max_gas_amount: u64,
+    /// Price in `XFI` coins per unit of gas.
+    pub gas_unit_price: u64,
     /// Sender address of the transaction owner.
     sender: AccountAddress,
 }

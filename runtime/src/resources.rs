@@ -4,8 +4,8 @@ use serde_derive::{Deserialize, Serialize};
 const COIN_MODULE: &str = "Coins";
 const PRICE_STRUCT: &str = "Price";
 
-const DFI_MODULE: &str = "DFI";
-const DFI_RESOURCE: &str = "T";
+const XFI_MODULE: &str = "XFI";
+const XFI_RESOURCE: &str = "T";
 
 const BLOCK_RESOURCE: &str = "BlockMetadata";
 
@@ -42,11 +42,11 @@ pub fn oracle_metadata(first: &str, second: &str) -> StructTag {
 
 fn currency_type(curr: &str) -> TypeTag {
     let curr = curr.to_uppercase();
-    if curr == DFI_MODULE {
+    if curr == XFI_MODULE {
         TypeTag::Struct(StructTag {
             address: CORE_CODE_ADDRESS,
-            name: Identifier::new(DFI_RESOURCE).expect("Valid module name."),
-            module: Identifier::new(DFI_MODULE).expect("Valid currency name."),
+            name: Identifier::new(XFI_RESOURCE).expect("Valid module name."),
+            module: Identifier::new(XFI_MODULE).expect("Valid currency name."),
             type_params: vec![],
         })
     } else {
@@ -81,14 +81,21 @@ pub fn time_metadata() -> StructTag {
 
 #[cfg(test)]
 mod tests {
-    use crate::resources::{time_metadata, block_metadata, oracle_metadata};
+    use crate::resources::*;
+    use libra::prelude::CORE_CODE_ADDRESS;
+
+    const ACCOUNT_MODULE: &str = "Account";
+    const BALANCE_STRUCT: &str = "Balance";
+
+    const DFINANCE_MODULE: &str = "Dfinance";
+    const INFO_STRUCT: &str = "Info";
 
     #[test]
     pub fn test_oracle_metadata() {
-        let vector = oracle_metadata("DFI", "BTC").access_vector();
+        let vector = oracle_metadata("XFI", "BTC").access_vector();
         assert_eq!(
             vector,
-            hex::decode("01b1a724361d17c9866b12e199ecdb17eb5cb16630b647bbc997fe65362920e3bb")
+            hex::decode("018c2f213d25358a39f9370a494dbe4bd80f84734137a01ec8f468c3b2ef16360a")
                 .unwrap()
         );
 
@@ -96,6 +103,58 @@ mod tests {
         assert_eq!(
             vector,
             hex::decode("01a7183ec0c4d32fd9a2705e1e6844035c5238598bf45167742e9db3735af96cc1")
+                .unwrap()
+        );
+    }
+
+    #[test]
+    pub fn test_balance_vector() {
+        fn balance_vector(curr: &str) -> StructTag {
+            StructTag {
+                address: CORE_CODE_ADDRESS,
+                name: Identifier::new(BALANCE_STRUCT).expect("Valid struct name."),
+                module: Identifier::new(ACCOUNT_MODULE).expect("Valid module name."),
+                type_params: vec![currency_type(curr)],
+            }
+        }
+
+        let vector = balance_vector("eth").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("0138f4f2895881c804de0e57ced1d44f02e976f9c6561c889f7b7eef8e660d2c9a")
+                .unwrap()
+        );
+
+        let vector = balance_vector("xfi").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("01226844e85ad6e3867f4ff1a4300e71ed6057538631a5a5330512772b7104b585")
+                .unwrap()
+        );
+    }
+
+    #[test]
+    pub fn test_currency_info_vector() {
+        fn currency_info_vector(curr: &str) -> StructTag {
+            StructTag {
+                address: CORE_CODE_ADDRESS,
+                name: Identifier::new(INFO_STRUCT).expect("Valid struct name."),
+                module: Identifier::new(DFINANCE_MODULE).expect("Valid module name."),
+                type_params: vec![currency_type(curr)],
+            }
+        }
+
+        let vector = currency_info_vector("eth").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("012a00668b5325f832c28a24eb83dffa8295170c80345fbfbf99a5263f962c76f4")
+                .unwrap()
+        );
+
+        let vector = currency_info_vector("xfi").access_vector();
+        assert_eq!(
+            vector,
+            hex::decode("01b9ed21c23abf8c7a53fb868a36e106d45394c30127fb722f8dd2d45aae719585")
                 .unwrap()
         );
     }
