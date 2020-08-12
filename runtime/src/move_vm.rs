@@ -11,7 +11,7 @@ use crate::gas_schedule;
 pub struct ExecutionMeta {
     /// Max gas units to be used in transaction execution.
     pub max_gas_amount: u64,
-    /// Price in `DFI` coins per unit of gas.
+    /// Price in `XFI` coins per unit of gas.
     pub gas_unit_price: u64,
     /// Sender address of the transaction owner.
     pub sender: AccountAddress,

@@ -4,8 +4,8 @@ use serde_derive::{Deserialize, Serialize};
 const COIN_MODULE: &str = "Coins";
 const PRICE_STRUCT: &str = "Price";
 
-const DFI_MODULE: &str = "DFI";
-const DFI_RESOURCE: &str = "T";
+const XFI_MODULE: &str = "XFI";
+const XFI_RESOURCE: &str = "T";
 
 const BLOCK_RESOURCE: &str = "BlockMetadata";
 
@@ -42,11 +42,11 @@ pub fn oracle_metadata(first: &str, second: &str) -> StructTag {
 
 fn currency_type(curr: &str) -> TypeTag {
     let curr = curr.to_uppercase();
-    if curr == DFI_MODULE {
+    if curr == XFI_MODULE {
         TypeTag::Struct(StructTag {
             address: CORE_CODE_ADDRESS,
-            name: Identifier::new(DFI_RESOURCE).expect("Valid module name."),
-            module: Identifier::new(DFI_MODULE).expect("Valid currency name."),
+            name: Identifier::new(XFI_RESOURCE).expect("Valid module name."),
+            module: Identifier::new(XFI_MODULE).expect("Valid currency name."),
             type_params: vec![],
         })
     } else {
@@ -85,10 +85,10 @@ mod tests {
 
     #[test]
     pub fn test_oracle_metadata() {
-        let vector = oracle_metadata("DFI", "BTC").access_vector();
+        let vector = oracle_metadata("XFI", "BTC").access_vector();
         assert_eq!(
             vector,
-            hex::decode("01b1a724361d17c9866b12e199ecdb17eb5cb16630b647bbc997fe65362920e3bb")
+            hex::decode("018c2f213d25358a39f9370a494dbe4bd80f84734137a01ec8f468c3b2ef16360a")
                 .unwrap()
         );
 
