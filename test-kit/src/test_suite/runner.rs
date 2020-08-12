@@ -68,7 +68,7 @@ impl TestState {
             .ok_or_else(|| anyhow!("Failed to resolve bytecode"))?
             .to_vec();
 
-        let tx_meta = Self::make_execution_meta(step.meta());
+        let tx_meta = Self::make_execution_meta(step.meta())?;
         let result = match step {
             TestStep::PublishModule(_) => vm.publish_module(tx_meta, Module::new(unit)),
             TestStep::ExecuteScript(_) => {
@@ -80,7 +80,7 @@ impl TestState {
     }
 
     /// Make vm execution meta.
-    fn make_execution_meta(test_meta: &TestMeta) -> ExecutionMeta {
+    fn make_execution_meta(test_meta: &TestMeta) -> Result<ExecutionMeta> {
         ExecutionMeta::new(test_meta.gas, 1, test_meta.address)
     }
 
