@@ -43,7 +43,7 @@ where
 {
     fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
         if self.modules.contains(module_id) {
-            return Ok(None);
+            Ok(None)
         } else {
             self.inner.get_module(module_id)
         }
@@ -55,7 +55,7 @@ where
         tag: &TypeTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
         if self.resources.contains(&(*address, tag.to_owned())) {
-            return Ok(None);
+            Ok(None)
         } else {
             self.inner.get_resource(address, tag)
         }
