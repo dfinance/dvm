@@ -2,7 +2,7 @@ pub mod ds_loader;
 
 pub use libra::prelude::*;
 use crate::mv::dependence::loader::Loader;
-use crate::embedded::ds_loader::StateViewLoader;
+use crate::embedded::ds_loader::RemoteCacheLoader;
 use std::collections::HashMap;
 use anyhow::Result;
 use std::{env, fs};
@@ -15,18 +15,18 @@ use std::io::Write;
 
 /// Embedded move compiler.
 #[derive(Clone)]
-pub struct Compiler<S: StateView + Clone> {
-    loader: Option<Loader<StateViewLoader<S>>>,
+pub struct Compiler<C: RemoteCache + Clone> {
+    loader: Option<Loader<RemoteCacheLoader<C>>>,
 }
 
-impl<S> Compiler<S>
+impl<C> Compiler<C>
 where
-    S: StateView + Clone,
+    C: RemoteCache + Clone,
 {
     /// Create move compiler.
-    pub fn new(view: S) -> Compiler<S> {
+    pub fn new(view: C) -> Compiler<C> {
         Compiler {
-            loader: Some(Loader::new(None, StateViewLoader::new(view))),
+            loader: Some(Loader::new(None, RemoteCacheLoader::new(view))),
         }
     }
 
@@ -134,16 +134,12 @@ pub fn compile(code: &str, address: Option<AccountAddress>) -> Result<Vec<u8>> {
 #[derive(Clone)]
 struct ZeroStateView;
 
-impl StateView for ZeroStateView {
-    fn get(&self, _: &AccessPath) -> Result<Option<Vec<u8>>> {
+impl RemoteCache for ZeroStateView {
+    fn get_module(&self, _: &ModuleId) -> VMResult<Option<Vec<u8>>> {
         Ok(None)
     }
 
-    fn multi_get(&self, _: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>> {
-        Ok(vec![])
-    }
-
-    fn is_genesis(&self) -> bool {
-        false
+    fn get_resource(&self, _: &AccountAddress, _: &TypeTag) -> PartialVMResult<Option<Vec<u8>>> {
+        Ok(None)
     }
 }

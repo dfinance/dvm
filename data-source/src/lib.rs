@@ -24,8 +24,6 @@ pub mod blacklist;
 
 use libra::prelude::*;
 
-use anyhow::Error;
-
 pub use mock::MockDataSource;
 pub use module_cache::ModuleCache;
 pub use metrics::DsMeter;
@@ -33,14 +31,7 @@ pub use grpc::GrpcDataSource;
 pub use blacklist::{BlackListDataSource};
 
 /// Thread-safe `StateView`.
-pub trait DataSource: StateView + RemoteCache + Clear + Clone + Send + Sync + 'static {}
-
-/// Used to automatically implement `get_module` which calls `StateView.get()`
-/// internally and automatically wraps result with `Module`.
-pub trait DataAccess {
-    /// See autoimplementation of the trait for all `StateView` objects.
-    fn get_module(&self, module_id: &ModuleId) -> Result<Option<Module>, Error>;
-}
+pub trait DataSource: RemoteCache + Clear + Clone + Send + Sync + 'static {}
 
 /// Trait to `clear()` internal data structure.
 pub trait Clear {
@@ -49,13 +40,5 @@ pub trait Clear {
     /// Used when `sender` is the built-in 0x0 / 0x1 address.
     fn clear(&self) {
         //no-op
-    }
-}
-
-// auto-impl for all StateView impls
-impl<T: StateView> DataAccess for T {
-    fn get_module(&self, module_id: &ModuleId) -> Result<Option<Module>, Error> {
-        let entry = self.get(&AccessPath::from(module_id))?;
-        Ok(entry.map(Module::new))
     }
 }

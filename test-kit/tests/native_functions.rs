@@ -1,11 +1,11 @@
 use libra::{prelude::*, lcs};
 use byteorder::{LittleEndian, ByteOrder};
 
-use runtime::move_vm::{U64Store, AddressStore};
 use dvm_net::api::grpc::vm_grpc::{VmArgs, VmTypeTag, ModuleIdent, LcsTag, StructIdent, LcsType};
 use dvm_test_kit::TestKit;
 use dvm_test_kit::*;
 use serde_derive::Serialize;
+use runtime::resources::*;
 
 #[test]
 fn test_native_function() {
@@ -24,7 +24,7 @@ fn test_native_function() {
 
     let account_address = account("0x110");
 
-    let res = test_kit.execute_script(script, meta(&account_address), vec![], vec![]);
+    let res = test_kit.execute_script(script, gas_meta(), vec![], vec![], vec![account_address]);
     test_kit.assert_success(&res);
     let value: AddressStore = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, account_address);
@@ -54,7 +54,7 @@ fn test_register_token_info() {
         r#type: VmTypeTag::U64 as i32,
         value: buf,
     }];
-    let res = test_kit.execute_script(script, meta(&account), args, vec![]);
+    let res = test_kit.execute_script(script, gas_meta(), args, vec![], vec![account]);
     test_kit.assert_success(&res);
     let value: U64Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(t_value, value.val);
@@ -63,26 +63,27 @@ fn test_register_token_info() {
 #[test]
 fn test_events() {
     let test_kit = TestKit::new();
-    test_kit.add_std_module(include_str!("resources/event.move"));
     test_kit.add_std_module(include_str!("resources/currency.move"));
     test_kit.add_std_module(include_str!("resources/event_proxy.move"));
 
     let script = "\
         script {
         use 0x1::Event;
+        use 0x1::Signer;
         use 0x1::Currency;
         use 0x1::EventProxy;
 
-        fun main<Curr: copyable>() {
-            Event::emit<Currency::Value<Curr>>(Currency::make_currency<Curr>(100));
-            EventProxy::store<Currency::BTC>(Currency::make_btc(101));
+        fun main<Curr: copyable>(account: &signer) {
+            let _addr = Signer::address_of(account);
+            Event::emit<Currency::Value<Curr>>(account, Currency::make_currency<Curr>(100));
+            EventProxy::store<Currency::BTC>(account, Currency::make_btc(101));
         }
         }
     ";
     let sender = account("0x110");
     let res = test_kit.execute_script(
         script,
-        meta(&sender),
+        gas_meta(),
         vec![],
         vec![StructIdent {
             address: CORE_CODE_ADDRESS.to_vec(),
@@ -90,6 +91,7 @@ fn test_events() {
             name: "ETH".to_string(),
             type_params: vec![],
         }],
+        vec![sender],
     );
     test_kit.assert_success(&res);
 

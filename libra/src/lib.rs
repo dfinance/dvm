@@ -37,7 +37,6 @@ pub mod result {
 }
 
 pub mod ds {
-    pub use libra_state_view::StateView;
     pub use libra_types::access_path::AccessPath;
     pub use move_vm_runtime::data_cache::RemoteCache;
     pub use libra_types::write_set::{WriteOp, WriteSet, WriteSetMut};

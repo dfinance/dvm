@@ -1,5 +1,5 @@
 use runtime::{
-    move_vm::{Dvm, ExecutionMeta, Script, VmResult},
+    vm::{dvm::*, types::*},
     resources::{
         block_metadata, time_metadata, oracle_metadata, BlockMetadata, Price, CurrentTimestamp,
     },
@@ -68,20 +68,23 @@ impl TestState {
             .ok_or_else(|| anyhow!("Failed to resolve bytecode"))?
             .to_vec();
 
-        let tx_meta = Self::make_execution_meta(step.meta())?;
+        let gas = Self::make_gas_meta(step.meta())?;
         let result = match step {
-            TestStep::PublishModule(_) => vm.publish_module(tx_meta, Module::new(unit)),
-            TestStep::ExecuteScript(_) => {
-                vm.execute_script(tx_meta, Script::new(unit, vec![], vec![]))
+            TestStep::PublishModule(_) => {
+                vm.publish_module(gas, ModuleTx::new(unit, step.meta().senders[0]))
             }
+            TestStep::ExecuteScript(_) => vm.execute_script(
+                gas,
+                ScriptTx::new(unit, vec![], vec![], step.meta().senders.to_owned())?,
+            ),
         };
 
         Self::handle_tx_tesult(main_ds, &step.meta().expected_result, result)
     }
 
-    /// Make vm execution meta.
-    fn make_execution_meta(test_meta: &TestMeta) -> Result<ExecutionMeta> {
-        ExecutionMeta::new(test_meta.gas, 1, test_meta.address)
+    /// Make vm gas meta.
+    fn make_gas_meta(test_meta: &TestMeta) -> Result<Gas> {
+        Gas::new(test_meta.gas, 1)
     }
 
     /// Store mete resources.

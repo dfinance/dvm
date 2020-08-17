@@ -5,6 +5,7 @@ use libra::prelude::*;
 use std::convert::TryFrom;
 use chrono::{Utc, TimeZone};
 use std::vec::IntoIter;
+use std::mem;
 
 lazy_static! {
     static ref META_RE: Regex = Regex::new("\\#([A-Za-z0-9_]+)[:|=]?([A-Za-z0-9.:]*)").unwrap();
@@ -110,15 +111,7 @@ fn handle_meta_tag(
             }
         },
         MetaTag::Address(addr) => {
-            if meta.address == None {
-                meta.address = Some(addr)
-            } else {
-                return Err(anyhow!(
-                    "Account address is already set. Error location [{}:{}]",
-                    file_name,
-                    line_number
-                ));
-            }
+            meta.senders.push(addr);
         }
         MetaTag::Gas(g) => {
             if meta.gas == None {
@@ -230,7 +223,7 @@ impl TestStep {
 /// Test metadata builder.
 #[derive(Debug, PartialEq, Default)]
 struct MetaState {
-    address: Option<AccountAddress>,
+    senders: Vec<AccountAddress>,
     gas: Option<u64>,
     expected_result: Option<ExecutionResult>,
     block: Option<u64>,
@@ -241,7 +234,7 @@ struct MetaState {
 /// Test metadata.
 #[derive(Debug, PartialEq)]
 pub struct TestMeta {
-    pub address: AccountAddress,
+    pub senders: Vec<AccountAddress>,
     pub gas: u64,
     pub expected_result: ExecutionResult,
     pub block: u64,
@@ -251,9 +244,16 @@ pub struct TestMeta {
 
 impl TestMeta {
     /// Returns test metadata.
-    fn take(meta: &mut MetaState, address: AccountAddress) -> TestMeta {
+    fn take(meta: &mut MetaState, sender: AccountAddress) -> TestMeta {
+        let senders = if meta.senders.is_empty() {
+            vec![sender]
+        } else {
+            let mut tmp = vec![];
+            mem::swap(&mut meta.senders, &mut tmp);
+            tmp
+        };
         TestMeta {
-            address: meta.address.take().unwrap_or_else(|| address),
+            senders,
             gas: meta.gas.take().unwrap_or_else(|| 100_000_000),
             expected_result: meta
                 .expected_result
@@ -313,7 +313,7 @@ impl TryFrom<(&str, &str)> for MetaTag {
                     Ok(MetaTag::Error(Some(value.parse()?)))
                 }
             }
-            "address" => Ok(MetaTag::Address(AccountAddress::from_hex_literal(value)?)),
+            "sender" => Ok(MetaTag::Address(AccountAddress::from_hex_literal(value)?)),
             "gas" => Ok(MetaTag::Gas(value.parse()?)),
             "status" => Ok(MetaTag::Status(value.parse()?)),
             "block" => Ok(MetaTag::Block(value.parse()?)),
@@ -361,13 +361,15 @@ pub mod tests {
                 }
             }
             //#time:24.06.2020T16:50:0
-            //#address=0x02
+            //#sender=0x02
+            //#sender=0x01
             module Test2 {}
 
             //#time:24.06.2020T16:50:1
+            //#sender=0x01
             //#error:100
             //#gas=100
-            //#address=0x0202
+            //#sender=0x0202
             //#Status=4001
             script {
                 fun main3() {
@@ -393,7 +395,7 @@ pub mod tests {
                 pipeline: vec![
                     TestStep::PublishModule((
                         TestMeta {
-                            address: CORE_CODE_ADDRESS,
+                            senders: vec![CORE_CODE_ADDRESS],
                             gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
@@ -404,7 +406,7 @@ pub mod tests {
                     )),
                     TestStep::ExecuteScript((
                         TestMeta {
-                            address: CORE_CODE_ADDRESS,
+                            senders: vec![CORE_CODE_ADDRESS],
                             gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
@@ -415,7 +417,7 @@ pub mod tests {
                     )),
                     TestStep::ExecuteScript((
                         TestMeta {
-                            address: CORE_CODE_ADDRESS,
+                            senders: vec![CORE_CODE_ADDRESS],
                             gas: 100000000,
                             expected_result: ExecutionResult::Error {
                                 main_status: None,
@@ -429,7 +431,7 @@ pub mod tests {
                     )),
                     TestStep::PublishModule((
                         TestMeta {
-                            address: AccountAddress::from_hex_literal("0x02").unwrap(),
+                            senders: vec![sender("0x02"), sender("0x01")],
                             gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 100,
@@ -440,7 +442,7 @@ pub mod tests {
                     )),
                     TestStep::ExecuteScript((
                         TestMeta {
-                            address: AccountAddress::from_hex_literal("0x0202").unwrap(),
+                            senders: vec![sender("0x01"), sender("0x0202")],
                             gas: 100,
                             expected_result: ExecutionResult::Error {
                                 main_status: None,
@@ -454,7 +456,7 @@ pub mod tests {
                     )),
                     TestStep::ExecuteScript((
                         TestMeta {
-                            address: CORE_CODE_ADDRESS,
+                            senders: vec![CORE_CODE_ADDRESS],
                             gas: 100000000,
                             expected_result: ExecutionResult::Success,
                             block: 1,
@@ -465,7 +467,7 @@ pub mod tests {
                     )),
                     TestStep::ExecuteScript((
                         TestMeta {
-                            address: CORE_CODE_ADDRESS,
+                            senders: vec![CORE_CODE_ADDRESS],
                             gas: 100000000,
                             expected_result: ExecutionResult::Error {
                                 main_status: None,
@@ -501,8 +503,8 @@ pub mod tests {
             MetaTag::try_from(("status", "400")).unwrap()
         );
         assert_eq!(
-            MetaTag::Address(AccountAddress::from_hex_literal("0x3").unwrap()),
-            MetaTag::try_from(("address", "0x3")).unwrap()
+            MetaTag::Address(sender("0x3")),
+            MetaTag::try_from(("sender", "0x3")).unwrap()
         );
         assert_eq!(
             MetaTag::Block(200),
@@ -516,5 +518,9 @@ pub mod tests {
             MetaTag::Price((("USD".to_owned(), "BTC".to_owned()), 100)),
             MetaTag::try_from(("usd_btc", "100")).unwrap()
         );
+    }
+
+    fn sender(addr: &str) -> AccountAddress {
+        AccountAddress::from_hex_literal(addr).unwrap()
     }
 }

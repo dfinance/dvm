@@ -79,6 +79,27 @@ pub fn time_metadata() -> StructTag {
     }
 }
 
+/// Deserializable `u64` for lcs.
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct U64Store {
+    /// Internal value.
+    pub val: u64,
+}
+
+/// Deserializable `AccountAddress` for lcs.
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct AddressStore {
+    /// Internal value.
+    pub val: AccountAddress,
+}
+
+/// Deserializable `Vec<u8>` for lcs.
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub struct VectorU8Store {
+    /// Internal value.
+    pub val: Vec<u8>,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::resources::*;
