@@ -1,7 +1,6 @@
 use crate::{DataSource, Clear};
 use std::collections::HashSet;
 use libra::prelude::*;
-use anyhow::Error;
 
 /// Wrapper for data source which returns blank for requests from blacklist.
 #[derive(Debug, Clone)]
@@ -10,7 +9,8 @@ where
     D: DataSource,
 {
     inner: D,
-    blacklist: HashSet<AccessPath>,
+    modules: HashSet<ModuleId>,
+    resources: HashSet<(AccountAddress, TypeTag)>,
 }
 
 impl<D> BlackListDataSource<D>
@@ -21,46 +21,19 @@ where
     pub fn new(inner: D) -> BlackListDataSource<D> {
         BlackListDataSource {
             inner,
-            blacklist: Default::default(),
+            modules: Default::default(),
+            resources: Default::default(),
         }
     }
 
     /// Add module to the blacklist.
     pub fn add_module(&mut self, module_id: &ModuleId) {
-        self.blacklist.insert(AccessPath::from(module_id));
+        self.modules.insert(module_id.to_owned());
     }
 
     /// Add resource to the blacklist.
     pub fn add_resource(&mut self, address: &AccountAddress, tag: &TypeTag) {
-        if let TypeTag::Struct(struct_tag) = tag.clone() {
-            let resource_tag = ResourceKey::new(*address, struct_tag);
-            self.blacklist
-                .insert(AccessPath::resource_access_path(&resource_tag));
-        }
-    }
-}
-
-impl<D> StateView for BlackListDataSource<D>
-where
-    D: DataSource,
-{
-    fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
-        if self.blacklist.contains(access_path) {
-            Ok(None)
-        } else {
-            self.inner.get(access_path)
-        }
-    }
-
-    fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
-        access_paths
-            .iter()
-            .map(|path| StateView::get(self, path))
-            .collect()
-    }
-
-    fn is_genesis(&self) -> bool {
-        self.inner.is_genesis()
+        self.resources.insert((*address, tag.to_owned()));
     }
 }
 
@@ -69,7 +42,11 @@ where
     D: DataSource,
 {
     fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
-        RemoteStorage::new(self).get_module(module_id)
+        if self.modules.contains(module_id) {
+            return Ok(None);
+        } else {
+            self.inner.get_module(module_id)
+        }
     }
 
     fn get_resource(
@@ -77,7 +54,11 @@ where
         address: &AccountAddress,
         tag: &TypeTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
-        RemoteStorage::new(self).get_resource(address, tag)
+        if self.resources.contains(&(*address, tag.to_owned())) {
+            return Ok(None);
+        } else {
+            self.inner.get_resource(address, tag)
+        }
     }
 }
 

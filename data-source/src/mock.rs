@@ -58,26 +58,11 @@ impl MockDataSource {
         let mut data = self.data.lock().unwrap();
         data.clear();
     }
-}
 
-impl StateView for MockDataSource {
-    fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
+    /// Returns chain data by access path.
+    pub fn get(&self, access_path: &AccessPath) -> Option<Vec<u8>> {
         let data = &self.data.lock().unwrap();
-        Ok(data.get(access_path).cloned())
-    }
-
-    // Function not currently in use.
-    fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
-        let data = &self.data.lock().unwrap();
-        access_paths
-            .iter()
-            .map(|path| Ok(data.get(path).cloned()))
-            .collect()
-    }
-
-    fn is_genesis(&self) -> bool {
-        // It doesn’t matter since we do not have a blockchain.
-        false
+        data.get(access_path).cloned()
     }
 }
 
@@ -112,7 +97,7 @@ impl MockDataSource {
 
 impl RemoteCache for MockDataSource {
     fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
-        RemoteStorage::new(self).get_module(module_id)
+        Ok(self.get(&AccessPath::from(module_id)))
     }
 
     fn get_resource(
@@ -120,7 +105,13 @@ impl RemoteCache for MockDataSource {
         address: &AccountAddress,
         tag: &TypeTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
-        RemoteStorage::new(self).get_resource(address, tag)
+        let struct_tag = match tag {
+            TypeTag::Struct(struct_tag) => struct_tag.clone(),
+            _ => return Err(PartialVMError::new(StatusCode::VALUE_DESERIALIZATION_ERROR)),
+        };
+        let resource_tag = ResourceKey::new(*address, struct_tag);
+        let path = AccessPath::resource_access_path(&resource_tag);
+        Ok(self.get(&path))
     }
 }
 

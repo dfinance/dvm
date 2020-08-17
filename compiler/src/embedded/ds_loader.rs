@@ -3,26 +3,29 @@ use anyhow::Result;
 use libra::prelude::*;
 
 #[derive(Clone)]
-pub struct StateViewLoader<S: StateView + Clone> {
-    view: S,
+pub struct RemoteCacheLoader<C: RemoteCache + Clone> {
+    cache: C,
 }
 
-impl<S> StateViewLoader<S>
+impl<C> RemoteCacheLoader<C>
 where
-    S: StateView + Clone,
+    C: RemoteCache + Clone,
 {
-    pub fn new(view: S) -> StateViewLoader<S> {
-        StateViewLoader { view }
+    pub fn new(view: C) -> RemoteCacheLoader<C> {
+        RemoteCacheLoader { cache: view }
     }
 }
 
-impl<S> BytecodeLoader for StateViewLoader<S>
+impl<C> BytecodeLoader for RemoteCacheLoader<C>
 where
-    S: StateView + Clone,
+    C: RemoteCache + Clone,
 {
     fn load(&self, module_id: &ModuleId) -> Result<Vec<u8>> {
-        let path = AccessPath::code_access_path(module_id);
-        if let Some(bytecode) = self.view.get(&path)? {
+        if let Some(bytecode) = self
+            .cache
+            .get_module(&module_id)
+            .map_err(|err| err.into_vm_status())?
+        {
             Ok(bytecode)
         } else {
             Err(anyhow!(

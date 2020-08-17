@@ -24,7 +24,6 @@ use lang::{
 };
 use compiler::Compiler;
 pub use genesis::genesis_write_set;
-use anyhow::Error;
 use crate::compiled_protos::vm_grpc::{VmArgs, VmPublishModule, VmExecuteResponse};
 use dvm_net::api::grpc::vm_grpc::{VmExecuteScript, StructIdent};
 
@@ -168,20 +167,6 @@ impl TestKit {
     /// Returns mock data source.
     pub fn data_source(&self) -> &MockDataSource {
         &self.data_source
-    }
-}
-
-impl StateView for TestKit {
-    fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
-        StateView::get(&self.data_source, access_path)
-    }
-
-    fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
-        self.data_source.multi_get(access_paths)
-    }
-
-    fn is_genesis(&self) -> bool {
-        self.data_source.is_genesis()
     }
 }
 

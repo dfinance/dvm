@@ -276,7 +276,7 @@ pub struct VectorU8Store {
 #[cfg(test)]
 pub mod tests {
     use compiler::Compiler;
-    use ds::{DataAccess, MockDataSource};
+    use ds::MockDataSource;
     use lang::{stdlib::zero_std};
     use libra::{prelude::*, vm::*};
     use crate::move_vm::{Dvm, ExecutionMeta, Script, U64Store};
@@ -299,12 +299,12 @@ pub mod tests {
 
         let compiled_module = CompiledModule::deserialize(&module.code()).unwrap();
         let module_id = compiled_module.self_id();
-        assert!(DataAccess::get_module(&ds, &module_id).unwrap().is_none());
+        assert!(ds.get_module(&module_id).unwrap().is_none());
 
         ds.merge_write_set(output.write_set);
         assert_ne!(output.gas_used, 0);
 
-        let loaded_module = DataAccess::get_module(&ds, &module_id).unwrap().unwrap();
+        let loaded_module = Module::new(ds.get_module(&module_id).unwrap().unwrap());
         assert_eq!(loaded_module, module);
 
         //try public module duplicate;
