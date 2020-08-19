@@ -806,7 +806,7 @@ checksum = "134951f4028bdadb9b84baf4232681efbf277da25144b9b0ad65df75946c422b"
 [[package]]
 name = "dvm-api"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/dvm-proto.git?rev=713ace2acdb7039fd0d8c29ed1a0281fba02e69a#713ace2acdb7039fd0d8c29ed1a0281fba02e69a"
+source = "git+https://github.com/dfinance/dvm-proto.git?rev=6b70956c85de3d4a006923883900b10492bcad63#6b70956c85de3d4a006923883900b10492bcad63"
 dependencies = [
  "prost",
  "tonic",
