@@ -8,7 +8,7 @@ pub extern crate log;
 /// Defines dvm `CostTable`.
 pub mod gas_schedule;
 
-/// Defines structures for script execution inside VM.
-pub mod move_vm;
 /// Chain resources.
 pub mod resources;
+/// Defines structures for script execution inside VM.
+pub mod vm;

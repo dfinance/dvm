@@ -130,27 +130,15 @@ impl GrpcDataSource {
             warn!("Unable to connect to data-source.");
         }
     }
-}
 
-impl StateView for GrpcDataSource {
-    fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
+    /// Returns chain data by access path.
+    pub fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
         let (tx, rx) = bounded(0);
         self.sender.send(Request {
             path: access_path.clone(),
             sender: tx,
         })?;
         rx.recv()?
-    }
-
-    fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
-        access_paths
-            .iter()
-            .map(|path| StateView::get(self, path))
-            .collect()
-    }
-
-    fn is_genesis(&self) -> bool {
-        false
     }
 }
 
@@ -166,7 +154,11 @@ struct Request {
 
 impl RemoteCache for GrpcDataSource {
     fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
-        RemoteStorage::new(self).get_module(module_id)
+        self.get(&AccessPath::from(module_id)).map_err(|e| {
+            PartialVMError::new(StatusCode::STORAGE_ERROR)
+                .with_message(e.to_string())
+                .finish(Location::Undefined)
+        })
     }
 
     fn get_resource(
@@ -174,7 +166,15 @@ impl RemoteCache for GrpcDataSource {
         address: &AccountAddress,
         tag: &TypeTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
-        RemoteStorage::new(self).get_resource(address, tag)
+        let struct_tag = match tag {
+            TypeTag::Struct(struct_tag) => struct_tag.clone(),
+            _ => return Err(PartialVMError::new(StatusCode::VALUE_DESERIALIZATION_ERROR)),
+        };
+        let resource_tag = ResourceKey::new(*address, struct_tag);
+        let path = AccessPath::resource_access_path(&resource_tag);
+
+        self.get(&path)
+            .map_err(|e| PartialVMError::new(StatusCode::STORAGE_ERROR).with_message(e.to_string()))
     }
 }
 

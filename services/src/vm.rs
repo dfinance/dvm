@@ -6,7 +6,7 @@ use crate::{tonic, api};
 use tonic::{Request, Response, Status};
 use api::grpc::vm_grpc::vm_script_executor_server::VmScriptExecutor;
 use dvm_net::api::grpc::vm_grpc::*;
-use runtime::move_vm::{ExecutionMeta, Script, ExecutionResult, Dvm};
+use runtime::vm::{dvm::*, types::*};
 use std::convert::TryFrom;
 use anyhow::Error;
 use byteorder::{LittleEndian, ByteOrder};
@@ -58,7 +58,7 @@ where
             }
         };
 
-        let response = self.vm.execute_script(contract.meta, contract.script);
+        let response = self.vm.execute_script(contract.gas, contract.script);
 
         Ok(Response::new(store_metric(
             vm_result_to_execute_response(response),
@@ -252,8 +252,8 @@ fn store_metric(result: VmExecuteResponse, mut scope_meter: ScopeMeter) -> VmExe
 /// Data for script execution.
 #[derive(Debug)]
 struct ExecuteScript {
-    meta: ExecutionMeta,
-    script: Script,
+    gas: Gas,
+    script: ScriptTx,
 }
 
 impl TryFrom<VmExecuteScript> for ExecuteScript {
@@ -345,13 +345,15 @@ impl TryFrom<VmExecuteScript> for ExecuteScript {
             .map(|ident| Ok(TypeTag::Struct(struct_tag(ident)?)))
             .collect::<Result<Vec<TypeTag>, Error>>()?;
 
+        let senders = req
+            .senders
+            .into_iter()
+            .map(AccountAddress::try_from)
+            .collect::<Result<Vec<AccountAddress>, Error>>()?;
+
         Ok(ExecuteScript {
-            meta: ExecutionMeta::new(
-                req.max_gas_amount,
-                req.gas_unit_price,
-                AccountAddress::try_from(req.address)?,
-            )?,
-            script: Script::new(req.code, args, type_args),
+            gas: Gas::new(req.max_gas_amount, req.gas_unit_price)?,
+            script: ScriptTx::new(req.code, args, type_args, senders)?,
         })
     }
 }
@@ -375,7 +377,7 @@ where
             }
         };
 
-        let response = self.vm.publish_module(contract.meta, contract.module);
+        let response = self.vm.publish_module(contract.gas, contract.module);
         Ok(Response::new(store_metric(
             vm_result_to_execute_response(response),
             meter,
@@ -386,8 +388,8 @@ where
 /// Data for module publication.
 #[derive(Debug)]
 struct PublishModule {
-    meta: ExecutionMeta,
-    module: Module,
+    gas: Gas,
+    module: ModuleTx,
 }
 
 impl TryFrom<VmPublishModule> for PublishModule {
@@ -395,12 +397,8 @@ impl TryFrom<VmPublishModule> for PublishModule {
 
     fn try_from(request: VmPublishModule) -> Result<Self, Self::Error> {
         Ok(PublishModule {
-            meta: ExecutionMeta::new(
-                request.max_gas_amount,
-                request.gas_unit_price,
-                AccountAddress::try_from(request.address)?,
-            )?,
-            module: Module::new(request.code),
+            gas: Gas::new(request.max_gas_amount, request.gas_unit_price)?,
+            module: ModuleTx::new(request.code, AccountAddress::try_from(request.sender)?),
         })
     }
 }

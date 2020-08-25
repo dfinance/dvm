@@ -14,19 +14,19 @@ use info::metrics::execution::ExecutionResult;
 
 /// Compilation service.
 #[derive(Clone)]
-pub struct CompilerService<S>
+pub struct CompilerService<C>
 where
-    S: StateView + Clone + Send + Sync + 'static,
+    C: RemoteCache + Clone + Send + Sync + 'static,
 {
-    compiler: Compiler<S>,
+    compiler: Compiler<C>,
 }
 
-impl<S> CompilerService<S>
+impl<C> CompilerService<C>
 where
-    S: StateView + Clone + Send + Sync + 'static,
+    C: RemoteCache + Clone + Send + Sync + 'static,
 {
     /// Create a new compiler service with the given compiler.
-    pub fn new(compiler: Compiler<S>) -> Self {
+    pub fn new(compiler: Compiler<C>) -> Self {
         CompilerService { compiler }
     }
 }
@@ -36,9 +36,9 @@ fn convert_address(addr: &[u8]) -> Result<AccountAddress, Status> {
     AccountAddress::try_from(addr).map_err(|err| Status::invalid_argument(err.to_string()))
 }
 
-impl<S> CompilerService<S>
+impl<C> CompilerService<C>
 where
-    S: StateView + Clone + Send + Sync + 'static,
+    C: RemoteCache + Clone + Send + Sync + 'static,
 {
     /// Compile source code.
     async fn compile(
@@ -79,9 +79,9 @@ where
 }
 
 #[tonic::async_trait]
-impl<S> VmCompiler for CompilerService<S>
+impl<C> VmCompiler for CompilerService<C>
 where
-    S: StateView + Clone + Send + Sync + 'static,
+    C: RemoteCache + Clone + Send + Sync + 'static,
 {
     /// Compile source code.
     async fn compile(
@@ -107,9 +107,9 @@ where
 }
 
 #[tonic::async_trait]
-impl<S> VmMultipleSourcesCompiler for CompilerService<S>
+impl<C> VmMultipleSourcesCompiler for CompilerService<C>
 where
-    S: StateView + Clone + Send + Sync + 'static,
+    C: RemoteCache + Clone + Send + Sync + 'static,
 {
     /// Compiler source codes.
     async fn compile(

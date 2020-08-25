@@ -1,5 +1,5 @@
 address 0x01 {
-    //#address:0x01
+    //#sender:0x01
     module Foo {
         use 0x01::Signer;
 
@@ -18,10 +18,12 @@ address 0x01 {
 }
 
 //#status:4008 MISSING_DATA
+//#sender:0x01
+//#sender:0x02
 script {
     use 0x01::Foo;
 
-    fun load_empty_val(account: &signer) {
+    fun load_empty_val(account: &signer, _account_1: &signer) {
         assert(Foo::get_val(account) == 13, 1);
     }
 }

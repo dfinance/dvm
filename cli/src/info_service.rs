@@ -67,7 +67,7 @@ async fn send_ping(
     let mut client = VmScriptExecutorClient::new(connection);
 
     let request = Request::new(VmExecuteScript {
-        address: CORE_CODE_ADDRESS.to_vec(),
+        senders: vec![CORE_CODE_ADDRESS.to_vec()],
         max_gas_amount: 100,
         gas_unit_price: 1,
         code: bytecode,

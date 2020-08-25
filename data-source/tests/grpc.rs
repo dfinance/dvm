@@ -68,7 +68,7 @@ fn test_grpc_ds() {
                         AccountAddress::random(),
                         AccountAddress::random().to_vec(),
                     );
-                    if let Ok(Some(resp)) = StateView::get(&ds, &path) {
+                    if let Ok(Some(resp)) = ds.get(&path) {
                         let mut response =
                             Vec::with_capacity(path.address.as_ref().len() + path.path.len());
                         response.append(&mut path.address.to_vec());

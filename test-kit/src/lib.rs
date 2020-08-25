@@ -14,7 +14,7 @@ pub mod test_suite;
 pub use grpc_server::{Server, Signal};
 use std::sync::{Mutex, Arc};
 use std::ops::Range;
-use runtime::move_vm::ExecutionMeta;
+use runtime::vm::types::Gas;
 use libra::prelude::*;
 use std::convert::TryFrom;
 use crate::grpc_client::Client;
@@ -24,7 +24,6 @@ use lang::{
 };
 use compiler::Compiler;
 pub use genesis::genesis_write_set;
-use anyhow::Error;
 use crate::compiled_protos::vm_grpc::{VmArgs, VmPublishModule, VmExecuteResponse};
 use dvm_net::api::grpc::vm_grpc::{VmExecuteScript, StructIdent};
 
@@ -85,12 +84,17 @@ impl TestKit {
     }
 
     /// Publish module.
-    pub fn publish_module(&self, code: &str, meta: ExecutionMeta) -> VmExecuteResponse {
-        let module = self.compiler.compile(code, Some(meta.sender())).unwrap();
+    pub fn publish_module(
+        &self,
+        code: &str,
+        gas: Gas,
+        sender: AccountAddress,
+    ) -> VmExecuteResponse {
+        let module = self.compiler.compile(code, Some(sender)).unwrap();
         self.client.publish_module(VmPublishModule {
-            address: meta.sender().to_vec(),
-            max_gas_amount: meta.max_gas_amount(),
-            gas_unit_price: meta.gas_unit_price(),
+            sender: sender.to_vec(),
+            max_gas_amount: gas.max_gas_amount(),
+            gas_unit_price: gas.gas_unit_price(),
             code: module,
         })
     }
@@ -110,16 +114,20 @@ impl TestKit {
     pub fn execute_script(
         &self,
         code: &str,
-        meta: ExecutionMeta,
+        gas: Gas,
         args: Vec<VmArgs>,
         type_params: Vec<StructIdent>,
+        senders: Vec<AccountAddress>,
     ) -> VmExecuteResponse {
-        let code = self.compiler.compile(code, Some(meta.sender())).unwrap();
+        assert!(!senders.is_empty());
+        let code = self.compiler.compile(code, Some(senders[0])).unwrap();
+
+        let senders = senders.iter().map(|sender| sender.to_vec()).collect();
 
         self.client.execute_script(VmExecuteScript {
-            address: meta.sender().to_vec(),
-            max_gas_amount: meta.max_gas_amount(),
-            gas_unit_price: meta.gas_unit_price(),
+            senders,
+            max_gas_amount: gas.max_gas_amount(),
+            gas_unit_price: gas.gas_unit_price(),
             code,
             type_params,
             args,
@@ -171,23 +179,9 @@ impl TestKit {
     }
 }
 
-impl StateView for TestKit {
-    fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
-        StateView::get(&self.data_source, access_path)
-    }
-
-    fn multi_get(&self, access_paths: &[AccessPath]) -> Result<Vec<Option<Vec<u8>>>, Error> {
-        self.data_source.multi_get(access_paths)
-    }
-
-    fn is_genesis(&self) -> bool {
-        self.data_source.is_genesis()
-    }
-}
-
-/// Returns execution meta with given address.
-pub fn meta(addr: &AccountAddress) -> ExecutionMeta {
-    ExecutionMeta::new(500_000, 1, *addr).unwrap()
+/// Returns gas meta.
+pub fn gas_meta() -> Gas {
+    Gas::new(500_000, 1).unwrap()
 }
 
 /// Create a new account address from hex string.

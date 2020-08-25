@@ -7,7 +7,7 @@ script {
 }
 
 address 0x02 {
-    //#address:0x02
+    //#sender:0x02
     module Foo {
         public fun get_val(): u64 {
             1
