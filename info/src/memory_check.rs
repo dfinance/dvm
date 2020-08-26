@@ -126,6 +126,6 @@ mod test {
                 cache.fill(1024);
             }
         }
-        assert_eq!(cache_2.size(), 1024 * 1000);
+        assert!(cache_2.size() >= 1024 * 1000);
     }
 }
