@@ -2,7 +2,7 @@ use dvm_info::metrics::execution::ExecutionResult;
 use dvm_info::metrics::meter::ScopeMeter;
 use libra::prelude::*;
 
-use crate::{Clear, DataSource};
+use crate::{RemoveModule, DataSource};
 
 /// Wrapper for data source which collects metrics queries.
 #[derive(Debug, Clone)]
@@ -23,12 +23,12 @@ where
     }
 }
 
-impl<D> Clear for DsMeter<D>
+impl<D> RemoveModule for DsMeter<D>
 where
     D: DataSource,
 {
-    fn clear(&self) {
-        self.inner.clear();
+    fn remove_module(&self, module_id: &ModuleId) {
+        self.inner.remove_module(module_id)
     }
 }
 

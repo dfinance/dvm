@@ -13,6 +13,7 @@ use crate::compiled_protos::vm_grpc::vm_script_executor_server::VmScriptExecutor
 use crate::compiled_protos::vm_grpc::vm_module_publisher_server::VmModulePublisherServer;
 use services::vm::VmService;
 use data_source::MockDataSource;
+use runtime::vm::dvm::Dvm;
 
 /// Grps VM service.
 pub struct Server {
@@ -34,7 +35,7 @@ impl Server {
             rt.block_on(async {
                 for port in PORT_RANGE {
                     service_port.store(port, Ordering::SeqCst);
-                    let service = VmService::new(data_source.clone(), None);
+                    let service = VmService::new(Dvm::new(data_source.clone(), None), None);
                     let service_res = TService::builder()
                         .add_service(VmScriptExecutorServer::new(service.clone()))
                         .add_service(VmModulePublisherServer::new(service.clone()))

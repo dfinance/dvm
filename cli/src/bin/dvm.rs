@@ -29,10 +29,10 @@ use services::vm::VmService;
 use dvm_cli::config::*;
 use dvm_cli::init;
 use futures::join;
-use dvm_info::config::InfoServiceConfig;
+use dvm_info::config::{InfoServiceConfig, MemoryOptions};
 use dvm_cli::info_service::create_info_service;
-
-const MODULE_CACHE: usize = 1000;
+use dvm_info::memory_check::MemoryChecker;
+use runtime::vm::dvm::Dvm;
 
 /// Definance Virtual Machine
 ///  combined with Move compilation server
@@ -55,6 +55,9 @@ struct Options {
 
     #[clap(flatten)]
     info_service: InfoServiceConfig,
+
+    #[clap(flatten)]
+    memory_config: MemoryOptions,
 
     /// DataSource Server internet address.
     #[clap(
@@ -100,9 +103,10 @@ async fn main_internal(options: Options) -> Result<()> {
     // data-source client
     let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
         .expect("Unable to instantiate GrpcDataSource.");
-    let ds = ModuleCache::new(DsMeter::new(ds), MODULE_CACHE);
+    let ds = ModuleCache::new(DsMeter::new(ds), options.memory_config.module_cache());
+    let mem_checker = MemoryChecker::new(options.memory_config, vec![Box::new(ds.clone())]);
     // vm services
-    let vm_service = VmService::new(ds.clone(), hrm);
+    let vm_service = VmService::new(Dvm::new(ds.clone(), Some(mem_checker)), hrm);
     // comp services
     let compiler_service = CompilerService::new(Compiler::new(ds));
     let metadata_service = MetadataService::default();

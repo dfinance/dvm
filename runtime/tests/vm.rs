@@ -10,7 +10,7 @@ use dvm_runtime::resources::U64Store;
 fn test_publish_module() {
     let ds = MockDataSource::with_write_set(zero_std());
     let compiler = Compiler::new(ds.clone());
-    let vm = Dvm::new(ds.clone());
+    let vm = Dvm::new(ds.clone(), None);
     let account = AccountAddress::random();
 
     let program = "module M {}";
@@ -43,7 +43,7 @@ fn test_publish_module() {
 fn test_execute_script() {
     let ds = MockDataSource::with_write_set(zero_std());
     let compiler = Compiler::new(ds.clone());
-    let vm = Dvm::new(ds.clone());
+    let vm = Dvm::new(ds.clone(), None);
     let account = AccountAddress::random();
 
     let module = include_str!("../../test-kit/tests/resources/store.move");

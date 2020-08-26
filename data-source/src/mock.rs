@@ -5,7 +5,7 @@ use anyhow::Error;
 
 use libra::prelude::*;
 
-use crate::{Clear, DataSource};
+use crate::{RemoveModule, DataSource};
 
 /// `StateView` implementation to be used in test_kit.
 #[derive(Debug, Clone, Default)]
@@ -115,6 +115,6 @@ impl RemoteCache for MockDataSource {
     }
 }
 
-impl Clear for MockDataSource {}
+impl RemoveModule for MockDataSource {}
 
 impl DataSource for MockDataSource {}

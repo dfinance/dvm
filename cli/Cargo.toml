@@ -17,6 +17,7 @@ libra = { path = "../libra", package = "dvm-libra-deps" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
 dvm-net = { path = "../net" }
 dvm-info = { path = "../info" }
+runtime = { path = "../runtime", package = "dvm-runtime" }
 
 anyhow = "1.0"
 log = "0.4.8"

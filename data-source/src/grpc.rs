@@ -14,7 +14,7 @@ use dvm_net::api;
 use dvm_net::prelude::*;
 use dvm_net::tonic;
 
-use crate::{Clear, DataSource};
+use crate::{RemoveModule, DataSource};
 
 /// Receiver for a channel that handles shutdown signals.
 pub type ShutdownSig = tokio::sync::oneshot::Receiver<()>;
@@ -178,6 +178,6 @@ impl RemoteCache for GrpcDataSource {
     }
 }
 
-impl Clear for GrpcDataSource {}
+impl RemoveModule for GrpcDataSource {}
 
 impl DataSource for GrpcDataSource {}

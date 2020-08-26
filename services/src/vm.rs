@@ -30,10 +30,10 @@ impl<D> VmService<D>
 where
     D: DataSource,
 {
-    /// Creates a new virtual machine service with the given data source and request interval counter.
-    pub fn new(view: D, hrm: Option<HeartRateMonitor>) -> VmService<D> {
+    /// Creates a new virtual machine service with the given virtual machine and request interval counter.
+    pub fn new(dvm: Dvm<D>, hrm: Option<HeartRateMonitor>) -> VmService<D> {
         VmService {
-            vm: Arc::new(Dvm::new(view)),
+            vm: Arc::new(dvm),
             hrm: Arc::new(hrm),
         }
     }
