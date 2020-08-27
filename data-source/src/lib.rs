@@ -31,14 +31,12 @@ pub use grpc::GrpcDataSource;
 pub use blacklist::{BlackListDataSource};
 
 /// Thread-safe `StateView`.
-pub trait DataSource: RemoteCache + Clear + Clone + Send + Sync + 'static {}
+pub trait DataSource: RemoteCache + RemoveModule + Clone + Send + Sync + 'static {}
 
-/// Trait to `clear()` internal data structure.
-pub trait Clear {
-    /// No-op in default implementation.
-    /// Called on internal `DataSource` object to remove all entries from internal cache.
-    /// Used when `sender` is the built-in 0x0 / 0x1 address.
-    fn clear(&self) {
+/// Trait to `remove_module` internal data structure.
+pub trait RemoveModule {
+    /// Removes the module by its id.
+    fn remove_module(&self, _module_id: &ModuleId) {
         //no-op
     }
 }

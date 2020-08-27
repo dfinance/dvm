@@ -1,4 +1,4 @@
-use crate::{DataSource, Clear};
+use crate::{DataSource, RemoveModule};
 use std::collections::HashSet;
 use libra::prelude::*;
 
@@ -64,11 +64,11 @@ where
 
 impl<D> DataSource for BlackListDataSource<D> where D: DataSource {}
 
-impl<D> Clear for BlackListDataSource<D>
+impl<D> RemoveModule for BlackListDataSource<D>
 where
     D: DataSource,
 {
-    fn clear(&self) {
-        self.inner.clear();
+    fn remove_module(&self, module_id: &ModuleId) {
+        self.inner.remove_module(module_id)
     }
 }

@@ -19,4 +19,3 @@ crossbeam = "0.7.3"
 http = "0.2"
 tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full" ] }
 log = "0.4.8"
-lru = "0.4.3"

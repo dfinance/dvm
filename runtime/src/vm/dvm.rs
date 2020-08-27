@@ -3,6 +3,7 @@ use libra::{prelude::*, vm::*, gas::*};
 use std::fmt;
 use crate::gas_schedule;
 use ds::{DataSource, BlackListDataSource};
+use dvm_info::memory_check::MemoryChecker;
 
 /// Dfinance virtual machine.
 pub struct Dvm<D: DataSource> {
@@ -12,6 +13,8 @@ pub struct Dvm<D: DataSource> {
     ds: D,
     /// Instructions cost table.
     cost_table: CostTable,
+    /// Dvm memory checker.
+    mem_checker: Option<MemoryChecker>,
 }
 
 impl<D> Dvm<D>
@@ -19,18 +22,21 @@ where
     D: DataSource,
 {
     /// Create a new virtual machine with the given data source.
-    pub fn new(ds: D) -> Dvm<D> {
+    pub fn new(ds: D, mem_checker: Option<MemoryChecker>) -> Dvm<D> {
         let vm = MoveVM::new();
         trace!("vm service is ready.");
         Dvm {
             vm,
             ds,
             cost_table: gas_schedule::cost_table(),
+            mem_checker,
         }
     }
 
     /// Publishes module to the chain.
     pub fn publish_module(&self, gas: Gas, module: ModuleTx) -> VmResult {
+        self.perform_memory_prevention();
+
         let (module, sender) = module.into_inner();
 
         let mut cost_strategy =
@@ -53,11 +59,8 @@ where
                 cost_strategy.charge_intrinsic_gas(AbstractMemorySize::new(module.len() as u64))?;
 
                 if sender == CORE_CODE_ADDRESS {
-                    self.ds.clear();
-                    let loader = &self.vm.runtime.loader;
-                    *loader.scripts.lock().unwrap() = ScriptCache::new();
-                    *loader.type_cache.lock().unwrap() = TypeCache::new();
-                    *loader.module_cache.lock().unwrap() = ModuleCache::new();
+                    self.ds.remove_module(&module_id);
+                    self.clear_cache();
 
                     let mut blacklist = BlackListDataSource::new(self.ds.clone());
                     blacklist.add_module(&module_id);
@@ -77,8 +80,31 @@ where
         Ok(ExecutionResult::new(cost_strategy, gas, res))
     }
 
+    fn clear_cache(&self) {
+        let loader = &self.vm.runtime.loader;
+        *loader.scripts.lock().unwrap_or_else(|err| err.into_inner()) = ScriptCache::new();
+        *loader
+            .type_cache
+            .lock()
+            .unwrap_or_else(|err| err.into_inner()) = TypeCache::new();
+        *loader
+            .module_cache
+            .lock()
+            .unwrap_or_else(|err| err.into_inner()) = ModuleCache::new();
+    }
+
+    fn perform_memory_prevention(&self) {
+        if let Some(mem_checker) = &self.mem_checker {
+            if mem_checker.is_limit_exceeded() {
+                self.clear_cache();
+            }
+        }
+    }
+
     /// Executes passed script on the chain.
     pub fn execute_script(&self, gas: Gas, tx: ScriptTx) -> VmResult {
+        self.perform_memory_prevention();
+
         let mut session = self.vm.new_session(&self.ds);
 
         let (script, args, type_args, senders) = tx.into_inner();

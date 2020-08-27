@@ -61,7 +61,7 @@ impl TestState {
         ds.merge_write_set(main_ds.to_write_set()?);
         Self::store_meta_resources(step.meta(), &ds)?;
 
-        let vm = Dvm::new(ds);
+        let vm = Dvm::new(ds, None);
 
         let unit = byte_code_map
             .get(step.unit())
