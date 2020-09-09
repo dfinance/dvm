@@ -85,6 +85,12 @@ impl<'a> ExpLoc<'a> {
     }
 }
 
+impl<'a> Default for ExpLoc<'a> {
+    fn default() -> Self {
+        ExpLoc::new(0, Exp::Nop)
+    }
+}
+
 impl<'a> SourceRange for ExpLoc<'a> {
     fn source_range(&self) -> Option<(usize, usize)> {
         Some(self.range())
@@ -191,6 +197,14 @@ impl<'a> Exp<'a> {
         match self {
             Exp::Nop => true,
             _ => false,
+        }
+    }
+
+    /// Returns `true` if the current expression is `Exp::Ret`.
+    pub fn ret(&mut self) -> Option<&mut Ret<'a>> {
+        match self {
+            Exp::Ret(ret) => Some(ret),
+            _ => None,
         }
     }
 

@@ -3,8 +3,7 @@ module Base {
         val: u64,
     }
 
-    fun test() {
-    }
+    fun test() {}
 
     public fun code(): u64 {
         1

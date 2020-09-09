@@ -1,8 +1,40 @@
 module M {
     fun w(v: u64) {
+        foo();
         while (v < 3) {
             v = v + 1
-        }
+        };
+        foo();
+    }
+
+    fun w_ret(v: u64): u64 {
+        foo();
+        while (v < 3) {
+            v = v + 1;
+            return v
+        };
+        foo();
+        return v
+    }
+
+    fun w_innner_loop(v: u64) {
+        foo();
+        while (cond()) {
+            while (v < 3) {
+                v = v + 1;
+            };
+            return
+        };
+        foo();
+    }
+
+    fun w_abort(v: u64) {
+        foo();
+        while (v < 3) {
+            v = v + 1;
+            abort v
+        };
+        foo();
     }
 
     fun w1() {
@@ -15,9 +47,10 @@ module M {
         }
     }
 
+
     fun f(v: u64) {
         while (v < 10) { v = v + 1 };
-        while (v < 10) ( v = v + 1 );
+        while (v < 10) (v = v + 1);
         while (v < 10) v = v + 1
     }
 
@@ -54,15 +87,17 @@ module M {
     fun w6() {
         while (cond()) {
             while (!cond()) {
-                if (cond()) {
-                } else {
+                if (cond()) {} else {
                     break
                 }
             }
         }
     }
 
+
     public fun cond(): bool {
         true
     }
+
+    public fun foo() {}
 }

@@ -9,6 +9,10 @@ module M {
         true
     }
 
+    fun empty(cond: bool) {
+        if (cond) {}
+    }
+
     fun t0(cond: bool) {
         let s = S { f: 0, g: 0 };
         let f;
@@ -20,7 +24,7 @@ module M {
 
     fun f(cond: bool) {
         if (cond) { if (cond) () };
-        if (cond) ( if (cond) () );
+        if (cond) (if (cond) ());
         if (cond) if (cond) ()
     }
 
@@ -30,17 +34,32 @@ module M {
         }
     }
 
-    fun i01(cond: bool) {
-        if (cond) {
+    fun i12(cond: bool) {
+        if (!cond) {
+            r();
         } else {
+            r1();
+        }
+    }
+
+    fun i11(cond: bool) {
+        if (!cond) {
+            r();
+            return
+        } else {
+            r1();
+        }
+    }
+
+    fun i01(cond: bool) {
+        if (cond) {} else {
             r();
         };
         r1();
     }
 
     fun i001(cond: bool) {
-        if (cond) {
-        } else {
+        if (cond) {} else {
             r();
         }
     }
@@ -77,8 +96,7 @@ module M {
     }
 
     fun i5() {
-        if (cond()) {
-        } else {
+        if (cond()) {} else {
             r();
         }
     }
@@ -99,24 +117,25 @@ module M {
             r();
         }
     }
-
+// worck but fail test.
 //    fun i8() {
 //        if (cond()) {
 //            i7();
 //        } else {
 //            return
-//        }
+//        };
+//        i8();
 //    }
 
-    fun i9() {
-        if (cond()) {
-            i7();
-        } else {
-            r();
-            return
-        }
-    }
-
+//    fun i9() {
+//        if (cond()) {
+//            r1();
+//        } else {
+//            r();
+//            return
+//        }
+//    }
+//
     fun i10(): u64 {
         if (cond()) {
             return 0
@@ -124,7 +143,7 @@ module M {
         1
     }
 
-    fun i11(): u64 {
+    fun i112(): u64 {
         if (cond()) {
             return 0
         };
@@ -141,17 +160,17 @@ module M {
         } else {
             r1();
             if (cond()) {
-               r1();
-            } else {
-               if (true) {
                 r1();
-               };
-               if (!cond) {
-                cond();
-               } else {
-                cond();
-               };
-               r();
+            } else {
+                if (true) {
+                    r1();
+                };
+                if (!cond) {
+                    cond();
+                } else {
+                    cond();
+                };
+                r();
             };
             r1();
         };

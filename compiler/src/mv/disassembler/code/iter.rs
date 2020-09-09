@@ -23,6 +23,13 @@ impl<'a> BytecodeIterator<'a> {
         self.index.unwrap_or_else(|| 0)
     }
 
+    /// Skip `n` number of opcode;
+    pub fn skip_opcodes(&mut self, n: usize) {
+        for _ in 0..n {
+            self.next();
+        }
+    }
+
     /// Returns a reference to all bytecode instructions.
     #[allow(dead_code)]
     pub fn as_slice(&self) -> &[Bytecode] {

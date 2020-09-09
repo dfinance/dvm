@@ -1,5 +1,5 @@
 module M {
-//    public fun l() {
+    //    public fun l() {
 //        l1();
 //        loop {
 //            cond();
@@ -11,7 +11,8 @@ module M {
     public fun l1() {
         loop {}
     }
-//
+
+    //
 //
 //    public fun l3(g: u64): u64 {
 //        loop {
@@ -70,12 +71,13 @@ module M {
 //        }
 //    }
 
+
     public fun cond(): bool {
         true
     }
 
     fun l8() {
-    l1();
+        l1();
         loop {
             if (cond()) {
                 l1();

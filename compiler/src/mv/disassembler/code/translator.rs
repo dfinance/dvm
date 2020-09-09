@@ -60,6 +60,9 @@ pub trait Context<'a> {
     /// Returns next bytecode instruction and updates bytecode iterator state.
     fn next_opcode(&mut self) -> Option<&Bytecode>;
 
+    /// Skip `n` opcodes.
+    fn skip_opcodes(&mut self, n: usize);
+
     /// Wraps the given expression at the current location.
     fn loc(&self, exp: Exp<'a>) -> ExpLoc<'a>;
 
@@ -379,6 +382,10 @@ where
 
     fn next_opcode(&mut self) -> Option<&Bytecode> {
         self.opcode_iter.next()
+    }
+
+    fn skip_opcodes(&mut self, n: usize) {
+        self.opcode_iter.skip_opcodes(n);
     }
 
     fn loc(&self, exp: Exp<'a>) -> ExpLoc<'a> {

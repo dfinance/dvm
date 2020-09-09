@@ -1,5 +1,5 @@
 module M {
-    resource struct R { f: u64, g: u64}
+    resource struct R { f: u64, g: u64 }
 
     struct R1<T> {
         t: T,
@@ -37,7 +37,7 @@ module M {
         x = 5;
         ref_x = &x;
 
-        let  _ = *ref_x;
+        let _ = *ref_x;
     }
 
     fun t11_mut() {
@@ -47,7 +47,7 @@ module M {
         x = 5;
         ref_x = &mut x;
 
-        let  _ = *ref_x;
+        let _ = *ref_x;
     }
 
     struct T {
@@ -59,16 +59,16 @@ module M {
     }
 
     fun t22(cond: bool): (T, S) {
-        let a = T {x: 3};
-        let b = S {y: 4};
+        let a = T { x: 3 };
+        let b = S { y: 4 };
         let a_ref = &mut a;
         let b_ref = &mut b;
         let x_ref = if (cond) { &mut a_ref.x } else { &mut b_ref.y };
 
         if (cond) {
-          *x_ref = 2;
+            *x_ref = 2;
         } else {
-          *x_ref = 0;
+            *x_ref = 0;
         };
 
         (a, b)

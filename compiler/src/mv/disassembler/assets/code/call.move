@@ -1,7 +1,7 @@
 module M {
-   use 0x00000000000000000000000000000001::Base;
+    use 0x00000000000000000000000000000001::Base;
 
-    fun r() : u8 {
+    fun r(): u8 {
         1
     }
 
@@ -9,9 +9,7 @@ module M {
         (r() as u64)
     }
 
-    fun c(_code: u64, _data: u8) {
-
-    }
+    fun c(_code: u64, _data: u8) {}
 
     fun c1(code: u64) {
         c(code, r())
@@ -26,8 +24,7 @@ module M {
         c(code, (Base::code() as u8))
     }
 
-    fun g<G, B, R>() {
-    }
+    fun g<G, B, R>() {}
 
     fun g1() {
         g<u8, Base::Test, vector<u8>>();
