@@ -64,7 +64,7 @@ jobs:
         [[ "$TAG_FIRST" == "inegrt" ]] && echo "::set-output name=value::$TAG_LAST"
         [[ "$TAG_FIRST" == "inegrt" ]] || echo "::set-output name=value::$TAG_FIRST"
         # fallback, default branch
-        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::master"
+        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::feature-dfi-719_vm_reconection_test"
         true
 
     #
