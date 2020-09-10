@@ -1,13 +1,13 @@
 module M {
-    //    public fun l() {
-//        l1();
-//        loop {
-//            cond();
-//            cond();
-//            cond();
-//        }
-//    }
-//
+    public fun l() {
+        l1();
+        loop {
+            cond();
+            cond();
+            cond();
+        }
+    }
+
     public fun l1() {
         loop {}
     }
@@ -26,30 +26,30 @@ module M {
 //        1
 //    }
 //
-//    public fun l4(g: u64): u64 {
-//        loop {
-//            l1();
-//            if (g > 100) {
-//                l1();
-//            } else {
-//                break
-//            }
-//        };
-//        1
-//    }
-//
-//    public fun l2() {
-//        loop {
-//            loop {
-//                l1();
-//                loop {
-//                    l();
-//                }
-//            }
-//        }
-//    }
-//
-//    fun l5() {
+    public fun l4(g: u64): u64 {
+        loop {
+            l1();
+            if (g > 100) {
+                l1();
+            } else {
+                break
+            }
+        };
+        1
+    }
+
+    public fun l2() {
+        loop {
+            loop {
+                l1();
+                loop {
+                    l();
+                }
+            }
+        }
+    }
+
+    //    fun l5() {
 //        loop {
 //            if (cond()) {
 //                continue
@@ -58,19 +58,18 @@ module M {
 //        }
 //    }
 //
-//    fun l6() {
-//        loop {
-//            l1();
-//            continue
-//        }
-//    }
-//
-//    fun l7() {
-//        loop {
-//            continue
-//        }
-//    }
+    fun l6() {
+        loop {
+            l1();
+            continue
+        }
+    }
 
+    fun l7() {
+        loop {
+            continue
+        }
+    }
 
     public fun cond(): bool {
         true
@@ -80,12 +79,11 @@ module M {
         l1();
         loop {
             if (cond()) {
-                l1();
+                l7();
             } else {
-                l1();
-                continue
+                l6();
             };
-            l8();
+            l1();
         }
     }
 }

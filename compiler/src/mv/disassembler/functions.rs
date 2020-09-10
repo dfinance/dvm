@@ -56,7 +56,10 @@ impl<'a> FunctionsDef<'a> {
                 body: Some(Body::mock()),
             }
         } else {
-            dbg!((&name, &def.code.as_ref().unwrap().code.iter().enumerate().collect::<Vec<_>>()));
+            if let Some(code) = def.code.as_ref() {
+                dbg!((&name, &code.code.iter().enumerate().collect::<Vec<_>>()));
+            }
+
             let body = def
                 .code
                 .as_ref()

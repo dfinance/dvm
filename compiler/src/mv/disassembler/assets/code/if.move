@@ -117,25 +117,7 @@ module M {
             r();
         }
     }
-// worck but fail test.
-//    fun i8() {
-//        if (cond()) {
-//            i7();
-//        } else {
-//            return
-//        };
-//        i8();
-//    }
 
-//    fun i9() {
-//        if (cond()) {
-//            r1();
-//        } else {
-//            r();
-//            return
-//        }
-//    }
-//
     fun i10(): u64 {
         if (cond()) {
             return 0

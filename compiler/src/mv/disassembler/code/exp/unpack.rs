@@ -8,6 +8,7 @@ use std::fmt::Write;
 use crate::mv::disassembler::code::translator::Context;
 use libra::file_format::*;
 use crate::mv::disassembler::unit::UnitAccess;
+use crate::mv::disassembler::code::exp::branching::algorithms::Algorithm;
 
 /// Unpack expressions.
 #[derive(Debug)]
@@ -50,7 +51,7 @@ impl<'a> Unpack<'a> {
             let forwards_exp = fields.len();
 
             let mut expressions = ctx
-                .translate_block(forwards_exp)
+                .translate_block(forwards_exp, Algorithm::None)
                 .into_iter()
                 .rev()
                 .collect::<Vec<_>>();

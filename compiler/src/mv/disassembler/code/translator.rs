@@ -20,6 +20,7 @@ use crate::mv::disassembler::code::exp::pack::{PackField, Pack};
 use crate::mv::disassembler::code::exp::unpack::Unpack;
 use crate::mv::disassembler::code::exp::branching::{br_true, br_false, br};
 use crate::mv::disassembler::unit::UnitAccess;
+use crate::mv::disassembler::code::exp::branching::algorithms::Algorithm;
 
 /// Transaction context.
 /// Provides functions for bytecode transactions.
@@ -39,6 +40,9 @@ pub trait Context<'a> {
     /// Removes the `exp_count` last elements from a expression list and returns it.
     fn pop_exp_vec(&mut self, exp_count: usize) -> Vec<ExpLoc<'a>>;
 
+    /// Removes the elements from a expression list and returns it.
+    fn pop_exp_by_offset(&mut self, offset: usize) -> Vec<ExpLoc<'a>>;
+
     /// Returns module Import by its handle reference.
     fn module_import(&self, module: &ModuleHandle) -> Option<Import<'a>>;
 
@@ -55,10 +59,17 @@ pub trait Context<'a> {
     fn pack_fields(&mut self, def: &StructDefinition) -> Vec<PackField<'a>>;
 
     /// Translates next `block_size` bytecode instructions and returns it.
-    fn translate_block(&mut self, block_size: usize) -> Vec<ExpLoc<'a>>;
+    fn translate_block(
+        &mut self,
+        block_size: usize,
+        parent_algorithm: Algorithm,
+    ) -> Vec<ExpLoc<'a>>;
 
     /// Returns next bytecode instruction and updates bytecode iterator state.
     fn next_opcode(&mut self) -> Option<&Bytecode>;
+
+    /// Returns parent algorithms.
+    fn parent_algorithms(&self) -> &[Algorithm];
 
     /// Skip `n` opcodes.
     fn skip_opcodes(&mut self, n: usize);
@@ -87,6 +98,7 @@ pub struct Translator<'a, 'b, 'c, A>
 where
     A: UnitAccess,
 {
+    parent_algorithms: Vec<Algorithm>,
     expressions: Vec<ExpLoc<'a>>,
     locals: &'b Locals<'a>,
     unit: &'a A,
@@ -110,9 +122,11 @@ where
         unit: &'a A,
         imports: &'a Imports<'a>,
         type_params: &'b [Generic],
+        parent_algorithms: Vec<Algorithm>,
     ) -> Translator<'a, 'b, 'c, A> {
         let start_offset = opcode_iter.index();
         Translator {
+            parent_algorithms,
             opcode_iter,
             expressions: vec![],
             locals,
@@ -324,6 +338,24 @@ where
         }
     }
 
+    fn pop_exp_by_offset(&mut self, offset: usize) -> Vec<ExpLoc<'a>> {
+        let mut exp_list = vec![];
+
+        loop {
+            if let Some(exp) = self.last_exp() {
+                if exp.index() < offset {
+                    break;
+                }
+            } else {
+                break;
+            }
+
+            exp_list.insert(0,self.pop_exp());
+        }
+
+        exp_list
+    }
+
     fn module_import(&self, module: &ModuleHandle) -> Option<Import<'a>> {
         let module_name = self.unit.identifier(module.name);
         let module_address = self.unit.address(module.address);
@@ -366,7 +398,14 @@ where
         }
     }
 
-    fn translate_block(&mut self, block_size: usize) -> Vec<ExpLoc<'a>> {
+    fn translate_block(
+        &mut self,
+        block_size: usize,
+        parent_algorithm: Algorithm,
+    ) -> Vec<ExpLoc<'a>> {
+        let mut parent_algorithms = self.parent_algorithms.clone();
+        parent_algorithms.push(parent_algorithm);
+
         let mut translator = Translator::new(
             self.opcode_iter,
             self.ret_len,
@@ -375,6 +414,7 @@ where
             self.unit,
             self.imports,
             self.type_params,
+            parent_algorithms,
         );
         translator.translate();
         translator.expressions
@@ -382,6 +422,10 @@ where
 
     fn next_opcode(&mut self) -> Option<&Bytecode> {
         self.opcode_iter.next()
+    }
+
+    fn parent_algorithms(&self) -> &[Algorithm] {
+        &self.parent_algorithms
     }
 
     fn skip_opcodes(&mut self, n: usize) {

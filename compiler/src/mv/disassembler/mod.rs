@@ -163,6 +163,31 @@ mod tests {
         );
     }
 
+    pub fn perform_test_with_string_cmp(source: &str, expected: &str) {
+        let ds = MockDataSource::new();
+        let compiler = Compiler::new(ds.clone());
+        ds.publish_module(
+            compiler
+                .compile(include_str!("assets/base.move"), Some(CORE_CODE_ADDRESS))
+                .unwrap(),
+        )
+        .unwrap();
+
+        ds.publish_module(
+            compiler
+                .compile(include_str!("assets/tx.move"), Some(CORE_CODE_ADDRESS))
+                .unwrap(),
+        )
+        .unwrap();
+
+        let original_bytecode = compiler.compile(source, Some(CORE_CODE_ADDRESS)).unwrap();
+        let config = Config {
+            light_version: false,
+        };
+        let restored_source = disasm_str(&original_bytecode, config).unwrap();
+        assert_eq!(expected.replace(" ", ""), restored_source.replace(" ", ""));
+    }
+
     fn compare_bytecode(expected: CompiledModule, actual: CompiledModule) {
         let mut expected = expected.into_inner();
         let mut actual = actual.into_inner();
@@ -261,7 +286,6 @@ mod tests {
         perform_test(include_str!("assets/code/loc.move"));
     }
 
-    #[ignore]
     #[test]
     pub fn test_loop() {
         perform_test(include_str!("assets/code/loop.move"));
@@ -275,5 +299,9 @@ mod tests {
     #[test]
     pub fn test_if() {
         perform_test(include_str!("assets/code/if.move"));
+        perform_test_with_string_cmp(
+            include_str!("assets/code/if/i1.move"),
+            include_str!("assets/code/if/i1_res.move"),
+        );
     }
 }
