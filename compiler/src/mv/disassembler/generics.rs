@@ -22,6 +22,7 @@ pub struct Generics(Rc<GenericPrefix>);
 pub enum GenericPrefix {
     /// Simple generic prefix.
     /// Prefix from generic prefix table.
+    // TODO: deserialize_with custom deserialize fn returns statically borrowed v by GENERICS_PREFIX
     SimplePrefix(&'static str),
     /// Random generic prefix.
     Generated(u16),
