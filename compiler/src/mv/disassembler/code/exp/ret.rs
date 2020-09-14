@@ -1,13 +1,15 @@
+use std::fmt::Write;
+use anyhow::Error;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::code::exp::{ExpLoc, Exp, find_range, SourceRange};
 use crate::mv::disassembler::code::translator::Context;
 use crate::mv::disassembler::{Encode, write_array};
-use std::fmt::Write;
-use anyhow::Error;
 
 /// Return expression.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Ret<'a> {
     /// Result tuple.
+    #[serde(borrow)]
     pub ret_list: Vec<ExpLoc<'a>>,
     /// is explicit return required.
     pub explicit_keyword: bool,

@@ -1,9 +1,10 @@
 use std::rc::Rc;
-use std::collections::HashSet;
-use libra::file_format::*;
-use crate::mv::disassembler::{Encode, write_array};
-use anyhow::Error;
 use std::fmt::Write;
+use std::collections::HashSet;
+use anyhow::Error;
+use libra::file_format::*;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::{Encode, write_array};
 use crate::mv::disassembler::unit::UnitAccess;
 
 const GENERICS_PREFIX: [&str; 22] = [
@@ -12,11 +13,12 @@ const GENERICS_PREFIX: [&str; 22] = [
 ];
 
 /// Generics template.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+// #[serde(transparent)]
 pub struct Generics(Rc<GenericPrefix>);
 
 /// Generics prefix.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum GenericPrefix {
     /// Simple generic prefix.
     /// Prefix from generic prefix table.
@@ -53,11 +55,24 @@ impl Generics {
 }
 
 /// Generic representation.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Generic {
     prefix: Generics,
     index: usize,
+    #[serde(with = "serde_kind::Kind")]
     kind: Kind,
+}
+
+mod serde_kind {
+    use serde::{Serialize, Deserialize};
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(remote = "libra::file_format::Kind")]
+    pub enum Kind {
+        All,
+        Resource,
+        Copyable,
+    }
 }
 
 impl Generic {

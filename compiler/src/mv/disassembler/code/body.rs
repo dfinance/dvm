@@ -1,9 +1,10 @@
+use anyhow::Error;
 use libra::file_format::*;
+use serde::export::fmt::Write;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::functions::Param;
 use crate::mv::disassembler::{Encode, INDENT};
-use anyhow::Error;
-use serde::export::fmt::Write;
 use crate::mv::disassembler::generics::Generic;
 use crate::mv::disassembler::code::translator::{Translator};
 use crate::mv::disassembler::code::locals::{Locals, Local};
@@ -12,7 +13,9 @@ use crate::mv::disassembler::code::exp::block::Block;
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Function body representation.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Body<'a> {
+    #[serde(borrow)]
     block: Block<'a>,
     locals: Locals<'a>,
 }

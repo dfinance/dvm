@@ -1,17 +1,19 @@
+use std::fmt::Write;
+use anyhow::Error;
+use libra::file_format::*;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::code::exp::{ExpLoc, Exp, SourceRange, find_range};
 use crate::mv::disassembler::Encode;
-use anyhow::Error;
-use std::fmt::Write;
 use crate::mv::disassembler::code::translator::Context;
-use libra::file_format::*;
 use crate::mv::disassembler::code::locals::Local;
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Field reference.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FieldRef<'a> {
     is_mut: bool,
     field_name: &'a str,
+    #[serde(borrow)]
     instance: ExpLoc<'a>,
 }
 
@@ -75,7 +77,7 @@ impl<'a> Encode for FieldRef<'a> {
 }
 
 /// Reference.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Ref<'a> {
     is_mut: bool,
     local: Local<'a>,
@@ -109,8 +111,9 @@ impl<'a> Encode for Ref<'a> {
 }
 
 ///Dereference expressions.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Deref<'a> {
+    #[serde(borrow)]
     exp: ExpLoc<'a>,
 }
 
@@ -136,9 +139,11 @@ impl<'a> Encode for Deref<'a> {
 }
 
 /// Write reference representation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WriteRef<'a> {
+    #[serde(borrow)]
     val: ExpLoc<'a>,
+    #[serde(borrow)]
     val_ref: ExpLoc<'a>,
 }
 

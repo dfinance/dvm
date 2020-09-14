@@ -1,15 +1,17 @@
+use std::fmt::Write;
+use anyhow::Error;
+use serde::{Serializer, Deserializer};
+use serde::{Serialize, Deserialize, ser::SerializeSeq};
+use libra::file_format::{FunctionHandleIndex, SignatureIndex, StructDefinitionIndex};
 use crate::mv::disassembler::code::exp::{Exp, ExpLoc, SourceRange, find_range};
 use crate::mv::disassembler::code::translator::Context;
 use crate::mv::disassembler::types::FType;
 use crate::mv::disassembler::imports::Import;
-use libra::file_format::{FunctionHandleIndex, SignatureIndex, StructDefinitionIndex};
-use crate::mv::disassembler::{Encode, write_array};
-use anyhow::Error;
-use std::fmt::Write;
 use crate::mv::disassembler::unit::UnitAccess;
+use crate::mv::disassembler::{Encode, write_array};
 
 /// Function call representation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum FnCall<'a> {
     /// Call build-in function.
     BuildIn {
@@ -18,8 +20,10 @@ pub enum FnCall<'a> {
         /// Type parameter.
         type_param_name: StructName<'a>,
         /// Type parameters of type parameter.
+        #[serde(borrow)]
         type_params: Vec<FType<'a>>,
         /// Parameters.
+        #[serde(borrow)]
         params: Vec<ExpLoc<'a>>,
     },
     /// Call plain function.
@@ -29,10 +33,24 @@ pub enum FnCall<'a> {
         /// Function name.
         name: &'a str,
         /// Type parameters.
+        // #[serde(borrow)]
+        #[serde(serialize_with = "serialize_ftype_vec")]
         type_params: Vec<FType<'a>>,
         /// Parameters.
+        #[serde(borrow)]
         params: Vec<ExpLoc<'a>>,
     },
+}
+
+fn serialize_ftype_vec<'de, 'a, S>(value: &'de Vec<FType<'a>>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let mut seq = serializer.serialize_seq(Some(value.len()))?;
+    for e in value {
+        seq.serialize_element(e)?;
+    }
+    seq.end()
 }
 
 impl<'a> FnCall<'a> {
@@ -152,7 +170,7 @@ impl<'a> Encode for FnCall<'a> {
 }
 
 /// Build-in functions.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum BuildIn {
     /// exists
     Exists,
@@ -193,7 +211,7 @@ impl Encode for BuildIn {
 }
 
 /// Struct full name.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct StructName<'a> {
     /// Struct name.
     pub name: &'a str,

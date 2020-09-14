@@ -1,14 +1,16 @@
-use std::collections::BTreeMap;
 use std::rc::Rc;
-use libra::prelude::*;
-use crate::mv::disassembler::Encode;
-use anyhow::Error;
 use std::fmt::Write;
+use std::collections::BTreeMap;
+use anyhow::Error;
+use libra::prelude::*;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::Encode;
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Unit imports table.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Imports<'a> {
+    #[serde(borrow)]
     imports: BTreeMap<&'a str, BTreeMap<AccountAddress, Import<'a>>>,
 }
 
@@ -55,7 +57,7 @@ impl<'a> Imports<'a> {
 pub type Import<'a> = Rc<ImportName<'a>>;
 
 /// Import name.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ImportName<'a> {
     /// Simple module name.
     Name(&'a str),

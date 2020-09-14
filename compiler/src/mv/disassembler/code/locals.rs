@@ -1,19 +1,21 @@
+use std::rc::Rc;
+use std::fmt::Write;
+use std::sync::atomic::{Ordering, AtomicBool};
+use anyhow::Error;
+use serde::{Serialize, Deserialize};
+use libra::file_format::*;
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::generics::Generic;
-use std::fmt::Write;
-use anyhow::Error;
 use crate::mv::disassembler::Encode;
 use crate::disassembler::functions::Param;
-use std::sync::atomic::{Ordering, AtomicBool};
-use std::rc::Rc;
-use libra::file_format::*;
 use crate::mv::disassembler::types::{FType, extract_type_signature};
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Local variable representation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Locals<'a> {
     /// Local variables.
+    // #[serde(borrow)]
     pub inner: Vec<Local<'a>>,
 }
 
@@ -60,10 +62,11 @@ impl<'a> Locals<'a> {
 }
 
 /// Variable.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Var<'a> {
     used: Rc<AtomicBool>,
     index: usize,
+    #[serde(borrow)]
     f_type: Rc<FType<'a>>,
 }
 
@@ -96,7 +99,7 @@ impl<'a> Encode for Var<'a> {
 }
 
 /// Local variable.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Local<'a> {
     /// Function parameters.
     Param(Param<'a>),

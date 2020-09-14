@@ -260,7 +260,10 @@ impl UnitAccess for CompiledUnit {
     }
 }
 
+use serde::{Serialize, Deserialize};
+
 /// Restored move ast.
+#[derive(Debug, Serialize)]
 pub enum SourceUnit<'a> {
     /// Script ast.
     Script(ScriptAst<'a>),

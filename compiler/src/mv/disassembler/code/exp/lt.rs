@@ -1,14 +1,16 @@
+use std::fmt::Write;
+use anyhow::Error;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::code::locals::Local;
 use crate::mv::disassembler::code::exp::{ExpLoc, Exp, SourceRange};
 use crate::mv::disassembler::code::translator::Context;
 use crate::mv::disassembler::Encode;
-use anyhow::Error;
-use std::fmt::Write;
 
 /// Assign local variable expression.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Let<'a> {
     local: Local<'a>,
+    #[serde(borrow)]
     exp: ExpLoc<'a>,
 }
 

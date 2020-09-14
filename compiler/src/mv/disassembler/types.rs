@@ -1,9 +1,10 @@
-use crate::mv::disassembler::generics::Generic;
-use crate::mv::disassembler::Encode;
 use std::fmt::Write;
 use anyhow::Error;
-use crate::mv::disassembler::imports::{Import, Imports};
 use libra::file_format::*;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::generics::Generic;
+use crate::mv::disassembler::Encode;
+use crate::mv::disassembler::imports::{Import, Imports};
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Extract type signature.
@@ -81,22 +82,26 @@ pub fn extract_struct_name<'a>(
 }
 
 /// Type.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum FType<'a> {
     /// Generic type.
     Generic(Generic),
     /// Primitive type.
     Primitive(&'static str),
     /// Reference type.
+    #[serde(borrow)]
     Ref(Box<FType<'a>>),
     /// Mutable reference type.
+    #[serde(borrow)]
     RefMut(Box<FType<'a>>),
     /// Vector type.
+    #[serde(borrow)]
     Vec(Box<FType<'a>>),
     /// Struct type.
+    #[serde(borrow)]
     Struct(FullStructName<'a>),
     /// Struct instantiation instance.
-    StructInst(FullStructName<'a>, Vec<FType<'a>>),
+    StructInst( #[serde(borrow = "'a")] FullStructName<'a>, #[serde(borrow = "'a")] Vec<FType<'a>>),
 }
 
 impl<'a> Encode for FType<'a> {
@@ -144,7 +149,7 @@ impl<'a> Encode for FType<'a> {
 }
 
 /// Full structure name.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FullStructName<'a> {
     name: &'a str,
     import: Option<Import<'a>>,

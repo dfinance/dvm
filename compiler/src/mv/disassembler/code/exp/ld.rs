@@ -1,13 +1,14 @@
+use std::fmt::Write;
+use anyhow::Error;
+use serde::{Serialize, Deserialize};
+use libra::file_format::ConstantPoolIndex;
 use crate::mv::disassembler::code::exp::{Exp, SourceRange};
 use crate::embedded::{AccountAddress, MoveValue, Bytecode};
-use libra::file_format::ConstantPoolIndex;
 use crate::mv::disassembler::Encode;
-use anyhow::Error;
-use std::fmt::Write;
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Load literal or constant.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Ld {
     /// U8 literal.
     U8(u8),

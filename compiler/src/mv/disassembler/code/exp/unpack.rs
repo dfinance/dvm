@@ -1,27 +1,32 @@
+use std::fmt::Write;
+use anyhow::Error;
+use libra::file_format::*;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::code::translator::Context;
+use crate::mv::disassembler::unit::UnitAccess;
+use crate::mv::disassembler::code::exp::branching::algorithms::Algorithm;
 use crate::mv::disassembler::imports::Import;
 use crate::mv::disassembler::types::FType;
 use crate::mv::disassembler::code::exp::pack::PackField;
 use crate::mv::disassembler::code::exp::{ExpLoc, SourceRange, find_range, Exp};
 use crate::mv::disassembler::{Encode, write_array};
-use anyhow::Error;
-use std::fmt::Write;
-use crate::mv::disassembler::code::translator::Context;
-use libra::file_format::*;
-use crate::mv::disassembler::unit::UnitAccess;
-use crate::mv::disassembler::code::exp::branching::algorithms::Algorithm;
 
 /// Unpack expressions.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Unpack<'a> {
     /// Struct import.
+    #[serde(borrow)]
     pub module: Option<Import<'a>>,
     /// Struct name.
     pub name: &'a str,
     /// Struct type parameters.
+    #[serde(borrow)]
     pub type_params: Vec<FType<'a>>,
     /// Struct fields.
+    #[serde(borrow)]
     pub fields: Vec<PackField<'a>>,
     /// Struct instance.
+    #[serde(borrow)]
     pub source: ExpLoc<'a>,
 }
 

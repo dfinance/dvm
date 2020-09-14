@@ -24,11 +24,12 @@ pub mod rf;
 /// Struct destructor.
 pub mod unpack;
 
-use crate::mv::disassembler::Encode;
-use libra::file_format::*;
 use std::fmt::Write;
+use libra::file_format::*;
 use anyhow::Error;
 use itertools::Itertools;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::Encode;
 use crate::mv::disassembler::code::exp::operators::{BinaryOp, Abort, Not};
 use crate::mv::disassembler::code::exp::ret::Ret;
 use crate::mv::disassembler::code::exp::cast::Cast;
@@ -42,9 +43,10 @@ use crate::mv::disassembler::code::exp::rf::{FieldRef, Ref, Deref, WriteRef};
 use crate::mv::disassembler::code::exp::block::Block;
 
 /// Expression wrapper that adds bytecode location of this expression.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ExpLoc<'a> {
     index: usize,
+    #[serde(borrow)]
     exp: Box<Exp<'a>>,
 }
 
@@ -140,13 +142,15 @@ impl<'a> Encode for ExpLoc<'a> {
 }
 
 /// Move expression.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Exp<'a> {
     /// Abort. (abort)
+    #[serde(borrow)]
     Abort(Abort<'a>),
     /// Load literal or constant. (5)
     Ld(Ld),
     /// Disassembler error.
+    #[serde(skip)]
     Error(Bytecode),
     /// Local variable.
     Local(Loc<'a>),

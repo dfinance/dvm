@@ -1,23 +1,26 @@
+use std::fmt::Write;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::rc::Rc;
+use anyhow::Error;
 use libra::file_format::*;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::generics::{Generics, Generic, extract_type_params, write_type_parameters};
 use crate::mv::disassembler::{Encode, write_array, Config};
-use anyhow::Error;
-use std::fmt::Write;
 use crate::mv::disassembler::types::{
     FType, extract_type_signature, FullStructName, extract_struct_name,
 };
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::rc::Rc;
 use crate::mv::disassembler::code::body::Body;
 use crate::mv::disassembler::unit::{UnitAccess};
 
 /// Function representation.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FunctionsDef<'a> {
     is_public: bool,
     is_native: bool,
     name: &'a str,
     type_params: Vec<Generic>,
+    #[serde(borrow)]
     ret: Vec<FType<'a>>,
     params: Vec<Param<'a>>,
     acquires: Vec<FullStructName<'a>>,
@@ -186,10 +189,11 @@ impl<'a> Encode for FunctionsDef<'a> {
 }
 
 /// Function parameter representation.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Param<'a> {
     used: Rc<AtomicBool>,
     index: usize,
+    #[serde(borrow)]
     f_type: Rc<FType<'a>>,
 }
 

@@ -1,13 +1,15 @@
-use crate::mv::disassembler::{Encode, INDENT, Config};
-use anyhow::Error;
 use std::fmt::Write;
-use crate::mv::disassembler::generics::{Generics, Generic, extract_type_params, write_type_parameters};
+use anyhow::Error;
 use libra::file_format::*;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::{Encode, INDENT, Config};
+use crate::mv::disassembler::generics::{Generics, Generic, extract_type_params, write_type_parameters};
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::types::{FType, extract_type_signature};
 use crate::mv::disassembler::unit::{UnitAccess};
 
 /// Struct representation.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct StructDef<'a> {
     is_nominal_resource: bool,
     is_native: bool,
@@ -110,8 +112,10 @@ impl<'a> Encode for StructDef<'a> {
 }
 
 /// Struct field representation.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Field<'a> {
     name: &'a str,
+    #[serde(borrow = "'a")]
     f_type: FType<'a>,
 }
 
