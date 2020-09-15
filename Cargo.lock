@@ -887,6 +887,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "clap 3.0.0-beta.1",
+ "dvm-net",
  "futures-util",
  "hyper",
  "log",

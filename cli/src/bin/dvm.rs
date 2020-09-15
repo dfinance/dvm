@@ -98,7 +98,7 @@ async fn main_internal(options: Options) -> Result<()> {
         }
     });
 
-    let (info_service, hrm) = create_info_service(options.address.clone(), options.info_service);
+    let (info_service, hrm) = create_info_service(options.info_service);
 
     // data-source client
     let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
