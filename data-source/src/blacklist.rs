@@ -10,7 +10,7 @@ where
 {
     inner: D,
     modules: HashSet<ModuleId>,
-    resources: HashSet<(AccountAddress, TypeTag)>,
+    resources: HashSet<(AccountAddress, StructTag)>,
 }
 
 impl<D> BlackListDataSource<D>
@@ -32,7 +32,7 @@ where
     }
 
     /// Add resource to the blacklist.
-    pub fn add_resource(&mut self, address: &AccountAddress, tag: &TypeTag) {
+    pub fn add_resource(&mut self, address: &AccountAddress, tag: &StructTag) {
         self.resources.insert((*address, tag.to_owned()));
     }
 }
@@ -52,7 +52,7 @@ where
     fn get_resource(
         &self,
         address: &AccountAddress,
-        tag: &TypeTag,
+        tag: &StructTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
         if self.resources.contains(&(*address, tag.to_owned())) {
             Ok(None)

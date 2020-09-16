@@ -57,7 +57,7 @@ where
     fn get_resource(
         &self,
         address: &AccountAddress,
-        tag: &TypeTag,
+        tag: &StructTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
         let mut meter = ScopeMeter::new("ds_access");
         match self.inner.get_resource(address, tag) {

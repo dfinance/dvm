@@ -164,13 +164,9 @@ impl RemoteCache for GrpcDataSource {
     fn get_resource(
         &self,
         address: &AccountAddress,
-        tag: &TypeTag,
+        tag: &StructTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
-        let struct_tag = match tag {
-            TypeTag::Struct(struct_tag) => struct_tag.clone(),
-            _ => return Err(PartialVMError::new(StatusCode::VALUE_DESERIALIZATION_ERROR)),
-        };
-        let resource_tag = ResourceKey::new(*address, struct_tag);
+        let resource_tag = ResourceKey::new(*address, tag.to_owned());
         let path = AccessPath::resource_access_path(&resource_tag);
 
         self.get(&path)

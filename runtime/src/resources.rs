@@ -1,4 +1,4 @@
-use libra::{prelude::*, vm::*};
+use libra::{prelude::*};
 use serde_derive::{Deserialize, Serialize};
 
 const COIN_MODULE: &str = "Coins";

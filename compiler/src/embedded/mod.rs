@@ -139,7 +139,7 @@ impl RemoteCache for ZeroStateView {
         Ok(None)
     }
 
-    fn get_resource(&self, _: &AccountAddress, _: &TypeTag) -> PartialVMResult<Option<Vec<u8>>> {
+    fn get_resource(&self, _: &AccountAddress, _: &StructTag) -> PartialVMResult<Option<Vec<u8>>> {
         Ok(None)
     }
 }
