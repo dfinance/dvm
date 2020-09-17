@@ -17,7 +17,7 @@ struct Opts {
     #[clap(short, long, parse(from_os_str))]
     output: Option<PathBuf>,
 
-    #[clap(short = "v", long = "verbose")]
+    #[clap(short = 'v', long = "verbose")]
     /// Verbose mode flag.
     /// Enables debug printing of internals including used modules.
     debug_print: bool,

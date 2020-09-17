@@ -9,16 +9,16 @@ authors = [
 edition = "2018"
 
 [dependencies]
-move-lang = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-libra-state-view = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-libra-types = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-lcs = { git = "https://github.com/dfinance/libra.git", package = "libra-canonical-serialization", branch = "15.09.2020" }
-compiler = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-libra-logger = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-vm = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-libra-vm = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-move-vm-natives = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
-bytecode-verifier = { git = "https://github.com/dfinance/libra.git", branch = "15.09.2020" }
+move-lang = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+libra-state-view = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+libra-types = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+lcs = { git = "https://github.com/dfinance/libra.git", package = "libra-canonical-serialization", branch = "feature-DFI-733" }
+compiler = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+libra-logger = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+vm = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+libra-vm = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+move-vm-natives = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
+bytecode-verifier = { git = "https://github.com/dfinance/libra.git", branch = "feature-DFI-733" }
