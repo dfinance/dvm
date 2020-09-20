@@ -3,7 +3,7 @@ use std::fmt::Write;
 use std::collections::HashSet;
 use anyhow::Error;
 use libra::file_format::*;
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, Deserializer};
 use crate::mv::disassembler::{Encode, write_array};
 use crate::mv::disassembler::unit::UnitAccess;
 
@@ -15,17 +15,47 @@ const GENERICS_PREFIX: [&str; 22] = [
 /// Generics template.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 // #[serde(transparent)]
-pub struct Generics(Rc<GenericPrefix>);
+pub struct Generics(#[serde(deserialize_with = "Generics::deserialize_rc")] Rc<GenericPrefix>);
+
+impl Generics {
+    /// TODO
+    pub fn deserialize_rc<'de, D>(deserializer: D) -> Result<Rc<GenericPrefix>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Rc::new(GenericPrefix::deserialize(deserializer)?))
+    }
+}
 
 /// Generics prefix.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum GenericPrefix {
     /// Simple generic prefix.
     /// Prefix from generic prefix table.
-    // TODO: deserialize_with custom deserialize fn returns statically borrowed v by GENERICS_PREFIX
+    #[serde(deserialize_with = "deserialize_simple_prefix")]
     SimplePrefix(&'static str),
     /// Random generic prefix.
     Generated(u16),
+}
+
+fn deserialize_simple_prefix<'de, D>(deserializer: D) -> Result<&'static str, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let prefix = String::deserialize(deserializer)?;
+    let found = GENERICS_PREFIX
+        .into_iter()
+        .enumerate()
+        .find(|(i, item)| *item == &prefix);
+
+    if let Some((index, _)) = found {
+        Ok(&GENERICS_PREFIX[index])
+    } else {
+        Err(serde::de::Error::custom(format!(
+            "Unknown Generics Prefix '{}'",
+            prefix
+        )))
+    }
 }
 
 impl Generics {

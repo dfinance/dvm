@@ -80,6 +80,7 @@ impl<'a> Encode for FieldRef<'a> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Ref<'a> {
     is_mut: bool,
+    #[serde(borrow)]
     local: Local<'a>,
 }
 

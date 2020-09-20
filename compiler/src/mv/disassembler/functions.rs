@@ -18,12 +18,17 @@ use crate::mv::disassembler::unit::{UnitAccess};
 pub struct FunctionsDef<'a> {
     is_public: bool,
     is_native: bool,
+    #[serde(borrow)]
     name: &'a str,
     type_params: Vec<Generic>,
     #[serde(borrow)]
+    #[serde(deserialize_with = "FType::deserialize_vec")]
     ret: Vec<FType<'a>>,
+    #[serde(borrow)]
     params: Vec<Param<'a>>,
+    #[serde(borrow)]
     acquires: Vec<FullStructName<'a>>,
+    #[serde(borrow)]
     body: Option<Body<'a>>,
 }
 
@@ -194,6 +199,7 @@ pub struct Param<'a> {
     used: Rc<AtomicBool>,
     index: usize,
     #[serde(borrow)]
+    #[serde(deserialize_with = "FType::deserialize_rc")]
     f_type: Rc<FType<'a>>,
 }
 

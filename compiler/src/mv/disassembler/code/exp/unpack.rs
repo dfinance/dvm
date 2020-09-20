@@ -21,6 +21,7 @@ pub struct Unpack<'a> {
     pub name: &'a str,
     /// Struct type parameters.
     #[serde(borrow)]
+    #[serde(deserialize_with = "FType::deserialize_vec")]
     pub type_params: Vec<FType<'a>>,
     /// Struct fields.
     #[serde(borrow)]

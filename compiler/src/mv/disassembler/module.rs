@@ -10,10 +10,11 @@ use crate::mv::disassembler::functions::FunctionsDef;
 use crate::mv::disassembler::unit::{UnitAccess};
 
 /// Module representation.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Module<'a> {
     address: Option<AccountAddress>,
     name: String,
+    #[serde(borrow)]
     structs: Vec<StructDef<'a>>,
     functions: Vec<FunctionsDef<'a>>,
     imports: &'a Imports<'a>,

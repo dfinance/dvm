@@ -9,6 +9,7 @@ use crate::mv::disassembler::Encode;
 /// Assign local variable expression.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Let<'a> {
+    #[serde(borrow)]
     local: Local<'a>,
     #[serde(borrow)]
     exp: ExpLoc<'a>,

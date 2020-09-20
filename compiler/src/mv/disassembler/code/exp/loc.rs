@@ -11,6 +11,7 @@ use crate::mv::disassembler::code::translator::Context;
 pub struct Loc<'a> {
     explicit_keyword: bool,
     access: LocAccess,
+    #[serde(borrow)]
     local: Local<'a>,
 }
 

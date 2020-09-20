@@ -18,9 +18,11 @@ pub enum FnCall<'a> {
         /// Build-in function kind.
         kind: BuildIn,
         /// Type parameter.
+        #[serde(borrow)]
         type_param_name: StructName<'a>,
         /// Type parameters of type parameter.
         #[serde(borrow)]
+        #[serde(deserialize_with = "FType::deserialize_vec")]
         type_params: Vec<FType<'a>>,
         /// Parameters.
         #[serde(borrow)]
@@ -29,12 +31,14 @@ pub enum FnCall<'a> {
     /// Call plain function.
     Plain {
         /// Function module.
+        #[serde(borrow)]
         module: Option<Import<'a>>,
         /// Function name.
+        #[serde(borrow)]
         name: &'a str,
         /// Type parameters.
-        // #[serde(borrow)]
-        #[serde(serialize_with = "serialize_ftype_vec")]
+        #[serde(borrow)]
+        #[serde(deserialize_with = "FType::deserialize_vec")]
         type_params: Vec<FType<'a>>,
         /// Parameters.
         #[serde(borrow)]

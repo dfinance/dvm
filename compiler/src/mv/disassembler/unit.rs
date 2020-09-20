@@ -263,11 +263,13 @@ impl UnitAccess for CompiledUnit {
 use serde::{Serialize, Deserialize};
 
 /// Restored move ast.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum SourceUnit<'a> {
     /// Script ast.
+    #[serde(borrow)]
     Script(ScriptAst<'a>),
     /// Module ast.
+    #[serde(borrow)]
     Module(ModuleAst<'a>),
 }
 

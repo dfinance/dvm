@@ -15,7 +15,7 @@ use crate::mv::disassembler::unit::UnitAccess;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Locals<'a> {
     /// Local variables.
-    // #[serde(borrow)]
+    #[serde(borrow)]
     pub inner: Vec<Local<'a>>,
 }
 
@@ -67,6 +67,7 @@ pub struct Var<'a> {
     used: Rc<AtomicBool>,
     index: usize,
     #[serde(borrow)]
+    #[serde(deserialize_with = "FType::deserialize_rc")]
     f_type: Rc<FType<'a>>,
 }
 
@@ -102,8 +103,10 @@ impl<'a> Encode for Var<'a> {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Local<'a> {
     /// Function parameters.
+    #[serde(borrow)]
     Param(Param<'a>),
     /// Variable.
+    #[serde(borrow)]
     Var(Var<'a>),
 }
 

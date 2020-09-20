@@ -40,9 +40,11 @@ pub struct Pack<'a> {
     #[serde(borrow)]
     pub module: Option<Import<'a>>,
     /// Struct name.
+    #[serde(borrow)]
     pub name: &'a str,
     /// Struct type parameters.
     #[serde(borrow)]
+    #[serde(deserialize_with = "FType::deserialize_vec")]
     pub type_params: Vec<FType<'a>>,
     /// Struct fields.
     #[serde(borrow)]

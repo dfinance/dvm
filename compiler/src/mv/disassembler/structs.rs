@@ -6,7 +6,7 @@ use crate::mv::disassembler::{Encode, INDENT, Config};
 use crate::mv::disassembler::generics::{Generics, Generic, extract_type_params, write_type_parameters};
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::types::{FType, extract_type_signature};
-use crate::mv::disassembler::unit::{UnitAccess};
+use crate::mv::disassembler::unit::UnitAccess;
 
 /// Struct representation.
 #[derive(Debug, Serialize, Deserialize)]
@@ -115,7 +115,8 @@ impl<'a> Encode for StructDef<'a> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Field<'a> {
     name: &'a str,
-    #[serde(borrow = "'a")]
+    #[serde(borrow)]
+    #[serde(deserialize_with = "FType::deserialize_just")]
     f_type: FType<'a>,
 }
 

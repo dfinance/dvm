@@ -85,8 +85,10 @@ pub fn extract_struct_name<'a>(
 #[derive(Debug, Serialize, Deserialize)]
 pub enum FType<'a> {
     /// Generic type.
+    #[serde(skip_deserializing)]
     Generic(Generic),
     /// Primitive type.
+    #[serde(skip_deserializing)]
     Primitive(&'static str),
     /// Reference type.
     #[serde(borrow)]
@@ -101,7 +103,44 @@ pub enum FType<'a> {
     #[serde(borrow)]
     Struct(FullStructName<'a>),
     /// Struct instantiation instance.
-    StructInst( #[serde(borrow = "'a")] FullStructName<'a>, #[serde(borrow = "'a")] Vec<FType<'a>>),
+    StructInst(
+        #[serde(borrow = "'a")] FullStructName<'a>,
+        #[serde(borrow = "'a")] Vec<FType<'a>>,
+    ),
+}
+
+use serde::Deserializer;
+use std::rc::Rc;
+impl<'a> FType<'a> {
+    /// TODO
+    pub fn deserialize_rc<'de: 'a, D>(_deserializer: D) -> Result<Rc<Self>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // let s = String::deserialize(deserializer)?;
+        // Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+        Ok(Rc::from(FType::Primitive("TODO")))
+    }
+
+    /// TODO
+    pub fn deserialize_vec<'de: 'a, D>(_deserializer: D) -> Result<Vec<Self>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // let s = String::deserialize(deserializer)?;
+        // Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+        Ok(vec![FType::Primitive("TODO")])
+    }
+
+    /// TODO
+    pub fn deserialize_just<'de: 'a, D>(_deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // let s = String::deserialize(deserializer)?;
+        // Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+        Ok(FType::Primitive("TODO"))
+    }
 }
 
 impl<'a> Encode for FType<'a> {

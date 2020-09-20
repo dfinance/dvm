@@ -17,6 +17,7 @@ use crate::mv::disassembler::unit::UnitAccess;
 pub struct Body<'a> {
     #[serde(borrow)]
     block: Block<'a>,
+    #[serde(borrow)]
     locals: Locals<'a>,
 }
 

@@ -153,40 +153,60 @@ pub enum Exp<'a> {
     #[serde(skip)]
     Error(Bytecode),
     /// Local variable.
+    #[serde(borrow)]
     Local(Loc<'a>),
     /// Cast types. (as)
+    #[serde(borrow)]
     Cast(Cast<'a>),
     /// Binary operation.
+    #[serde(borrow)]
     BinaryOp(BinaryOp<'a>),
     /// Expression in parentheses.
+    #[serde(borrow)]
     Basket(ExpLoc<'a>),
     /// Logical negation.
+    #[serde(borrow)]
     Not(Not<'a>),
     /// Function call.
+    #[serde(borrow)]
     FnCall(FnCall<'a>),
     /// Local variable assignment.
+    #[serde(borrow)]
     Let(Let<'a>),
     /// Struct constructor.
+    #[serde(borrow)]
     Pack(Pack<'a>),
     /// Struct destructor.
+    #[serde(borrow)]
     Unpack(Unpack<'a>),
     /// Return.
+    #[serde(borrow)]
     Ret(Ret<'a>),
     /// Structures field access.
+    #[serde(borrow)]
     FieldRef(FieldRef<'a>),
     /// Reference.
+    #[serde(borrow)]
     Ref(Ref<'a>),
     /// Dereference.
+    #[serde(borrow)]
     Deref(Deref<'a>),
     /// Assign reference.
+    #[serde(borrow)]
     WriteRef(WriteRef<'a>),
     /// Infinite Loop.
     #[allow(dead_code)]
+    #[serde(borrow)]
     Loop(Block<'a>),
     /// While loop.
-    While(ExpLoc<'a>, Block<'a>),
+    // #[serde(borrow = "'a + 'a")]
+    While(#[serde(borrow)] ExpLoc<'a>, #[serde(borrow)] Block<'a>),
     /// If else expression.
-    If(ExpLoc<'a>, Block<'a>, Option<Block<'a>>),
+    If(
+        #[serde(borrow)] ExpLoc<'a>,
+        #[serde(borrow)] Block<'a>,
+        #[serde(borrow)] Option<Block<'a>>,
+    ),
     /// Break.
     Break,
     /// Continue.
