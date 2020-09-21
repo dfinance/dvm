@@ -47,22 +47,19 @@ pub(crate) mod support_sentry {
         // back-compat to default env var:
         std::env::set_var("SENTRY_DSN", format!("{}", &dsn));
 
-        let client = {
-            let mut options = sentry::ClientOptions::default()
-                // add logging integration
-                .add_integration(logger)
-                // add panic handler
-                .add_integration(PanicIntegration::default());
-            // set env
-            if let Some(ref env) = env {
-                trace!("sentry env: {}", env);
-                options.environment = Some(env.to_owned().into());
-            }
-            // set DSN:
-            options.dsn = Some(dsn.to_owned());
-            sentry::init(options)
-        };
-        client
+        let mut options = sentry::ClientOptions::default()
+            // add logging integration
+            .add_integration(logger)
+            // add panic handler
+            .add_integration(PanicIntegration::default());
+        // set env
+        if let Some(ref env) = env {
+            trace!("sentry env: {}", env);
+            options.environment = Some(env.to_owned().into());
+        }
+        // set DSN:
+        options.dsn = Some(dsn.to_owned());
+        sentry::init(options)
     }
 }
 
