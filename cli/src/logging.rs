@@ -3,10 +3,10 @@ use crate::config::*;
 #[cfg(feature = "sentry")]
 pub(crate) mod support_sentry {
     use super::*;
-    use sentry::internals::Dsn;
-    use sentry::internals::ClientInitGuard;
-    use sentry::integrations::panic::register_panic_handler;
-    use sentry::integrations::env_logger::init as sentry_log_init;
+    use sentry::internals::{ClientInitGuard, Dsn};
+    use sentry::integrations::log::LogIntegration;
+    use sentry::integrations::panic::PanicIntegration;
+    pub use sentry::integrations::anyhow::capture_anyhow;
 
     /// Create standard logger, init integrations such as with sentry.
     /// At the end init Libra's logger.
@@ -16,9 +16,9 @@ pub(crate) mod support_sentry {
     ) -> Option<ClientInitGuard> {
         let mut builder = logging_builder(log);
         let result = if let Some(sentry_dsn) = &integrations.sentry_dsn {
-            sentry_log_init(Some(builder.build()), Default::default());
+            let log = LogIntegration::default().with_env_logger_dest(Some(builder.build()));
 
-            let sentry = init_sentry(sentry_dsn, &integrations.sentry_env);
+            let sentry = init_sentry(sentry_dsn, &integrations.sentry_env, log);
             trace!("Logging system initialized with Sentry.");
 
             Some(sentry)
@@ -43,27 +43,29 @@ pub(crate) mod support_sentry {
     /// - register panic handler.
     ///
     /// Returns guard for panic handler and api-client.
-    pub fn init_sentry(dsn: &Dsn, env: &Option<String>) -> ClientInitGuard {
+    pub fn init_sentry(dsn: &Dsn, env: &Option<String>, logger: LogIntegration) -> ClientInitGuard {
         // back-compat to default env var:
         std::env::set_var("SENTRY_DSN", format!("{}", &dsn));
 
-        let client = {
-            let mut options = sentry::ClientOptions::default();
-            options.dsn = Some(dsn.to_owned());
-            if let Some(ref env) = env {
-                trace!("sentry env: {}", env);
-                options.environment = Some(env.to_owned().into());
-            }
-            sentry::init(options)
-        };
-        if client.is_enabled() {
-            register_panic_handler();
-            trace!("Sentry integration enabled, panic handler registered.");
-        } else {
-            trace!("Sentry client disabled");
+        let mut options = sentry::ClientOptions::default()
+            // add logging integration
+            .add_integration(logger)
+            // add panic handler
+            .add_integration(PanicIntegration::default());
+        // set env
+        if let Some(ref env) = env {
+            trace!("sentry env: {}", env);
+            options.environment = Some(env.to_owned().into());
         }
-        client
+        // set DSN:
+        options.dsn = Some(dsn.to_owned());
+        sentry::init(options)
     }
+}
+
+#[cfg(not(feature = "sentry"))]
+pub fn capture_anyhow(e: &anyhow::Error) {
+    error!("{}", e);
 }
 
 mod support_libra_logger {
@@ -80,7 +82,6 @@ mod support_libra_logger {
                 warn!("unable to initialize sub-logger");
             })
             .ok();
-        // logger::init_println_struct_log()
     }
 
     struct TraceLog;

@@ -32,15 +32,17 @@ enum-iterator = "0.6.0"
 signal-notify = "0.1.3"
 
 [dependencies.sentry]
-version = "0.18"
+version = "0.20.1"
 optional = true
 features = [
-    "with_log",
-    "with_env_logger",
-    "with_panic",
-    # "with_debug_to_log"
+    "default",
+    "log",
+    "env_logger",
+    "anyhow",
+    "panic",
+    # "debug-logs"
 ]
 
 [features]
 default = [ "sentry" ]
-integrity-tests = [ "sentry", "sentry/with_test_support" ]
+integrity-tests = [ "sentry", "sentry/with_test_support" ] # test
