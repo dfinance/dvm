@@ -6,6 +6,7 @@ pub(crate) mod support_sentry {
     use sentry::internals::{ClientInitGuard, Dsn};
     use sentry::integrations::log::LogIntegration;
     use sentry::integrations::panic::PanicIntegration;
+    pub use sentry::integrations::anyhow::capture_anyhow;
 
     /// Create standard logger, init integrations such as with sentry.
     /// At the end init Libra's logger.
@@ -63,6 +64,11 @@ pub(crate) mod support_sentry {
         };
         client
     }
+}
+
+#[cfg(not(feature = "sentry"))]
+pub fn capture_anyhow(e: &anyhow::Error) {
+    error!("{}", e);
 }
 
 mod support_libra_logger {

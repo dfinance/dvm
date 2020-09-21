@@ -38,6 +38,7 @@ features = [
     "default",
     "log",
     "env_logger",
+    "anyhow",
     "panic",
     # "debug-logs"
 ]

@@ -3238,12 +3238,23 @@ checksum = "144e85b28d129f056ef91664fe2b985eade906d2838752c2f61c9f233cd98e4a"
 dependencies = [
  "httpdate",
  "reqwest",
+ "sentry-anyhow",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",
  "sentry-failure",
  "sentry-log",
  "sentry-panic",
+]
+
+[[package]]
+name = "sentry-anyhow"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e6a984e366219d09cd3c34e87dc477367678564b6412a5492854cce122c73e6"
+dependencies = [
+ "anyhow",
+ "sentry-core",
 ]
 
 [[package]]
