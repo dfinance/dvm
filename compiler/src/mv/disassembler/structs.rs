@@ -9,7 +9,7 @@ use crate::mv::disassembler::types::{FType, extract_type_signature};
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Struct representation.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct StructDef<'a> {
     is_nominal_resource: bool,
     is_native: bool,

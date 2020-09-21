@@ -1,6 +1,6 @@
 use std::fmt::Write;
 use anyhow::Error;
-use serde::{Serialize, Deserialize};
+use serde::Serialize;
 use crate::mv::disassembler::{Encode, INDENT, Config};
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::generics::Generics;
@@ -8,7 +8,7 @@ use crate::mv::disassembler::functions::FunctionsDef;
 use crate::mv::disassembler::unit::{UnitAccess};
 
 /// Script representation.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct Script<'a> {
     #[serde(borrow)]
     imports: &'a Imports<'a>,

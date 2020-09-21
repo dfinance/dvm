@@ -151,6 +151,7 @@ pub enum Exp<'a> {
     Ld(Ld),
     /// Disassembler error.
     #[serde(skip)]
+    // TODO: serde remote type impl
     Error(Bytecode),
     /// Local variable.
     #[serde(borrow)]

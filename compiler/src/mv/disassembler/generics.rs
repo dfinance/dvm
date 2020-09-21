@@ -13,19 +13,18 @@ const GENERICS_PREFIX: [&str; 22] = [
 ];
 
 /// Generics template.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 // #[serde(transparent)]
 pub struct Generics(#[serde(deserialize_with = "Generics::deserialize_rc")] Rc<GenericPrefix>);
 
-impl Generics {
-    /// TODO
+/* impl Generics {
     pub fn deserialize_rc<'de, D>(deserializer: D) -> Result<Rc<GenericPrefix>, D::Error>
     where
         D: Deserializer<'de>,
     {
         Ok(Rc::new(GenericPrefix::deserialize(deserializer)?))
     }
-}
+} */
 
 /// Generics prefix.
 #[derive(Debug, Serialize, Deserialize)]
@@ -86,7 +85,7 @@ impl Generics {
 }
 
 /// Generic representation.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Generic {
     prefix: Generics,
     index: usize,

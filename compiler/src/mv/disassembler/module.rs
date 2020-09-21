@@ -1,7 +1,7 @@
 use std::fmt::Write;
 use anyhow::Error;
 use libra::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::Serialize;
 use crate::disassembler::structs::StructDef;
 use crate::mv::disassembler::{Encode, INDENT, Config};
 use crate::mv::disassembler::generics::Generics;
@@ -10,7 +10,7 @@ use crate::mv::disassembler::functions::FunctionsDef;
 use crate::mv::disassembler::unit::{UnitAccess};
 
 /// Module representation.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct Module<'a> {
     address: Option<AccountAddress>,
     name: String,

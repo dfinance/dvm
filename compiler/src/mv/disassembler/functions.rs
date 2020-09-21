@@ -14,7 +14,7 @@ use crate::mv::disassembler::code::body::Body;
 use crate::mv::disassembler::unit::{UnitAccess};
 
 /// Function representation.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct FunctionsDef<'a> {
     is_public: bool,
     is_native: bool,
