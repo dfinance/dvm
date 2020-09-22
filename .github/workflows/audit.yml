@@ -9,29 +9,11 @@ on:
 jobs:
   rust:
     name: Audit
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-        - macos-latest
-        - ubuntu-latest
-
-    env:
-      RUSTFLAGS: -D warnings
-      RUST_BACKTRACE: full
-      CARGO_INCREMENTAL: 1
-      RUSTUP_MAX_RETRIES: 10
-      CARGO_NET_RETRY: 10
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-
-    - name: fix permissions
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
     - name: cargo-audit
       uses: actions-rs/audit-check@v1
