@@ -22,7 +22,7 @@ runtime = { path = "../runtime", package = "dvm-runtime" }
 anyhow = "1.0"
 log = "0.4.8"
 env_logger = "0.7.1"
-clap = "3.0.0-beta.1"
+clap = "3.0.0-beta.2"
 http = "0.2"
 tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full", "time" ] }
 futures = "0.3"
