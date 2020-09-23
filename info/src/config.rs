@@ -11,7 +11,7 @@ pub struct InfoServiceConfig {
         name = "info service listen address. HOST_ADDRESS:PORT",
         env = "INFO_SERVICE_ADDR",
         long = "info-service-addr",
-        short = "i",
+        short = 'i',
         verbatim_doc_comment
     )]
     pub info_service_addr: Option<SocketAddr>,

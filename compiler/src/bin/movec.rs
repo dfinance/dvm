@@ -1,6 +1,6 @@
-extern crate structopt;
+extern crate clap;
 
-use structopt::StructOpt;
+use clap::Clap;
 use http::Uri;
 use std::env;
 use dvm_compiler::{
@@ -12,58 +12,42 @@ use std::path::Path;
 use anyhow::Error;
 use dvm_compiler::manifest::read_manifest;
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "Move compiler.")]
+#[derive(Clap, Debug)]
+#[clap(name = "Move compiler.")]
 enum Opt {
-    #[structopt(about = "Init directory as move project.")]
+    #[clap(about = "Init directory as move project.")]
     Init {
-        #[structopt(help = "Project name.")]
+        /// Project name.
         project_name: String,
-        #[structopt(
-            help = "Basic uri to blockchain api.",
-            name = "Blockchain API",
-            long = "repo",
-            short = "r"
-        )]
+        #[clap(name = "Blockchain API", long = "repo", short = 'r')]
+        /// Basic uri to blockchain api.
         repository: Option<Uri>,
-        #[structopt(
-            help = "Account address.",
-            name = "address",
-            long = "address",
-            short = "a"
-        )]
+        #[clap(name = "address", long = "address", short = 'a')]
+        /// Account address.
         address: Option<String>,
     },
-    #[structopt(about = "Create a new move project")]
+    #[clap(about = "Create a new move project")]
     New {
-        #[structopt(help = "Project name.")]
+        /// Project name.
         project_name: String,
-        #[structopt(
-            help = "Basic uri to blockchain api.",
-            name = "Blockchain API",
-            long = "repo",
-            short = "r"
-        )]
+        #[clap(name = "Blockchain API", long = "repo", short = 'r')]
+        /// Basic uri to blockchain api.
         repository: Option<Uri>,
-        #[structopt(
-            help = "Account address.",
-            name = "address",
-            long = "address",
-            short = "a"
-        )]
+        #[clap(name = "address", long = "address", short = 'a')]
+        /// Account address.
         address: Option<String>,
     },
-    #[structopt(about = "Reload dependencies")]
+    #[clap(about = "Reload dependencies")]
     Update {},
-    #[structopt(about = "Build project")]
+    #[clap(about = "Build project")]
     Build {},
-    #[structopt(about = "Check project")]
+    #[clap(about = "Check project")]
     Check {},
 }
 
 fn main() {
     let project_dir = env::current_dir().unwrap();
-    let matches = Opt::from_args();
+    let matches = Opt::parse();
     handle_error(match matches {
         Opt::New {
             project_name: source_dir,
