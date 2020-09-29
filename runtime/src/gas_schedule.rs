@@ -33,12 +33,18 @@ pub fn cost_table() -> CostTable {
         (BitAnd, GasCost::new(44, 1)),
         (ReadRef, GasCost::new(51, 1)),
         (Sub, GasCost::new(44, 1)),
-        (MutBorrowField(FieldHandleIndex::new(0)), GasCost::new(58, 1)),
+        (
+            MutBorrowField(FieldHandleIndex::new(0)),
+            GasCost::new(58, 1),
+        ),
         (
             MutBorrowFieldGeneric(FieldInstantiationIndex::new(0)),
             GasCost::new(58, 1),
         ),
-        (ImmBorrowField(FieldHandleIndex::new(0)), GasCost::new(58, 1)),
+        (
+            ImmBorrowField(FieldHandleIndex::new(0)),
+            GasCost::new(58, 1),
+        ),
         (
             ImmBorrowFieldGeneric(FieldInstantiationIndex::new(0)),
             GasCost::new(58, 1),
