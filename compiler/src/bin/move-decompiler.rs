@@ -8,7 +8,7 @@ use anyhow::Error;
 use dvm_compiler::disassembler;
 
 #[derive(Clap, Debug)]
-#[clap(name = "Move disassembler")]
+#[clap(name = "Move decompiler")]
 struct Opt {
     #[clap(about = "Path to input file", long, short)]
     /// Path to compiled Move binary
