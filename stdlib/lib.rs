@@ -96,6 +96,7 @@ pub mod tests {
     use super::build_std;
     use test_kit::test_suite::{run_test_suite};
     use include_dir::Dir;
+    use libra::logger::Logger;
     use std::collections::HashMap;
 
     #[test]
@@ -108,6 +109,7 @@ pub mod tests {
 
     #[test]
     fn test_move() {
+        Logger::builder().init();
         run_test_suite(dir_content(BASE_TESTS_DIR));
         run_test_suite(dir_content(STDLIB_TESTS_DIR));
     }

@@ -37,6 +37,6 @@ pub fn run_test_suite(suite: HashMap<String, String>) {
         }
     }
     if has_error {
-        panic!();
+        panic!("Test failed.");
     }
 }

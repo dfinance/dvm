@@ -59,7 +59,7 @@ where
     fn get_resource(
         &self,
         address: &AccountAddress,
-        tag: &TypeTag,
+        tag: &StructTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
         self.inner.get_resource(address, tag)
     }

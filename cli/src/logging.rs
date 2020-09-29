@@ -67,27 +67,10 @@ pub(crate) mod support_sentry {
 }
 
 mod support_libra_logger {
-    use libra::logger;
-    use logger::{StructLogSink, StructuredLogEntry};
-    use logger::{struct_logger_set, set_struct_logger};
+    use libra::logger::Logger;
 
     pub fn init() {
-        let logger = TraceLog;
-        let logger = Box::leak(Box::new(logger));
-        set_struct_logger(logger)
-            .map(|_| trace!("internall logger initialized: {}", struct_logger_set()))
-            .map_err(|_| {
-                warn!("unable to initialize sub-logger");
-            })
-            .ok();
-        // logger::init_println_struct_log()
-    }
-
-    struct TraceLog;
-    impl StructLogSink for TraceLog {
-        fn send(&self, entry: StructuredLogEntry) {
-            trace!("{}", serde_json::to_string(&entry).unwrap());
-        }
+        Logger::builder().build();
     }
 }
 
