@@ -857,6 +857,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "bech32",
+ "clap 3.0.0-beta.2",
  "dvm-data-source",
  "dvm-libra-deps",
  "hex",
@@ -870,7 +871,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_derive",
- "structopt",
  "termcolor",
  "tiny-keccak",
  "toml",
@@ -899,6 +899,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "clap 3.0.0-beta.2",
+ "dvm-net",
  "futures-util",
  "hyper",
  "log",
@@ -1440,9 +1441,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00d63df3d41950fb462ed38308eea019113ad1508da725bbedcd0fa5a85ef5f7"
+checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 
 [[package]]
 name = "heapless"
@@ -1664,7 +1665,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55e2e4c765aa53a0424761bf9f41aa7a6ac1efa87238f59560640e27fca028f2"
 dependencies = [
  "autocfg 1.0.1",
- "hashbrown 0.9.0",
+ "hashbrown 0.9.1",
 ]
 
 [[package]]
@@ -2767,9 +2768,9 @@ dependencies = [
 
 [[package]]
 name = "pin-project-lite"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71f349a4f0e70676ffb2dbafe16d0c992382d02f0a952e3ddf584fc289dac6b3"
+checksum = "4fe74897791e156a0cd8cce0db31b9b2198e67877316bf3086c3acd187f719f0"
 
 [[package]]
 name = "pin-utils"
@@ -3374,9 +3375,9 @@ dependencies = [
 
 [[package]]
 name = "serde-generate"
-version = "0.14.3"
+version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b267650002aa8acce7f64c981fab6271d9b8c79d6521e8453f0dbb03ae8833fa"
+checksum = "f41e83d77c4098aa648c40e4dd2ce1035743b790f29bb22aa5818a6824f2f9f0"
 dependencies = [
  "heck",
  "include_dir",
@@ -4168,12 +4169,13 @@ dependencies = [
 
 [[package]]
 name = "tracing"
-version = "0.1.19"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d79ca061b032d6ce30c660fded31189ca0b9922bf483cd70759f13a2d86786c"
+checksum = "b0987850db3733619253fe60e17cb59b82d37c7e6c0236bb81e4d6b87c879f27"
 dependencies = [
  "cfg-if",
  "log",
+ "pin-project-lite",
  "tracing-attributes",
  "tracing-core",
 ]
@@ -4191,9 +4193,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.16"
+version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5bcf46c1f1f06aeea2d6b81f3c863d0930a596c86ad1920d4e5bad6dd1d7119a"
+checksum = "f50de3927f93d202783f4513cda820ab47ef17f624b03c096e86ef00c67e6b5f"
 dependencies = [
  "lazy_static",
 ]

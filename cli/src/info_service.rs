@@ -14,18 +14,25 @@ static TEST_SCRIPT: &str = "script{fun main() {}}";
 
 /// Create and run information service.
 pub fn create_info_service(
-    dvm_address: Endpoint,
     info_service: InfoServiceConfig,
 ) -> (Option<impl Future>, Option<HeartRateMonitor>) {
     if let Some(info_service_addr) = info_service.info_service_addr {
+        info!("Start info service: {}", info_service_addr);
         let hrm = HeartRateMonitor::new(Duration::from_secs(info_service.heartbeat_max_interval));
         let bytecode = compiler::compile(TEST_SCRIPT, None).unwrap();
-        tokio::spawn(dvm_ping_process(
-            dvm_address,
-            hrm.clone(),
-            Duration::from_secs(info_service.heartbeat_stimulation_interval),
-            bytecode,
-        ));
+        if let Some(dvm_self_addr) = info_service.dvm_self_check_addr {
+            info!("Start health check service.");
+            tokio::spawn(dvm_ping_process(
+                dvm_self_addr,
+                hrm.clone(),
+                Duration::from_secs(info_service.heartbeat_stimulation_interval),
+                bytecode,
+            ));
+        } else {
+            warn!(
+                "Health check service is not running, because dvm-self-check-addr is not defined."
+            );
+        }
 
         let info_service = start_info_service(
             info_service_addr,
