@@ -141,6 +141,131 @@ impl<'a> Encode for ExpLoc<'a> {
     }
 }
 
+mod serde_bytecode {
+    use serde::{Serialize, Deserialize};
+    use libra::file_format::{
+        CodeOffset, FieldHandleIndex, FieldInstantiationIndex, FunctionInstantiationIndex,
+        LocalIndex, StructDefInstantiationIndex, StructDefinitionIndex,
+    };
+    use libra::file_format::{ConstantPoolIndex, FunctionHandleIndex};
+
+    pub mod serde_index {
+        use serde::{Serialize, Deserialize};
+        use libra::file_format::TableIndex;
+
+        macro_rules! remote_index {
+            ($ty: ident) => {
+                #[allow(non_snake_case)]
+                pub mod $ty {
+                    use super::*;
+                    use libra::file_format::$ty as Remote;
+                    #[derive(Serialize, Deserialize)]
+                    #[serde(remote = "Remote")]
+                    pub struct Impl(pub TableIndex);
+                }
+            };
+        }
+
+        remote_index!(ConstantPoolIndex);
+        remote_index!(FunctionHandleIndex);
+        remote_index!(FunctionInstantiationIndex);
+        remote_index!(StructDefinitionIndex);
+        remote_index!(StructDefInstantiationIndex);
+        remote_index!(FieldHandleIndex);
+        remote_index!(FieldInstantiationIndex);
+    }
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(remote = "libra::file_format::Bytecode")]
+    pub enum Bytecode {
+        Pop,
+        Ret,
+        BrTrue(CodeOffset),
+        BrFalse(CodeOffset),
+        Branch(CodeOffset),
+        LdU8(u8),
+        LdU64(u64),
+        LdU128(u128),
+        CastU8,
+        CastU64,
+        CastU128,
+        #[serde(with = "serde_index::ConstantPoolIndex::Impl")]
+        LdConst(ConstantPoolIndex),
+        LdTrue,
+        LdFalse,
+        CopyLoc(LocalIndex),
+        MoveLoc(LocalIndex),
+
+        StLoc(LocalIndex),
+        #[serde(with = "serde_index::FunctionHandleIndex::Impl")]
+        Call(FunctionHandleIndex),
+        #[serde(with = "serde_index::FunctionInstantiationIndex::Impl")]
+        CallGeneric(FunctionInstantiationIndex),
+        #[serde(with = "serde_index::StructDefinitionIndex::Impl")]
+        Pack(StructDefinitionIndex),
+        #[serde(with = "serde_index::StructDefInstantiationIndex::Impl")]
+        PackGeneric(StructDefInstantiationIndex),
+        #[serde(with = "serde_index::StructDefinitionIndex::Impl")]
+        Unpack(StructDefinitionIndex),
+        #[serde(with = "serde_index::StructDefInstantiationIndex::Impl")]
+        UnpackGeneric(StructDefInstantiationIndex),
+        ReadRef,
+        WriteRef,
+        FreezeRef,
+        MutBorrowLoc(LocalIndex),
+        ImmBorrowLoc(LocalIndex),
+        #[serde(with = "serde_index::FieldHandleIndex::Impl")]
+        MutBorrowField(FieldHandleIndex),
+        #[serde(with = "serde_index::FieldInstantiationIndex::Impl")]
+        MutBorrowFieldGeneric(FieldInstantiationIndex),
+        #[serde(with = "serde_index::FieldHandleIndex::Impl")]
+        ImmBorrowField(FieldHandleIndex),
+        #[serde(with = "serde_index::FieldInstantiationIndex::Impl")]
+        ImmBorrowFieldGeneric(FieldInstantiationIndex),
+        #[serde(with = "serde_index::StructDefinitionIndex::Impl")]
+        MutBorrowGlobal(StructDefinitionIndex),
+        #[serde(with = "serde_index::StructDefInstantiationIndex::Impl")]
+        MutBorrowGlobalGeneric(StructDefInstantiationIndex),
+        #[serde(with = "serde_index::StructDefinitionIndex::Impl")]
+        ImmBorrowGlobal(StructDefinitionIndex),
+        #[serde(with = "serde_index::StructDefInstantiationIndex::Impl")]
+        ImmBorrowGlobalGeneric(StructDefInstantiationIndex),
+        Add,
+        Sub,
+        Mul,
+        Mod,
+        Div,
+        BitOr,
+        BitAnd,
+        Xor,
+        Or,
+        And,
+        Not,
+        Eq,
+        Neq,
+        Lt,
+        Gt,
+        Le,
+        Ge,
+        Abort,
+        Nop,
+        #[serde(with = "serde_index::StructDefinitionIndex::Impl")]
+        Exists(StructDefinitionIndex),
+        #[serde(with = "serde_index::StructDefInstantiationIndex::Impl")]
+        ExistsGeneric(StructDefInstantiationIndex),
+        #[serde(with = "serde_index::StructDefinitionIndex::Impl")]
+        MoveFrom(StructDefinitionIndex),
+        #[serde(with = "serde_index::StructDefInstantiationIndex::Impl")]
+        MoveFromGeneric(StructDefInstantiationIndex),
+        #[serde(with = "serde_index::StructDefinitionIndex::Impl")]
+        MoveTo(StructDefinitionIndex),
+        #[serde(with = "serde_index::StructDefInstantiationIndex::Impl")]
+        MoveToGeneric(StructDefInstantiationIndex),
+        Shl,
+        Shr,
+    }
+}
+
 /// Move expression.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Exp<'a> {
@@ -150,8 +275,7 @@ pub enum Exp<'a> {
     /// Load literal or constant. (5)
     Ld(Ld),
     /// Disassembler error.
-    #[serde(skip)]
-    // TODO: serde remote type impl
+    #[serde(with = "serde_bytecode::Bytecode")]
     Error(Bytecode),
     /// Local variable.
     #[serde(borrow)]
