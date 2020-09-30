@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::Error;
 
-use libra::prelude::*;
+use libra::{prelude::*, vm::StructTag};
 
 use crate::{RemoveModule, DataSource};
 

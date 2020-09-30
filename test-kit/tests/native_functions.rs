@@ -4,7 +4,7 @@ use byteorder::{LittleEndian, ByteOrder};
 use dvm_net::api::grpc::vm_grpc::{VmArgs, VmTypeTag, ModuleIdent, LcsTag, StructIdent, LcsType};
 use dvm_test_kit::TestKit;
 use dvm_test_kit::*;
-use serde_derive::Serialize;
+use serde::Serialize;
 use runtime::resources::*;
 
 #[test]

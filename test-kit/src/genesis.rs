@@ -1,5 +1,5 @@
 use libra::prelude::*;
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 /// Returns genesis write set.
 pub fn genesis_write_set() -> WriteSet {

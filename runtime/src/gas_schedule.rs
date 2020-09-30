@@ -1,4 +1,5 @@
 use libra::{prelude::*, gas::*, file_format::*};
+use libra::move_vm_types::gas_schedule::NativeCostIndex as N;
 
 /// Specific gas per instruction configuration for dvm.
 /// INITIAL_GAS_SCHEDULE from libra with dfinance update.

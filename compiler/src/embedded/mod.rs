@@ -1,6 +1,7 @@
 pub mod ds_loader;
 
 pub use libra::prelude::*;
+use libra::vm::StructTag;
 use crate::mv::dependence::loader::Loader;
 use crate::embedded::ds_loader::RemoteCacheLoader;
 use std::collections::HashMap;

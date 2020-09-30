@@ -6,7 +6,7 @@ use std::sync::RwLock;
 use std::thread::ThreadId;
 
 use once_cell::sync::Lazy;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use sysinfo::{System, SystemExt};
 
 /// Live time metrics.

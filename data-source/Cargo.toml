@@ -10,7 +10,7 @@ edition = "2018"
 
 
 [dependencies]
-libra = { path = "../libra", package = "dvm-libra-deps" }
+libra = { path = "../libra" }
 dvm-net = { path = "../net"}
 dvm-info = { path = "../info" }
 

@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use libra::prelude::*;
+use libra::{prelude::*, vm::StructTag};
 use crate::{RemoveModule, DataSource};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};

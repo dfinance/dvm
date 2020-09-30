@@ -10,7 +10,7 @@ edition = "2018"
 
 
 [dependencies]
-libra = { path = "../libra", package = "dvm-libra-deps" }
+libra = { path = "../libra" }
 compiler = { path = "../compiler", package = "dvm-compiler" }
 ds = { path = "../data-source", package = "dvm-data-source" }
 stdlib = { path = "../stdlib", package = "dvm-stdlib" }
