@@ -14,17 +14,8 @@ const GENERICS_PREFIX: [&str; 22] = [
 
 /// Generics template.
 #[derive(Clone, Debug, Serialize)]
-// #[serde(transparent)]
-pub struct Generics(#[serde(deserialize_with = "Generics::deserialize_rc")] Rc<GenericPrefix>);
-
-/* impl Generics {
-    pub fn deserialize_rc<'de, D>(deserializer: D) -> Result<Rc<GenericPrefix>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Ok(Rc::new(GenericPrefix::deserialize(deserializer)?))
-    }
-} */
+#[serde(transparent)]
+pub struct Generics(Rc<GenericPrefix>);
 
 /// Generics prefix.
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,9 +34,9 @@ where
 {
     let prefix = String::deserialize(deserializer)?;
     let found = GENERICS_PREFIX
-        .into_iter()
+        .iter()
         .enumerate()
-        .find(|(i, item)| *item == &prefix);
+        .find(|(_, item)| *item == &prefix);
 
     if let Some((index, _)) = found {
         Ok(&GENERICS_PREFIX[index])

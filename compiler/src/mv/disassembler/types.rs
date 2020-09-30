@@ -112,34 +112,29 @@ pub enum FType<'a> {
 use serde::Deserializer;
 use std::rc::Rc;
 impl<'a> FType<'a> {
-    /// TODO
+    /// Deserialize `FType` wrapped into `Rc`
     pub fn deserialize_rc<'de: 'a, D>(_deserializer: D) -> Result<Rc<Self>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        // let s = String::deserialize(deserializer)?;
-        // Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
-        Ok(Rc::from(FType::Primitive("TODO")))
+        // Ok(Rc::from(FType::Primitive(/* select from static strs */)))
+        todo!("impl deserialize for FType");
     }
 
-    /// TODO
+    /// Deserialize `FType` wrapped into `Vec`
     pub fn deserialize_vec<'de: 'a, D>(_deserializer: D) -> Result<Vec<Self>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        // let s = String::deserialize(deserializer)?;
-        // Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
-        Ok(vec![FType::Primitive("TODO")])
+        todo!("impl deserialize for FType");
     }
 
-    /// TODO
-    pub fn deserialize_just<'de: 'a, D>(_deserializer: D) -> Result<Self, D::Error>
+    /// Custom deserialize `FType`
+    pub fn deserialize_ext<'de: 'a, D>(_deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        // let s = String::deserialize(deserializer)?;
-        // Utc.datetime_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
-        Ok(FType::Primitive("TODO"))
+        todo!("impl deserialize for FType");
     }
 }
 

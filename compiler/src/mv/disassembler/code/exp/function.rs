@@ -1,7 +1,6 @@
 use std::fmt::Write;
 use anyhow::Error;
-use serde::{Serializer, Deserializer};
-use serde::{Serialize, Deserialize, ser::SerializeSeq};
+use serde::{Serialize, Deserialize};
 use libra::file_format::{FunctionHandleIndex, SignatureIndex, StructDefinitionIndex};
 use crate::mv::disassembler::code::exp::{Exp, ExpLoc, SourceRange, find_range};
 use crate::mv::disassembler::code::translator::Context;
@@ -44,17 +43,6 @@ pub enum FnCall<'a> {
         #[serde(borrow)]
         params: Vec<ExpLoc<'a>>,
     },
-}
-
-fn serialize_ftype_vec<'de, 'a, S>(value: &'de Vec<FType<'a>>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    let mut seq = serializer.serialize_seq(Some(value.len()))?;
-    for e in value {
-        seq.serialize_element(e)?;
-    }
-    seq.end()
 }
 
 impl<'a> FnCall<'a> {

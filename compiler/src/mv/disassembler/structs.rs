@@ -116,7 +116,7 @@ impl<'a> Encode for StructDef<'a> {
 pub struct Field<'a> {
     name: &'a str,
     #[serde(borrow)]
-    #[serde(deserialize_with = "FType::deserialize_just")]
+    #[serde(deserialize_with = "FType::deserialize_ext")]
     f_type: FType<'a>,
 }
 
