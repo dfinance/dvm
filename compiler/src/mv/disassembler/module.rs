@@ -1,17 +1,20 @@
-use crate::disassembler::structs::StructDef;
-use anyhow::Error;
-use crate::mv::disassembler::{Encode, INDENT, Config};
-use libra::prelude::*;
 use std::fmt::Write;
+use anyhow::Error;
+use libra::prelude::*;
+use serde::Serialize;
+use crate::disassembler::structs::StructDef;
+use crate::mv::disassembler::{Encode, INDENT, Config};
 use crate::mv::disassembler::generics::Generics;
 use crate::mv::disassembler::imports::Imports;
 use crate::mv::disassembler::functions::FunctionsDef;
 use crate::mv::disassembler::unit::{UnitAccess};
 
 /// Module representation.
+#[derive(Debug, Serialize)]
 pub struct Module<'a> {
     address: Option<AccountAddress>,
     name: String,
+    #[serde(borrow)]
     structs: Vec<StructDef<'a>>,
     functions: Vec<FunctionsDef<'a>>,
     imports: &'a Imports<'a>,

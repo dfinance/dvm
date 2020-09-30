@@ -1,17 +1,20 @@
+use std::fmt::Write;
+use anyhow::Error;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::code::translator::Context;
 use crate::mv::disassembler::code::exp::{ExpLoc, Exp, SourceRange, find_range};
 use crate::mv::disassembler::Encode;
-use anyhow::Error;
-use std::fmt::Write;
 
 /// Binary operation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BinaryOp<'a> {
     /// Left operand.
+    #[serde(borrow)]
     pub left: ExpLoc<'a>,
     /// Operator.
     pub sign: Op,
     /// Right operand.
+    #[serde(borrow)]
     pub right: ExpLoc<'a>,
 }
 
@@ -50,7 +53,7 @@ impl<'a> Encode for BinaryOp<'a> {
 }
 
 /// Binary operation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Op {
     /// +
     Add,
@@ -127,8 +130,9 @@ pub fn pop<'a>() -> Exp<'a> {
 }
 
 /// Abort expression.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Abort<'a> {
+    #[serde(borrow)]
     exp: ExpLoc<'a>,
 }
 
@@ -158,8 +162,9 @@ impl<'a> Encode for Abort<'a> {
 }
 
 /// Logical negation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Not<'a> {
+    #[serde(borrow)]
     exp: ExpLoc<'a>,
 }
 

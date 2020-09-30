@@ -1,15 +1,16 @@
+use anyhow::Error;
+use libra::file_format::*;
+use serde::export::fmt::Write;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::code::translator::Context;
 use crate::mv::disassembler::imports::Import;
 use crate::mv::disassembler::types::FType;
 use crate::mv::disassembler::code::exp::{ExpLoc, find_range, Exp, SourceRange};
 use crate::mv::disassembler::{Encode, write_array};
-use serde::export::fmt::Write;
-use anyhow::Error;
-use crate::mv::disassembler::code::translator::Context;
-use libra::file_format::*;
 use crate::mv::disassembler::unit::UnitAccess;
 
 /// Pack field.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PackField<'a> {
     /// Field name.
     pub name: &'a str,
@@ -33,15 +34,20 @@ impl<'a> Encode for PackField<'a> {
 }
 
 /// Struct pack.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Pack<'a> {
     /// Struct import.
+    #[serde(borrow)]
     pub module: Option<Import<'a>>,
     /// Struct name.
+    #[serde(borrow)]
     pub name: &'a str,
     /// Struct type parameters.
+    #[serde(borrow)]
+    #[serde(deserialize_with = "FType::deserialize_vec")]
     pub type_params: Vec<FType<'a>>,
     /// Struct fields.
+    #[serde(borrow)]
     pub fields: Vec<PackField<'a>>,
 }
 

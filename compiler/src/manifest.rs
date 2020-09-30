@@ -1,4 +1,4 @@
-use serde_derive::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize};
 use anyhow::Error;
 use std::path::Path;
 use std::fs;

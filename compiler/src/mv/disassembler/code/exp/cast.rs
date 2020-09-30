@@ -1,12 +1,14 @@
+use std::fmt::Write;
+use anyhow::Error;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::code::exp::{ExpLoc, Exp, SourceRange};
 use crate::mv::disassembler::code::translator::Context;
 use crate::mv::disassembler::Encode;
-use std::fmt::Write;
-use anyhow::Error;
 
 /// Cast representation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Cast<'a> {
+    #[serde(borrow)]
     exp: ExpLoc<'a>,
     ty: CastType,
 }
@@ -39,7 +41,7 @@ impl<'a> Encode for Cast<'a> {
 }
 
 /// Cast types.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum CastType {
     /// Cast to u8.
     U8,

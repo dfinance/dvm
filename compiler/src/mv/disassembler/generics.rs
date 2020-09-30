@@ -1,9 +1,10 @@
 use std::rc::Rc;
-use std::collections::HashSet;
-use libra::file_format::*;
-use crate::mv::disassembler::{Encode, write_array};
-use anyhow::Error;
 use std::fmt::Write;
+use std::collections::HashSet;
+use anyhow::Error;
+use libra::file_format::*;
+use serde::{Serialize, Deserialize, Deserializer};
+use crate::mv::disassembler::{Encode, write_array};
 use crate::mv::disassembler::unit::UnitAccess;
 
 const GENERICS_PREFIX: [&str; 22] = [
@@ -12,17 +13,39 @@ const GENERICS_PREFIX: [&str; 22] = [
 ];
 
 /// Generics template.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(transparent)]
 pub struct Generics(Rc<GenericPrefix>);
 
 /// Generics prefix.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum GenericPrefix {
     /// Simple generic prefix.
     /// Prefix from generic prefix table.
+    #[serde(deserialize_with = "deserialize_simple_prefix")]
     SimplePrefix(&'static str),
     /// Random generic prefix.
     Generated(u16),
+}
+
+fn deserialize_simple_prefix<'de, D>(deserializer: D) -> Result<&'static str, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let prefix = String::deserialize(deserializer)?;
+    let found = GENERICS_PREFIX
+        .iter()
+        .enumerate()
+        .find(|(_, item)| *item == &prefix);
+
+    if let Some((index, _)) = found {
+        Ok(&GENERICS_PREFIX[index])
+    } else {
+        Err(serde::de::Error::custom(format!(
+            "Unknown Generics Prefix '{}'",
+            prefix
+        )))
+    }
 }
 
 impl Generics {
@@ -53,11 +76,24 @@ impl Generics {
 }
 
 /// Generic representation.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Generic {
     prefix: Generics,
     index: usize,
+    #[serde(with = "serde_kind::Kind")]
     kind: Kind,
+}
+
+mod serde_kind {
+    use serde::{Serialize, Deserialize};
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(remote = "libra::file_format::Kind")]
+    pub enum Kind {
+        All,
+        Resource,
+        Copyable,
+    }
 }
 
 impl Generic {

@@ -1,14 +1,16 @@
+use std::fmt::Write;
+use anyhow::Error;
+use serde::{Serialize, Deserialize};
 use crate::mv::disassembler::code::exp::{SourceRange, ExpLoc, find_range};
 use crate::mv::disassembler::code::exp::ld::Ld;
 use crate::mv::disassembler::code::exp::operators::Abort;
 use crate::mv::disassembler::{Encode, INDENT};
-use std::fmt::Write;
-use anyhow::Error;
 use super::Exp;
 
 /// Block of expressions in curly braces.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Block<'a> {
+    #[serde(borrow)]
     exp: Vec<ExpLoc<'a>>,
     basket: bool,
 }

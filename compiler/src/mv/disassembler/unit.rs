@@ -1,10 +1,11 @@
+use std::fmt::{Write, Debug};
 use libra::file_format::*;
 use libra::prelude::*;
 use anyhow::Error;
+use serde::Serialize;
 use crate::mv::disassembler::{Encode};
 use crate::mv::disassembler::script::Script as ScriptAst;
 use crate::mv::disassembler::module::Module as ModuleAst;
-use std::fmt::{Write, Debug};
 
 /// Undefined bytecode abstraction.
 #[derive(Debug)]
@@ -261,10 +262,13 @@ impl UnitAccess for CompiledUnit {
 }
 
 /// Restored move ast.
+#[derive(Debug, Serialize)]
 pub enum SourceUnit<'a> {
     /// Script ast.
+    #[serde(borrow)]
     Script(ScriptAst<'a>),
     /// Module ast.
+    #[serde(borrow)]
     Module(ModuleAst<'a>),
 }
 

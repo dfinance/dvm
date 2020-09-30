@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 pub mod algorithms;
 
 use crate::mv::disassembler::code::exp::Exp;

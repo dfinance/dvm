@@ -1,15 +1,17 @@
-use crate::mv::disassembler::Encode;
 use std::fmt::Write;
 use anyhow::Error;
+use serde::{Serialize, Deserialize};
+use crate::mv::disassembler::Encode;
 use crate::mv::disassembler::code::locals::Local;
 use crate::mv::disassembler::code::exp::{Exp, SourceRange};
 use crate::mv::disassembler::code::translator::Context;
 
 /// Local variable assignment.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Loc<'a> {
     explicit_keyword: bool,
     access: LocAccess,
+    #[serde(borrow)]
     local: Local<'a>,
 }
 
@@ -56,7 +58,7 @@ impl<'a> Encode for Loc<'a> {
 }
 
 /// Access type.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum LocAccess {
     /// Move local.
     Move,
