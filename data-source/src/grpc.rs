@@ -1,4 +1,4 @@
-use libra::prelude::*;
+use libra::{prelude::*, vm::StructTag};
 
 use std::convert::TryInto;
 use std::sync::Arc;

@@ -498,6 +498,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "colored"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3616f750b84d8f0de8a58bda93e08e2a81ad3f523089b05f1dffecab48c6cbd"
+dependencies = [
+ "atty",
+ "lazy_static",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "compiled-stdlib"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=15.09.2020#ab8fa75bd710b49e621f3bbd834a26af76160690"
@@ -835,7 +846,6 @@ dependencies = [
  "dvm-data-source",
  "dvm-info",
  "dvm-lang",
- "dvm-libra-deps",
  "dvm-net",
  "dvm-runtime",
  "dvm-services",
@@ -843,6 +853,7 @@ dependencies = [
  "env_logger",
  "futures",
  "http",
+ "libra 0.1.0",
  "log",
  "sentry",
  "serde",
@@ -859,18 +870,17 @@ dependencies = [
  "bech32",
  "clap 3.0.0-beta.2",
  "dvm-data-source",
- "dvm-libra-deps",
  "hex",
  "http",
  "itertools 0.9.0",
  "lazy_static",
+ "libra 0.1.0",
  "log",
  "once_cell",
  "rand",
  "regex",
  "reqwest",
  "serde",
- "serde_derive",
  "termcolor",
  "tiny-keccak",
  "toml",
@@ -885,9 +895,9 @@ dependencies = [
  "anyhow",
  "crossbeam",
  "dvm-info",
- "dvm-libra-deps",
  "dvm-net",
  "http",
+ "libra 0.1.0",
  "log",
  "tokio",
 ]
@@ -907,7 +917,6 @@ dependencies = [
  "palaver",
  "prometheus_exporter_base",
  "serde",
- "serde_derive",
  "serde_json",
  "sys-info",
  "sysinfo",
@@ -923,11 +932,11 @@ dependencies = [
  "codespan 0.9.5",
  "dvm-compiler",
  "dvm-data-source",
- "dvm-libra-deps",
  "dvm-stdlib",
  "hex",
  "include_dir",
  "lazy_static",
+ "libra 0.1.0",
  "lru",
  "maplit",
  "once_cell",
@@ -935,25 +944,6 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "dvm-libra-deps"
-version = "0.1.0"
-dependencies = [
- "bytecode-verifier",
- "compiler",
- "libra-canonical-serialization",
- "libra-logger",
- "libra-state-view",
- "libra-types",
- "libra-vm",
- "move-core-types",
- "move-lang",
- "move-vm-natives",
- "move-vm-runtime",
- "move-vm-types",
- "vm",
 ]
 
 [[package]]
@@ -983,12 +973,11 @@ dependencies = [
  "dvm-data-source",
  "dvm-info",
  "dvm-lang",
- "dvm-libra-deps",
  "hex",
+ "libra 0.1.0",
  "log",
  "once_cell",
  "serde",
- "serde_derive",
 ]
 
 [[package]]
@@ -1001,10 +990,10 @@ dependencies = [
  "dvm-data-source",
  "dvm-info",
  "dvm-lang",
- "dvm-libra-deps",
  "dvm-net",
  "dvm-runtime",
  "hex",
+ "libra 0.1.0",
  "tokio",
 ]
 
@@ -1015,10 +1004,10 @@ dependencies = [
  "anyhow",
  "dvm-compiler",
  "dvm-data-source",
- "dvm-libra-deps",
  "dvm-test-kit",
  "hex",
  "include_dir",
+ "libra 0.1.0",
  "serde",
 ]
 
@@ -1033,16 +1022,15 @@ dependencies = [
  "dvm-compiler",
  "dvm-data-source",
  "dvm-lang",
- "dvm-libra-deps",
  "dvm-net",
  "dvm-runtime",
  "dvm-services",
  "futures",
  "hex",
  "lazy_static",
+ "libra 0.1.0",
  "regex",
  "serde",
- "serde_derive",
  "serde_json",
  "termion",
  "tokio",
@@ -1790,6 +1778,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2f96b10ec2560088a8e76961b00d47107b3a625fecb76dedb29ee7ccbf98235"
 
 [[package]]
+name = "libra"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/move-tools.git?branch=restructuring-refactoring#ff9edc18235f2b46de501098c60dd5848c1928b0"
+dependencies = [
+ "bytecode-source-map",
+ "bytecode-verifier",
+ "compiler",
+ "ir-to-bytecode-syntax",
+ "libra-canonical-serialization",
+ "libra-logger",
+ "libra-state-view",
+ "libra-types",
+ "libra-vm",
+ "libra-workspace-hack",
+ "move-core-types",
+ "move-coverage",
+ "move-ir-types",
+ "move-lang",
+ "move-vm-natives",
+ "move-vm-runtime",
+ "move-vm-types",
+ "vm",
+]
+
+[[package]]
+name = "libra"
+version = "0.1.0"
+dependencies = [
+ "libra 0.1.0 (git+https://github.com/dfinance/move-tools.git?branch=restructuring-refactoring)",
+]
+
+[[package]]
 name = "libra-canonical-serialization"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=15.09.2020#ab8fa75bd710b49e621f3bbd834a26af76160690"
@@ -2225,6 +2245,26 @@ dependencies = [
  "serde",
  "serde_bytes",
  "thiserror",
+]
+
+[[package]]
+name = "move-coverage"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/libra.git?branch=15.09.2020#ab8fa75bd710b49e621f3bbd834a26af76160690"
+dependencies = [
+ "anyhow",
+ "bytecode-source-map",
+ "codespan 0.8.0",
+ "colored",
+ "libra-canonical-serialization",
+ "libra-types",
+ "libra-workspace-hack",
+ "move-core-types",
+ "move-ir-types",
+ "once_cell",
+ "serde",
+ "structopt",
+ "vm",
 ]
 
 [[package]]
@@ -2798,9 +2838,9 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9a50142b55ab3ed0e9f68dfb3709f1d90d29da24e91033f28b96330643107dc"
+checksum = "a5884790f1ce3553ad55fec37b5aaac5882e0e845a2612df744d6c85c9bf046c"
 dependencies = [
  "cfg-if",
  "universal-hash",

@@ -1,5 +1,5 @@
-use libra::{prelude::*};
-use serde_derive::{Deserialize, Serialize};
+use libra::{prelude::*, vm::StructTag};
+use serde::{Deserialize, Serialize};
 
 const COIN_MODULE: &str = "Coins";
 const PRICE_STRUCT: &str = "Price";

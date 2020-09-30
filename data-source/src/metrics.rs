@@ -1,6 +1,6 @@
 use dvm_info::metrics::execution::ExecutionResult;
 use dvm_info::metrics::meter::ScopeMeter;
-use libra::prelude::*;
+use libra::{prelude::*, vm::StructTag};
 
 use crate::{RemoveModule, DataSource};
 

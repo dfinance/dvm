@@ -1,6 +1,6 @@
 use crate::{DataSource, RemoveModule};
 use std::collections::HashSet;
-use libra::prelude::*;
+use libra::{prelude::*, vm::StructTag};
 
 /// Wrapper for data source which returns blank for requests from blacklist.
 #[derive(Debug, Clone)]

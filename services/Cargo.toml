@@ -11,7 +11,7 @@ edition = "2018"
 
 [dependencies]
 dvm-net = { path = "../net" }
-libra = { path = "../libra", package = "dvm-libra-deps" }
+libra = { path = "../libra" }
 lang = { path = "../lang", package = "dvm-lang" }
 data_source = { path = "../data-source", package = "dvm-data-source" }
 runtime = { path = "../runtime", package = "dvm-runtime" }
