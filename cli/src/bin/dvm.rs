@@ -16,9 +16,8 @@ use services::compiler::CompilerService;
 use services::metadata::MetadataService;
 
 use dvm_net::{prelude::*, api, tonic};
-use api::grpc::vm_grpc::vm_compiler_server::VmCompilerServer;
-use api::grpc::vm_grpc::vm_multiple_sources_compiler_server::VmMultipleSourcesCompilerServer;
-use api::grpc::vm_grpc::vm_script_metadata_server::VmScriptMetadataServer;
+use api::grpc::compiler_grpc::dvm_compiler_server::DvmCompilerServer;
+use api::grpc::metadata_grpc::dvm_bytecode_metadata_server::DvmBytecodeMetadataServer;
 use dvm_net::api::grpc::vm_grpc::{
     vm_script_executor_server::VmScriptExecutorServer,
     vm_module_publisher_server::VmModulePublisherServer,
@@ -119,9 +118,8 @@ async fn main_internal(options: Options) -> Result<()> {
         .add_service(VmScriptExecutorServer::new(vm_service.clone()))
         .add_service(VmModulePublisherServer::new(vm_service.clone()))
         // comp services
-        .add_service(VmCompilerServer::new(compiler_service.clone()))
-        .add_service(VmMultipleSourcesCompilerServer::new(compiler_service))
-        .add_service(VmScriptMetadataServer::new(metadata_service))
+        .add_service(DvmCompilerServer::new(compiler_service.clone()))
+        .add_service(DvmBytecodeMetadataServer::new(metadata_service))
         // serve
         .serve_ext_with_shutdown(options.address, serv_term_rx.map(|_| ()))
         .map(|res| {

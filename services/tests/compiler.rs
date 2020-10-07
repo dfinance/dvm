@@ -1,32 +1,34 @@
 use libra::{prelude::*, file_format::*};
-use dvm_net::{tonic, api};
-use tonic::{Request, Response, Status};
+use dvm_net::tonic;
+use tonic::Request;
 use lang::{stdlib::build_std};
 use compiler::Compiler;
 use data_source::MockDataSource;
-use api::grpc::vm_grpc::{CompilationResult, SourceFile};
 use dvm_services::compiler::CompilerService;
-use api::grpc::vm_grpc::vm_compiler_server::VmCompiler;
+use dvm_net::api::grpc::compiler_grpc::{SourceFiles, CompilationUnit, CompiledUnit as Unit};
 
-fn new_source_file(source: &str, address: &AccountAddress) -> SourceFile {
-    SourceFile {
-        text: source.to_string(),
+fn new_source_file(source: &str, address: &AccountAddress) -> SourceFiles {
+    SourceFiles {
+        units: vec![CompilationUnit {
+            text: source.to_string(),
+            name: "src".to_string(),
+        }],
         address: address.to_vec(),
     }
 }
 
-fn new_source_file_request(source_text: &str) -> Request<SourceFile> {
+fn new_source_file_request(source_text: &str) -> Request<SourceFiles> {
     let address = AccountAddress::random();
     let source_file = new_source_file(source_text, &address);
     Request::new(source_file)
 }
 
-async fn compile_source_file(source_text: &str) -> Result<Response<CompilationResult>, Status> {
+async fn compile_source_file(source_text: &str) -> Result<Vec<Unit>, String> {
     let source_file_request = new_source_file_request(source_text);
 
     let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
     let compiler_service = CompilerService::new(compiler);
-    compiler_service.compile(source_file_request).await
+    compiler_service.compile(source_file_request).await.unwrap()
 }
 
 #[tokio::test]
@@ -37,14 +39,8 @@ async fn test_compile_module() {
                 }
             }
         ";
-    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
-    assert!(
-        compilation_result.errors.is_empty(),
-        "{:?}",
-        compilation_result.errors
-    );
-
-    CompiledModule::deserialize(&compilation_result.bytecode[..]).unwrap();
+    let compilation_result = compile_source_file(source_text).await.unwrap().remove(0);
+    CompiledModule::deserialize(&compilation_result.bytecode).unwrap();
 }
 
 #[tokio::test]
@@ -55,12 +51,7 @@ async fn test_compile_script() {
             }
             }
         ";
-    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
-    assert!(
-        compilation_result.errors.is_empty(),
-        "{:?}",
-        compilation_result.errors
-    );
+    let compilation_result = compile_source_file(source_text).await.unwrap().remove(0);
     let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
     assert_eq!(compiled_script.code().code, vec![Bytecode::Ret]);
 }
@@ -78,19 +69,16 @@ async fn test_compile_script_with_dependencies() {
     let source_file_request = new_source_file_request(source_text);
 
     let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
+
     let compiler_service = CompilerService::new(compiler);
     let compilation_result = compiler_service
         .compile(source_file_request)
         .await
         .unwrap()
-        .into_inner();
-    assert!(
-        compilation_result.errors.is_empty(),
-        "{:?}",
-        compilation_result.errors
-    );
+        .unwrap()
+        .remove(0);
 
-    let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode[..]).unwrap();
+    let compiled_script = CompiledScript::deserialize(&compilation_result.bytecode).unwrap();
     assert_eq!(
         compiled_script.code().code,
         vec![
@@ -123,15 +111,11 @@ async fn test_required_libracoin_dependency_is_not_available() {
 
     let compiler = Compiler::new(MockDataSource::with_write_set(build_std()));
     let compiler_service = CompilerService::new(compiler);
-    let compilation_result = compiler_service
+    let error = compiler_service
         .compile(source_file_request)
         .await
         .unwrap()
-        .into_inner();
-    assert!(compilation_result.bytecode.is_empty());
-    assert_eq!(compilation_result.errors.len(), 1);
-
-    let error = compilation_result.errors.get(0).unwrap();
+        .unwrap_err();
     assert_eq!(
         error,
         r#"Module '0x0000000000000000000000000000000000000001::Coin' not found"#
@@ -162,24 +146,18 @@ async fn test_allows_for_bech32_addresses() {
         module Hash {
             public fun hash(){}
         }
-    ",
+        ",
             Some(libra_address),
         )
         .unwrap();
     ds.publish_module(hash).unwrap();
 
     let compiler_service = CompilerService::new(compiler);
-    let compilation_result = compiler_service
+    compiler_service
         .compile(source_file_request)
         .await
         .unwrap()
-        .into_inner();
-    assert_eq!(
-        compilation_result.errors.len(),
-        0,
-        "{:?}",
-        compilation_result.errors
-    );
+        .unwrap();
 }
 
 #[tokio::test]
@@ -192,16 +170,6 @@ async fn test_compilation_error_on_expected_an_expression_term() {
             }
             }
         "#;
-    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
-    assert!(compilation_result.errors[0].contains("Unused local 'a'"));
-}
-
-#[tokio::test]
-async fn test_compilation_with_multiple_modules() {
-    let source_text = r#"
-            module A {}
-            module B {}
-        "#;
-    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
-    assert!(compilation_result.errors[0].contains("Unsupported multiple modules file."));
+    let error = compile_source_file(source_text).await.unwrap_err();
+    assert!(error.contains("Unused local 'a'"));
 }

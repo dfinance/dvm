@@ -26,6 +26,11 @@ impl<'a> Script<'a> {
             function: main,
         }
     }
+
+    /// Returns function definition.
+    pub fn function(&self) -> &FunctionsDef<'a> {
+        &self.function
+    }
 }
 
 impl<'a> Encode for Script<'a> {

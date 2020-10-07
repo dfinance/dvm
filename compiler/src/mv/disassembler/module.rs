@@ -46,6 +46,21 @@ impl<'a> Module<'a> {
             imports,
         }
     }
+
+    /// Returns module name.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Returns structs.
+    pub fn structs(&self) -> &Vec<StructDef<'a>> {
+        &self.structs
+    }
+
+    /// Returns functions.
+    pub fn functions(&self) -> &Vec<FunctionsDef<'a>> {
+        &self.functions
+    }
 }
 
 impl<'a> Encode for Module<'a> {

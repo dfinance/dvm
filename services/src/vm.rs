@@ -14,6 +14,7 @@ use info::metrics::meter::ScopeMeter;
 use info::metrics::execution::ExecutionResult as ActionResult;
 use dvm_net::api::grpc::vm_grpc::vm_module_publisher_server::VmModulePublisher;
 use dvm_net::api::tonic::Code;
+use dvm_net::api::grpc::types::VmTypeTag;
 
 /// Virtual machine service.
 #[derive(Clone)]

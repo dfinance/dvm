@@ -1,8 +1,8 @@
 use libra::{prelude::*, lcs};
 use dvm_test_kit::*;
-use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
 use runtime::resources::*;
-use dvm_net::api::grpc::vm_grpc::{VmStatus, Message, MoveError, vm_status};
+use dvm_net::api::grpc::vm_grpc::{VmArgs, VmStatus, Message, MoveError, vm_status};
+use dvm_net::api::grpc::types::VmTypeTag;
 
 #[test]
 fn test_sender_as_argument() {

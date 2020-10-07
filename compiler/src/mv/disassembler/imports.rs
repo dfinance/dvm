@@ -24,12 +24,14 @@ impl<'a> Imports<'a> {
                 let entry = imports.entry(module_name);
                 let name_map = entry.or_insert_with(BTreeMap::new);
                 let count = name_map.len();
-                let address_entry = name_map.entry(*unit.address(handler.address));
+
+                let address = *unit.address(handler.address);
+                let address_entry = name_map.entry(address);
                 address_entry.or_insert_with(|| {
                     if count == 0 {
-                        Rc::new(ImportName::Name(module_name))
+                        Rc::new(ImportName::Name(address, module_name))
                     } else {
-                        Rc::new(ImportName::Alias(module_name, count))
+                        Rc::new(ImportName::Alias(address, module_name, count))
                     }
                 });
             }
@@ -58,9 +60,19 @@ pub type Import<'a> = Rc<ImportName<'a>>;
 #[derive(Debug)]
 pub enum ImportName<'a> {
     /// Simple module name.
-    Name(&'a str),
+    Name(AccountAddress, &'a str),
     /// Import alias.
-    Alias(&'a str, usize),
+    Alias(AccountAddress, &'a str, usize),
+}
+
+impl<'a> ImportName<'a> {
+    /// Returns import address.
+    pub fn address(&self) -> AccountAddress {
+        match self {
+            ImportName::Name(address, _) => *address,
+            ImportName::Alias(address, _, _) => *address,
+        }
+    }
 }
 
 impl<'a> Encode for Imports<'a> {
@@ -75,7 +87,7 @@ impl<'a> Encode for Imports<'a> {
                     addr = address,
                     name = name
                 )?;
-                if let ImportName::Alias(alias, id) = alias.as_ref() {
+                if let ImportName::Alias(_, alias, id) = alias.as_ref() {
                     write!(w, " as {}_{}", alias, id)?;
                 }
                 writeln!(w, ";")?;
@@ -88,8 +100,8 @@ impl<'a> Encode for Imports<'a> {
 impl<'a> Encode for ImportName<'a> {
     fn encode<W: Write>(&self, w: &mut W, _: usize) -> Result<(), Error> {
         match &self {
-            ImportName::Name(name) => w.write_str(name)?,
-            ImportName::Alias(name, id) => write!(w, "{}_{}", name, id)?,
+            ImportName::Name(_, name) => w.write_str(name)?,
+            ImportName::Alias(_, name, id) => write!(w, "{}_{}", name, id)?,
         }
 
         Ok(())
