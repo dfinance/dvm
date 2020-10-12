@@ -197,7 +197,7 @@ async fn test_compilation_error_on_expected_an_expression_term() {
 }
 
 #[tokio::test]
-async fn test_compilation_with_multiple_models() {
+async fn test_compilation_with_multiple_modules() {
     let source_text = r#"
             module A {}
             module B {}
