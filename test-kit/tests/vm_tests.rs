@@ -2,6 +2,7 @@ use libra::{prelude::*, lcs};
 use dvm_test_kit::*;
 use dvm_test_kit::compiled_protos::vm_grpc::{VmArgs, VmTypeTag};
 use runtime::resources::*;
+use dvm_net::api::grpc::vm_grpc::{VmStatus, Message, MoveError, vm_status};
 
 #[test]
 fn test_sender_as_argument() {
@@ -165,4 +166,60 @@ fn test_update_std_module_1() {
     );
     test_kit.assert_success(&res);
     test_kit.merge_result(&res);
+}
+
+#[test]
+fn test_publish_module_data_format_error() {
+    let test_kit = TestKit::new();
+    let bytecode = test_kit
+        .compile(
+            "module Foo{ public fun foo(): u64 {1}}",
+            Some(CORE_CODE_ADDRESS),
+        )
+        .unwrap();
+
+    let resp =
+        test_kit.publish_module_raw(bytecode, u64::MAX, u64::MAX, CORE_CODE_ADDRESS.to_vec());
+
+    assert_eq!(
+        resp.status,
+        Some(VmStatus {
+            message: Some(Message {
+                text: "max_gas_amount value must be in the range from 0 to 18446744073709551"
+                    .to_owned()
+            }),
+            error: Some(vm_status::Error::MoveError(MoveError {
+                status_code: StatusCode::DATA_FORMAT_ERROR as u64
+            }))
+        })
+    )
+}
+
+#[test]
+fn test_execute_script_data_format_error() {
+    let test_kit = TestKit::new();
+    let resp = test_kit.execute_script(
+        "script {
+        fun main(_account: &signer, _int: u64) {}
+        }",
+        gas_meta(),
+        vec![VmArgs {
+            r#type: VmTypeTag::U64 as i32,
+            value: vec![0x0, 0x1, 0x2, 0x3],
+        }],
+        vec![],
+        vec![AccountAddress::random()],
+    );
+
+    assert_eq!(
+        resp.status,
+        Some(VmStatus {
+            message: Some(Message {
+                text: "Invalid u64 argument length. Expected 8 byte.".to_owned()
+            }),
+            error: Some(vm_status::Error::MoveError(MoveError {
+                status_code: StatusCode::DATA_FORMAT_ERROR as u64
+            }))
+        })
+    )
 }

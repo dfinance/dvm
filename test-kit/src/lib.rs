@@ -5,6 +5,7 @@
 
 #[macro_use]
 extern crate anyhow;
+
 mod genesis;
 mod grpc_client;
 mod grpc_server;
@@ -36,6 +37,7 @@ pub mod compiled_protos {
 
 /// gRPC server ports pool.
 pub const PORT_RANGE: Range<u32> = 3000..5000;
+
 /// Arc<Mutex<>> type alias.
 pub type ArcMut<T> = Arc<Mutex<T>>;
 
@@ -99,6 +101,22 @@ impl TestKit {
         })
     }
 
+    /// Publish module.
+    pub fn publish_module_raw(
+        &self,
+        bytecode: Vec<u8>,
+        max_gas_amount: u64,
+        gas_unit_price: u64,
+        sender: Vec<u8>,
+    ) -> VmExecuteResponse {
+        self.client.publish_module(VmPublishModule {
+            sender,
+            max_gas_amount,
+            gas_unit_price,
+            code: bytecode,
+        })
+    }
+
     /// Add std module to data source.
     pub fn add_std_module(&self, code: &str) {
         let module = self
@@ -108,6 +126,11 @@ impl TestKit {
 
         let id = CompiledModule::deserialize(&module).unwrap().self_id();
         self.data_source.insert((&id).into(), module);
+    }
+
+    /// Compiler source codes.
+    pub fn compile(&self, code: &str, address: Option<AccountAddress>) -> anyhow::Result<Vec<u8>> {
+        self.compiler.compile(code, address)
     }
 
     /// Execute script.
