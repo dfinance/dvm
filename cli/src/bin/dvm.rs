@@ -39,7 +39,7 @@ use runtime::vm::dvm::Dvm;
 ///  powered by gRPC interface on top of TCP/IPC.
 /// API described in protobuf schemas: https://github.com/dfinance/dvm-proto
 #[derive(Debug, Clone, Clap)]
-#[clap(name = "dvm", version = "0.6.0")]
+#[clap(name = "dvm", version = "0.7.1")]
 #[clap(verbatim_doc_comment)]
 struct Options {
     /// Address in the form of HOST_ADDRESS:PORT.
