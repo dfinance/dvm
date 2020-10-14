@@ -49,6 +49,7 @@ pub fn run_ds_service_mock() {
     thread::sleep(Duration::from_secs(1));
 }
 
+#[allow(clippy::needless_collect)]
 #[test]
 fn test_grpc_ds() {
     run_ds_service_mock();

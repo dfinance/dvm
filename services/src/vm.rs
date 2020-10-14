@@ -54,7 +54,7 @@ where
             Ok(contract) => contract,
             Err(err) => {
                 meter.set_result(ActionResult::new(false, Code::InvalidArgument as u64, 0));
-                return Err(Status::new(Code::InvalidArgument, err.to_string()));
+                return Ok(Response::new(make_vm_error(err)));
             }
         };
 
@@ -85,6 +85,23 @@ fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmEx
                 status: Some(convert_status(err, None)),
             }
         }
+    }
+}
+
+/// Makes `VmExecuteResponse` with data format error.
+fn make_vm_error(err: Error) -> VmExecuteResponse {
+    VmExecuteResponse {
+        write_set: vec![],
+        events: vec![],
+        gas_used: 0,
+        status: Some(VmStatus {
+            message: Some(Message {
+                text: err.to_string(),
+            }),
+            error: Some(vm_status::Error::MoveError(MoveError {
+                status_code: StatusCode::DATA_FORMAT_ERROR as u64,
+            })),
+        }),
     }
 }
 
@@ -373,7 +390,7 @@ where
             Ok(contract) => contract,
             Err(err) => {
                 meter.set_result(ActionResult::new(false, Code::InvalidArgument as u64, 0));
-                return Err(Status::new(Code::InvalidArgument, err.to_string()));
+                return Ok(Response::new(make_vm_error(err)));
             }
         };
 
