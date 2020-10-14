@@ -30,6 +30,7 @@ jobs:
         - ubuntu-latest
         go:
         - "1.14.1"
+        - "1.14.6"
         rust:
         - "1.45.2"
         # - "stable"
