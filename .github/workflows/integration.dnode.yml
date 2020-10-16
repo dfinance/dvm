@@ -165,7 +165,6 @@ jobs:
         rustc -V
         dvm -V
         go version
-        $GOPATH/bin/dnode version
         dnode version
 
 
