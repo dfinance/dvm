@@ -11,6 +11,7 @@ use std::convert::TryFrom;
 use compiler::Compiler;
 use info::metrics::meter::ScopeMeter;
 use info::metrics::execution::ExecutionResult;
+use std::collections::HashMap;
 
 /// Compilation service.
 #[derive(Clone)]
@@ -47,10 +48,21 @@ where
     ) -> Result<Result<Vec<u8>, String>, Status> {
         let source_file_data = request.into_inner();
         let address = convert_address(&source_file_data.address)?;
+        let mut source = HashMap::with_capacity(1);
+        source.insert("source".to_owned(), source_file_data.text);
         Ok(self
             .compiler
-            .compile(&source_file_data.text, Some(address))
-            .map_err(|err| err.to_string()))
+            .compile_source_map(source, Some(address))
+            .map_err(|err| err.to_string())
+            .and_then(|bytecode_map| {
+                if bytecode_map.len() > 1 {
+                    Err("Unsupported multiple modules file.".to_owned())
+                } else if let Some((_, bytecode)) = bytecode_map.into_iter().next() {
+                    Ok(bytecode)
+                } else {
+                    Err("".to_owned())
+                }
+            }))
     }
 
     /// Compiler source codes.

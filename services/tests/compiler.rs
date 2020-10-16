@@ -1,9 +1,3 @@
-// use libra::libra_vm;
-// use libra_vm::access::ScriptAccess;
-// use libra_vm::CompiledModule;
-// use libra_vm::file_format::{Bytecode, ModuleHandleIndex, FunctionHandleIndex};
-// use libra_vm::file_format::CompiledScript;
-// use libra::libra_types::account_address::AccountAddress;
 use libra::{prelude::*, file_format::*};
 use dvm_net::{tonic, api};
 use tonic::{Request, Response, Status};
@@ -200,4 +194,14 @@ async fn test_compilation_error_on_expected_an_expression_term() {
         "#;
     let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
     assert!(compilation_result.errors[0].contains("Unused local 'a'"));
+}
+
+#[tokio::test]
+async fn test_compilation_with_multiple_modules() {
+    let source_text = r#"
+            module A {}
+            module B {}
+        "#;
+    let compilation_result = compile_source_file(source_text).await.unwrap().into_inner();
+    assert!(compilation_result.errors[0].contains("Unsupported multiple modules file."));
 }
