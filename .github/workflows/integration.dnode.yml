@@ -162,9 +162,11 @@ jobs:
 
     - name: print versions
       run: |
-        echo `rustc -V`
-        echo `dvm -V`
-        echo `dnode version`
+        rustc -V
+        dvm -V
+        go version
+        $GOPATH/bin/dnode version
+        dnode version
 
 
     - name: Tests
