@@ -148,6 +148,7 @@ jobs:
     - name: Get dependencies
       run: |
         cd ${{ steps.VARS.outputs.NODE_REPO_PATH }}
+        go get golang.org/x/sys@f9321e4c35
         go mod download
         if [ -f Gopkg.toml ]; then
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
