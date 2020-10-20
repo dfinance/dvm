@@ -64,7 +64,7 @@ jobs:
         [[ "$TAG_FIRST" == "inegrt" ]] && echo "::set-output name=value::$TAG_LAST"
         [[ "$TAG_FIRST" == "inegrt" ]] || echo "::set-output name=value::$TAG_FIRST"
         # fallback, default branch
-        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::feature-dfi-850_dvm_multi_module_compile"
+        [[ "$TAG_KIND" == "heads" ]] && echo "::set-output name=value::master"
         true
 
     #
