@@ -150,6 +150,18 @@ pub struct FullStructName<'a> {
     import: Option<Import<'a>>,
 }
 
+impl<'a> FullStructName<'a> {
+    /// Returns struct name.
+    pub fn name(&self) -> &str {
+        self.name
+    }
+
+    /// Returns struct import.
+    pub fn import(&self) -> &Option<Import<'a>> {
+        &self.import
+    }
+}
+
 impl<'a> Encode for FullStructName<'a> {
     fn encode<W: Write>(&self, w: &mut W, indent: usize) -> Result<(), Error> {
         if let Some(import) = &self.import {

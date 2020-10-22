@@ -1,11 +1,12 @@
 use libra::{prelude::*, lcs};
 use byteorder::{LittleEndian, ByteOrder};
 
-use dvm_net::api::grpc::vm_grpc::{VmArgs, VmTypeTag, ModuleIdent, LcsTag, StructIdent, LcsType};
+use dvm_net::api::grpc::vm_grpc::{VmArgs, ModuleIdent, LcsTag, StructIdent, LcsType};
 use dvm_test_kit::TestKit;
 use dvm_test_kit::*;
 use serde_derive::Serialize;
 use runtime::resources::*;
+use dvm_net::api::grpc::types::VmTypeTag;
 
 #[test]
 fn test_native_function() {

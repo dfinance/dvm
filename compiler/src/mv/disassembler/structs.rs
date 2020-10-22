@@ -59,6 +59,26 @@ impl<'a> StructDef<'a> {
             vec![]
         }
     }
+
+    /// Return true if the struct is the nominal resource, false otherwise.
+    pub fn is_nominal_resource(&self) -> bool {
+        self.is_nominal_resource
+    }
+
+    /// Returns struct name.
+    pub fn name(&self) -> &'a str {
+        self.name
+    }
+
+    /// Returns struct type parameters.
+    pub fn type_params(&self) -> &Vec<Generic> {
+        &self.type_params
+    }
+
+    /// Returns struct fields.
+    pub fn fields(&self) -> &Vec<Field<'a>> {
+        &self.fields
+    }
 }
 
 impl<'a> Encode for StructDef<'a> {
@@ -113,6 +133,18 @@ impl<'a> Encode for StructDef<'a> {
 pub struct Field<'a> {
     name: &'a str,
     f_type: FType<'a>,
+}
+
+impl<'a> Field<'a> {
+    /// Returns field name.
+    pub fn name(&self) -> &'a str {
+        self.name
+    }
+
+    /// Returns field type.
+    pub fn f_type(&self) -> &FType<'a> {
+        &self.f_type
+    }
 }
 
 impl<'a> Encode for Field<'a> {

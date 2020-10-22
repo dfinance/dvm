@@ -36,8 +36,9 @@ impl<'a> FunctionsDef<'a> {
         let handler = unit.function_handle(def.function);
         let name = unit.identifier(handler.name);
         let type_params = extract_type_params(&handler.type_parameters, generics);
-        let ret = FunctionsDef::ret(unit, imports, unit.signature(handler.return_), &type_params);
-        let params = FunctionsDef::params(
+        let ret =
+            FunctionsDef::make_ret(unit, imports, unit.signature(handler.return_), &type_params);
+        let params = FunctionsDef::make_params(
             unit,
             imports,
             unit.signature(handler.parameters),
@@ -87,16 +88,16 @@ impl<'a> FunctionsDef<'a> {
         imports: &'a Imports<'a>,
         generics: &'a Generics,
     ) -> FunctionsDef<'a> {
-        let (type_params, params, body) = if let Some((code, type_parameters, params)) =
-            unit.script_info()
-        {
-            let type_params = extract_type_params(type_parameters, generics);
-            let params = FunctionsDef::params(unit, imports, unit.signature(params), &type_params);
-            let body = Body::new(code, 0, unit, &params, &imports, &type_params);
-            (type_params, params, Some(body))
-        } else {
-            (vec![], vec![], None)
-        };
+        let (type_params, params, body) =
+            if let Some((code, type_parameters, params)) = unit.script_info() {
+                let type_params = extract_type_params(type_parameters, generics);
+                let params =
+                    FunctionsDef::make_params(unit, imports, unit.signature(params), &type_params);
+                let body = Body::new(code, 0, unit, &params, &imports, &type_params);
+                (type_params, params, Some(body))
+            } else {
+                (vec![], vec![], None)
+            };
 
         FunctionsDef {
             is_public: false,
@@ -110,7 +111,7 @@ impl<'a> FunctionsDef<'a> {
         }
     }
 
-    fn ret(
+    fn make_ret(
         unit: &'a impl UnitAccess,
         imports: &'a Imports<'a>,
         sign: &'a Signature,
@@ -122,7 +123,7 @@ impl<'a> FunctionsDef<'a> {
             .collect::<Vec<_>>()
     }
 
-    fn params(
+    fn make_params(
         unit: &'a impl UnitAccess,
         imports: &'a Imports<'a>,
         sign: &'a Signature,
@@ -137,6 +138,36 @@ impl<'a> FunctionsDef<'a> {
                 f_type: Rc::new(extract_type_signature(unit, tkn, imports, &type_params)),
             })
             .collect::<Vec<_>>()
+    }
+
+    /// Return true if the function is public, false otherwise.
+    pub fn is_public(&self) -> bool {
+        self.is_public
+    }
+
+    /// Return true if the function is native, false otherwise.
+    pub fn is_native(&self) -> bool {
+        self.is_native
+    }
+
+    /// Returns functions name.
+    pub fn name(&self) -> &'a str {
+        self.name
+    }
+
+    /// Returns functions type params.
+    pub fn type_params(&self) -> &Vec<Generic> {
+        &self.type_params
+    }
+
+    /// Returns functions parameters.
+    pub fn params(&self) -> &Vec<Param<'a>> {
+        &self.params
+    }
+
+    /// Returns functions return types.
+    pub fn ret(&self) -> &Vec<FType<'a>> {
+        &self.ret
     }
 }
 
@@ -206,6 +237,11 @@ impl<'a> Param<'a> {
             write!(w, "{}", self.index)?;
         }
         Ok(())
+    }
+
+    /// Returns parameter
+    pub fn f_type(&self) -> &Rc<FType<'a>> {
+        &self.f_type
     }
 }
 
