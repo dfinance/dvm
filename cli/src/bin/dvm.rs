@@ -33,7 +33,6 @@ use dvm_cli::info_service::create_info_service;
 use dvm_info::memory_check::MemoryChecker;
 use runtime::vm::dvm::Dvm;
 
-
 /// Definance Virtual Machine
 ///  combined with Move compilation server
 ///  powered by gRPC interface on top of TCP/IPC.

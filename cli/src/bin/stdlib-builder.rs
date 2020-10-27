@@ -1,5 +1,8 @@
 use std::collections::HashMap;
-use std::{fs, io, path::{Path, PathBuf}};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 use clap::Clap;
 use serde_json::{to_string, to_string_pretty};
 use lang::stdlib::{build_external_std, Stdlib, WS};
