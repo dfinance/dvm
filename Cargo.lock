@@ -842,6 +842,7 @@ dependencies = [
  "enum-iterator",
  "env_logger",
  "futures",
+ "git-hash",
  "http",
  "log",
  "sentry",
@@ -1385,6 +1386,11 @@ name = "gimli"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aaf91faf136cb47367fa430cd46e37a788775e7fa104f8b4bcb3861dc389b724"
+
+[[package]]
+name = "git-hash"
+version = "0.1.0"
+source = "git+https://github.com/dfinance/move-tools.git#ebab31d9db977dfdc51ed72a4fb40dde5760cc38"
 
 [[package]]
 name = "glob"

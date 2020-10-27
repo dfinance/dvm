@@ -1,15 +1,16 @@
-use std::path::PathBuf;
-use libra::prelude::*;
-use clap::Clap;
 use std::collections::HashMap;
-use enum_iterator::IntoEnumIterator;
-use anyhow::Result;
+use std::path::PathBuf;
 use std::fs::OpenOptions;
 use std::io::Write;
+use libra::prelude::*;
+use clap::Clap;
+use enum_iterator::IntoEnumIterator;
+use anyhow::Result;
+use dvm_cli::version;
 
 /// Status table generator.
 #[derive(Clap)]
-#[clap(name = "status-table")]
+#[clap(name = "status-table", version = version!())]
 struct Opts {
     /// Optional path to the output file.
     /// If not passed, result will be printed to stdout.
