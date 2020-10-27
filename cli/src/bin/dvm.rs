@@ -74,6 +74,7 @@ struct Options {
 }
 
 fn main() -> Result<()> {
+    remove_empty_env_vars();
     let options = Options::parse();
     let _guard = init(&options.logging, &options.integrations);
     main_internal(options)
