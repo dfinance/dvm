@@ -59,3 +59,22 @@ pub struct IntegrationsOptions {
     #[cfg(feature = "sentry")]
     pub sentry_env: Option<String>,
 }
+
+pub fn remove_empty_env_vars() {
+    use std::env;
+    [
+        DVM_LOG,
+        DVM_LOG_STYLE,
+        DVM_DATA_SOURCE,
+        DVM_SENTRY_DSN,
+        DVM_SENTRY_ENV,
+    ]
+    .iter()
+    .for_each(|var| {
+        if let Ok(value) = env::var(var) {
+            if value.trim().is_empty() {
+                env::remove_var(var);
+            }
+        }
+    });
+}
