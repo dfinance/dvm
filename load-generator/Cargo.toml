@@ -1,0 +1,23 @@
+[package]
+name = "load-generator"
+version = "0.2.0"
+authors = [
+    "Alex Koz. <alexanderkozlovskii@wings.ai>",
+    "Dm. Yakushev <dmitryyakushev@wings.ai>",
+    "Maxim Kurnikov <maximkurnikov@wings.ai>"
+    ]
+edition = "2018"
+
+[dependencies]
+dvm-net = { path = "../net" }
+dvm-info = { path = "../info" }
+libra = { path = "../libra", package = "dvm-libra-deps" }
+
+http = "0.2"
+clap = "3.0.0-beta.2"
+anyhow = "1.0"
+tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full", "time" ] }
+itertools = "0.9.0"
+rand = "0.7.3"
+byteorder = "1.3.4"
+regex = "1.3.7"
