@@ -3,19 +3,45 @@ on:
   pull_request:
   push:
     branches:
-    - master
-    - release-*
+      - master
+      - release-*
 
 jobs:
-  rust:
+  audit:
     name: Audit
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: cargo-audit
-      uses: actions-rs/audit-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: fix permissions
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+      - name: cached cargo audit version
+        continue-on-error: true
+        run: cargo-audit -h | sed -n 1p
+
+      - name: install cargo audit
+        continue-on-error: true
+        run: cargo install cargo-audit
+
+      - name: run cargo audit
+        run: cargo audit --ignore RUSTSEC-2020-0041
+
+      # temporary disabled because
+      # https://github.com/bodil/sized-chunks/issues/11
+      #   - name: cargo-audit
+      #     uses: actions-rs/audit-check@v1
+      #     with:
+      #       token: ${{ secrets.GITHUB_TOKEN }}
