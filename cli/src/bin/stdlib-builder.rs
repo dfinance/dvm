@@ -1,13 +1,16 @@
-use std::{fs, io, path::PathBuf};
+use std::collections::HashMap;
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 use clap::Clap;
 use serde_json::{to_string, to_string_pretty};
 use lang::stdlib::{build_external_std, Stdlib, WS};
-use std::path::Path;
 use anyhow::Error;
-use std::collections::HashMap;
+use dvm_cli::version;
 
 #[derive(Clap)]
-#[clap(name = "stdlib-builder")]
+#[clap(name = "stdlib-builder", version = version!())]
 struct Opts {
     /// Path to the directory with the standard library.
     #[clap()]

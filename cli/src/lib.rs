@@ -8,6 +8,7 @@ pub mod logging;
 
 use config::*;
 use futures::future::{lazy, Future, FutureExt};
+pub use git_hash::crate_version_with_git_hash_short as version;
 
 /// Init standard handlers for cli-executable.
 /// Create standard logger, init integrations such as with sentry if enabled.
