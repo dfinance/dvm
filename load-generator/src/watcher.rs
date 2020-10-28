@@ -130,21 +130,26 @@ impl FromStr for TimeInterval {
 
 impl fmt::Display for TimeInterval {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let seconds = self.duration.as_secs();
-        let mut minutes = seconds / 60;
-        let mut hours = minutes / 60;
-        let days = hours / 24;
+        let total_minutes = self.duration.as_secs() / 60;
+        let minutes = total_minutes % 60;
+
+        let total_hours = (total_minutes - minutes) / 60;
+        let hours = total_hours % 24;
+
+        let days = total_hours / 24;
         if days > 0 {
             write!(f, "{}d", days)?;
-            hours %= 24;
         }
 
         if hours > 0 {
             write!(f, "{}h", hours)?;
-            minutes %= 60;
         }
 
-        write!(f, "{}m", minutes)
+        if minutes > 0 {
+            write!(f, "{}m", minutes)
+        } else {
+            Ok(())
+        }
     }
 }
 
