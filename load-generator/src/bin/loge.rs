@@ -39,7 +39,7 @@ enum Loge {
 
 #[derive(Debug, Default, Clone, Clap)]
 pub struct TestInfo {
-    #[clap(default_value = "4", long = "threads_count", short = 't')]
+    #[clap(default_value = "1", long = "threads_count", short = 't')]
     threads_count: usize,
     #[clap(default_value = "1h", long = "load_time")]
     load_time: String,

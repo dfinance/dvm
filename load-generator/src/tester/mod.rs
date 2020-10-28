@@ -19,7 +19,6 @@ pub fn run_load(
     ds: InMemoryDataSource,
 ) -> LoadHandler {
     let handlers = (0..workers_count)
-        .into_iter()
         .map(|_| Pipeline::new(stat.clone(), dvm.clone(), ds.clone()))
         .map(perform)
         .collect();
