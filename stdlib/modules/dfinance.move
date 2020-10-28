@@ -51,6 +51,11 @@ module Dfinance {
         T { value: amount }
     }
 
+    public fun destroy_zero<Coin>(coin: T<Coin>) {
+        let T { value } = coin;
+        assert(value == 0, 11)
+    }
+
     /// Working with CoinInfo - coin registration procedure, 0x1 account used
 
     /// What can be done here:
