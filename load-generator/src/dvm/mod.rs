@@ -8,9 +8,9 @@ use std::process::{Command, Stdio, Child};
 use std::{env, fs};
 use anyhow::Error;
 use crate::dvm::args::IntoArgs;
-use dvm_net::api::grpc::vm_grpc::vm_script_executor_client::VmScriptExecutorClient;
 use crate::dvm::client::Client;
 use tokio::time::{delay_for, Duration};
+use libra::account::CORE_CODE_ADDRESS;
 
 #[derive(Debug)]
 pub enum Dvm {
@@ -64,11 +64,14 @@ impl Dvm {
                 Dvm::Own { uri, .. } => uri,
                 Dvm::External(uri) => uri,
             };
-            if VmScriptExecutorClient::connect(uri.clone()).await.is_err() {
-                delay_for(Duration::from_secs(2)).await;
-            } else {
-                break;
+
+            if let Ok(mut cl) = Client::new(dbg!(uri.clone())).await {
+                if cl.compile("module A {}", CORE_CODE_ADDRESS).await.is_ok() {
+                    println!("Connected");
+                    break;
+                }
             }
+            delay_for(Duration::from_secs(2)).await;
         }
     }
 

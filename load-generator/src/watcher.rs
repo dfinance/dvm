@@ -135,7 +135,6 @@ impl fmt::Display for TimeInterval {
 
         let total_hours = (total_minutes - minutes) / 60;
         let hours = total_hours % 24;
-
         let days = total_hours / 24;
         if days > 0 {
             write!(f, "{}d", days)?;
