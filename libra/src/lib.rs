@@ -72,6 +72,7 @@ pub mod vm {
     pub use move_vm_types::values::Value;
     pub use move_vm_runtime::loader::Loader;
     pub use move_vm_runtime::{data_cache::TransactionEffects, session::Session};
+    pub use move_vm_runtime::logging::{NoContextLog, LogContext};
 }
 
 pub mod gas {

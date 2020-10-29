@@ -210,7 +210,7 @@ pub mod tests {
         .unwrap_err();
         assert_eq!(
             err.to_string(),
-            "Module 646600000a6d43cfd2d2b999efbbf24b3c73409a.Unknown is not whitelisted"
+            "Module 646600000A6D43CFD2D2B999EFBBF24B3C73409A.Unknown is not whitelisted"
         );
     }
 
