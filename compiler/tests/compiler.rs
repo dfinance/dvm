@@ -129,7 +129,7 @@ fn test_parse_script_with_bech32_addresses() {
     let address = script.address_identifier_at(module.address);
     assert_eq!(
         address.to_string(),
-        "de5f86ce8ad7944f272d693cb4625a955b610150"
+        "DE5F86CE8AD7944F272D693CB4625A955B610150"
     );
 }
 
@@ -169,7 +169,7 @@ fn test_parse_module_with_bech32_addresses() {
     let address = main_module.address_identifier_at(module.address);
     assert_eq!(
         address.to_string(),
-        "de5f86ce8ad7944f272d693cb4625a955b610150"
+        "DE5F86CE8AD7944F272D693CB4625A955B610150"
     );
 }
 

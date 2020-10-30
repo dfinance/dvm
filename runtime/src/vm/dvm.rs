@@ -67,12 +67,22 @@ where
                     let mut session = self.vm.new_session(&blacklist);
 
                     session
-                        .publish_module(module.to_vec(), sender, &mut cost_strategy)
+                        .publish_module(
+                            module.to_vec(),
+                            sender,
+                            &mut cost_strategy,
+                            &NoContextLog::new(),
+                        )
                         .and_then(|_| session.finish())
                 } else {
                     let mut session = self.vm.new_session(&self.ds);
                     session
-                        .publish_module(module.to_vec(), sender, &mut cost_strategy)
+                        .publish_module(
+                            module.to_vec(),
+                            sender,
+                            &mut cost_strategy,
+                            &NoContextLog::new(),
+                        )
                         .and_then(|_| session.finish())
                 }
             });
@@ -82,15 +92,9 @@ where
 
     fn clear_cache(&self) {
         let loader = &self.vm.runtime.loader;
-        *loader.scripts.lock().unwrap_or_else(|err| err.into_inner()) = ScriptCache::new();
-        *loader
-            .type_cache
-            .lock()
-            .unwrap_or_else(|err| err.into_inner()) = TypeCache::new();
-        *loader
-            .module_cache
-            .lock()
-            .unwrap_or_else(|err| err.into_inner()) = ModuleCache::new();
+        *loader.scripts.lock() = ScriptCache::new();
+        *loader.type_cache.lock() = TypeCache::new();
+        *loader.module_cache.lock() = ModuleCache::new();
     }
 
     fn perform_memory_prevention(&self) {
@@ -112,7 +116,14 @@ where
             CostStrategy::transaction(&self.cost_table, GasUnits::new(gas.max_gas_amount()));
 
         let res = session
-            .execute_script(script, type_args, args, senders, &mut cost_strategy)
+            .execute_script(
+                script,
+                type_args,
+                args,
+                senders,
+                &mut cost_strategy,
+                &NoContextLog::new(),
+            )
             .and_then(|_| session.finish());
 
         Ok(ExecutionResult::new(cost_strategy, gas, res))
