@@ -19,13 +19,13 @@ impl IntoArgs for InfoServiceConfig {
         }
 
         args.push("--metric-update-interval".to_owned());
-        args.push(5.to_string());
+        args.push(self.metric_update_interval.to_string());
 
         args.push("--heartbeat-interval-max".to_owned());
-        args.push(5.to_string());
+        args.push(self.heartbeat_max_interval.to_string());
 
         args.push("--heartbeat-pressure".to_owned());
-        args.push(4.to_string());
+        args.push(self.heartbeat_stimulation_interval.to_string());
 
         args
     }
@@ -36,13 +36,10 @@ impl IntoArgs for MemoryOptions {
         let mut args = Vec::with_capacity(8);
 
         args.push("--module_cache_size".to_owned());
-        args.push(102400.to_string());
+        args.push(self.module_cache.to_string());
 
-        args.push("--memory_check_period".to_owned());
-        args.push(10000.to_string());
-
-        args.push("--dvm_cache_size".to_owned());
-        args.push(102400.to_string());
+        args.push("--vm_reset_interval".to_owned());
+        args.push(self.vm_reset_interval.to_string());
 
         args
     }

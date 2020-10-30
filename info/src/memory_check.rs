@@ -34,35 +34,3 @@ pub trait CacheSize {
     /// Returns cache size.
     fn size(&self) -> usize;
 }
-
-#[cfg(test)]
-mod test {
-    use crate::memory_check::{MemoryChecker, CacheSize};
-    use crate::config::MemoryOptions;
-    use std::rc::Rc;
-    use std::cell::RefCell;
-
-    #[derive(Clone)]
-    struct FakeCache(Rc<RefCell<Vec<u8>>>);
-
-    impl FakeCache {
-        fn new() -> FakeCache {
-            FakeCache {
-                0: Rc::new(RefCell::new(vec![])),
-            }
-        }
-
-        fn fill(&self, bytes_count: usize) {
-            let mut buffer = self.0.borrow_mut();
-            for byte in 0..bytes_count {
-                buffer.push(byte as u8);
-            }
-        }
-    }
-
-    impl CacheSize for FakeCache {
-        fn size(&self) -> usize {
-            self.0.borrow().len()
-        }
-    }
-}

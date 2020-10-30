@@ -124,7 +124,7 @@ impl Pipeline {
 }
 
 pub fn perform(mut pipeline: Pipeline) -> Handler {
-    println!("Starting test worker.");
+    println!("Starting load worker.");
     let is_run = Arc::new(AtomicBool::new(true));
 
     let is_run_clone = is_run.clone();

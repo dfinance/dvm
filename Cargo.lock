@@ -809,6 +809,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "doc-comment"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
+
+[[package]]
 name = "docgen"
 version = "0.1.0"
 source = "git+https://github.com/dfinance/libra.git?branch=release-1.0#898e93c4bfa41732800920136dc8b0f13403df01"
@@ -2099,7 +2105,9 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "byteorder",
+ "chrono",
  "clap 3.0.0-beta.2",
+ "csv",
  "dvm-info",
  "dvm-libra-deps",
  "dvm-net",
@@ -2107,6 +2115,7 @@ dependencies = [
  "itertools 0.9.0",
  "rand",
  "regex",
+ "reqwest",
  "tokio",
 ]
 
@@ -2506,6 +2515,15 @@ name = "nom"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf51a729ecf40266a2368ad335a5fdde43471f545a967109cd62146ecf8b66ff"
+
+[[package]]
+name = "ntapi"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f6bb902e437b6d86e03cce10a7e2af662292c5dfef23b65899ea3ac9354ad44"
+dependencies = [
+ "winapi 0.3.9",
+]
 
 [[package]]
 name = "num"
@@ -3818,11 +3836,17 @@ dependencies = [
 
 [[package]]
 name = "sysinfo"
-version = "0.3.19"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "953067ed3a538fd8e5fe4a6b4ddbbdedd348a3421f8a3b2aa97f2ca06f8ea57e"
+checksum = "67330cbee3b2a819e3365a773f05e884a136603687f812bf24db5b6c3d76b696"
 dependencies = [
+ "cfg-if",
+ "doc-comment",
  "libc",
+ "ntapi",
+ "once_cell",
+ "rayon",
+ "winapi 0.3.9",
 ]
 
 [[package]]

@@ -1,5 +1,6 @@
 pub mod ds;
 pub mod dvm;
-pub mod statistic;
+pub mod info_service;
+pub mod log;
 pub mod tester;
 pub mod watcher;

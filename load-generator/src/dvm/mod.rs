@@ -25,15 +25,18 @@ impl Dvm {
 
     pub fn start<P: AsRef<Path>>(
         path: P,
-        info_service: InfoServiceConfig,
+        mut info_service: InfoServiceConfig,
         memory_config: MemoryOptions,
         dvm_port: u16,
         ds_port: u16,
+        info_service_port: u16,
     ) -> Result<Dvm, Error> {
+        info_service.info_service_addr = Some(format!("127.0.0.1:{}", info_service_port).parse()?);
         let info_service = info_service.into_args();
         let memory_config = memory_config.into_args();
+
         println!(
-            "Run dvm process:[{} http://0.0.0.0:{} http://127.0.0.1:{} {} {}]",
+            "Run dvm process:[{} \"http://127.0.0.1:{}\" \"http://127.0.0.1:{}\" {} {}]",
             path.as_ref().to_str().unwrap_or("dvm"),
             dvm_port,
             ds_port,
@@ -42,7 +45,7 @@ impl Dvm {
         );
 
         let process = Command::new(&fs::canonicalize(env::current_dir()?.join(path))?)
-            .arg(format!("http://0.0.0.0:{}", dvm_port))
+            .arg(format!("http://127.0.0.1:{}", dvm_port))
             .arg(format!("http://127.0.0.1:{}", ds_port))
             .args(info_service)
             .args(memory_config)
@@ -58,14 +61,15 @@ impl Dvm {
     }
 
     pub async fn wait_for(&self) {
-        println!("Wait for dvm.");
-        loop {
-            let uri = match self {
-                Dvm::Own { uri, .. } => uri,
-                Dvm::External(uri) => uri,
-            };
+        let uri = match self {
+            Dvm::Own { uri, .. } => uri,
+            Dvm::External(uri) => uri,
+        };
 
-            if let Ok(mut cl) = Client::new(dbg!(uri.clone())).await {
+        println!("Wait for dvm [{}].", uri);
+
+        loop {
+            if let Ok(mut cl) = Client::new(uri.clone()).await {
                 if cl.compile("module A {}", CORE_CODE_ADDRESS).await.is_ok() {
                     println!("Connected");
                     break;

@@ -5,12 +5,16 @@ use crate::tester::stat::{StatCollector, Statistic};
 use tokio::time::{Duration, Instant, delay_for};
 use std::fmt;
 use std::io::{stdout, Write};
+use crate::info_service::{InfoService, SystemInfo};
+use crate::log::Log;
 
 pub async fn watch(
     handler: LoadHandler,
     stat_collector: StatCollector,
     load_time: TimeInterval,
     update_interval: Duration,
+    mut info_service: Option<InfoService>,
+    mut logger: Option<impl Log>,
 ) -> Result<(), Error> {
     if !handler.is_run() {
         return Err(anyhow!("Failed to start load"));
@@ -32,7 +36,17 @@ pub async fn watch(
             return Err(anyhow!("An error occurred during stress tests."));
         }
 
-        print_status(&left, total_iterations, &statistics)?;
+        let sys_info = if let Some(srv) = &mut info_service {
+            srv.load_info().await?
+        } else {
+            Default::default()
+        };
+
+        if let Some(logger) = &mut logger {
+            logger.log(total_iterations, &statistics, &sys_info)?;
+        }
+
+        print_status(&left, total_iterations, &statistics, sys_info)?;
 
         if left.is_zero() {
             println!("Time is over");
@@ -152,10 +166,15 @@ impl fmt::Display for TimeInterval {
     }
 }
 
-fn print_status(left: &TimeInterval, total_iterations: u64, stat: &Statistic) -> Result<(), Error> {
+fn print_status(
+    left: &TimeInterval,
+    total_iterations: u64,
+    stat: &Statistic,
+    sys_info: SystemInfo,
+) -> Result<(), Error> {
     print!(
-        "\rTime left:{}; number of iterations:{}; statistics:{}",
-        left, total_iterations, stat
+        "\rTime left:{}; number of iterations:{}; statistics:{}; {}",
+        left, total_iterations, stat, sys_info
     );
     stdout().flush()?;
     Ok(())

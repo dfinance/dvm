@@ -11,6 +11,8 @@ use anyhow::Error;
 use dvm_net::api::tonic::transport::Server;
 use dvm_net::api::grpc::ds_grpc::ds_service_server::DsServiceServer;
 use libra::ds::{WriteSet, WriteOp};
+use dvm_net::endpoint::Endpoint;
+use dvm_net::serve::ServeWith;
 
 type Resources = HashMap<Vec<u8>, Vec<u8>>;
 type Accounts = HashMap<Vec<u8>, Resources>;
@@ -93,14 +95,14 @@ impl DsService for InMemoryDataSource {
     }
 }
 
-pub fn start(port: u16) -> Result<InMemoryDataSource, Error> {
+pub fn start(endpoint: Endpoint) -> Result<InMemoryDataSource, Error> {
     let ds = InMemoryDataSource::new();
     let ds_clone = ds.clone();
     tokio::spawn(async move {
-        println!("Start data source at http://0.0.0.0:{}", port);
+        println!("Start data source at {}", endpoint);
         Server::builder()
             .add_service(DsServiceServer::new(ds_clone.clone()))
-            .serve(format!("0.0.0.0:{}", port).parse().unwrap())
+            .serve_ext(endpoint)
             .await
             .unwrap()
     });
