@@ -4,11 +4,12 @@ use std::fmt;
 use crate::gas_schedule;
 use ds::{DataSource, BlackListDataSource};
 use dvm_info::memory_check::MemoryChecker;
+use std::sync::RwLock;
 
 /// Dfinance virtual machine.
 pub struct Dvm<D: DataSource> {
     /// Libra virtual machine.
-    vm: MoveVM,
+    vm: RwLock<MoveVM>,
     /// Data source.
     ds: D,
     /// Instructions cost table.
@@ -23,7 +24,7 @@ where
 {
     /// Create a new virtual machine with the given data source.
     pub fn new(ds: D, mem_checker: Option<MemoryChecker>) -> Dvm<D> {
-        let vm = MoveVM::new();
+        let vm = RwLock::new(MoveVM::new());
         trace!("vm service is ready.");
         Dvm {
             vm,
@@ -64,7 +65,8 @@ where
 
                     let mut blacklist = BlackListDataSource::new(self.ds.clone());
                     blacklist.add_module(&module_id);
-                    let mut session = self.vm.new_session(&blacklist);
+                    let vm = self.vm.read().unwrap();
+                    let mut session = vm.new_session(&blacklist);
 
                     session
                         .publish_module(
@@ -75,7 +77,8 @@ where
                         )
                         .and_then(|_| session.finish())
                 } else {
-                    let mut session = self.vm.new_session(&self.ds);
+                    let vm = self.vm.read().unwrap();
+                    let mut session = vm.new_session(&self.ds);
                     session
                         .publish_module(
                             module.to_vec(),
@@ -91,10 +94,9 @@ where
     }
 
     fn clear_cache(&self) {
-        let loader = &self.vm.runtime.loader;
-        *loader.scripts.lock() = ScriptCache::new();
-        *loader.type_cache.lock() = TypeCache::new();
-        *loader.module_cache.lock() = ModuleCache::new();
+        let new_vm = MoveVM::new();
+        let mut vm = self.vm.write().unwrap_or_else(|err| err.into_inner());
+        *vm = new_vm;
     }
 
     fn perform_memory_prevention(&self) {
@@ -108,8 +110,8 @@ where
     /// Executes passed script on the chain.
     pub fn execute_script(&self, gas: Gas, tx: ScriptTx) -> VmResult {
         self.perform_memory_prevention();
-
-        let mut session = self.vm.new_session(&self.ds);
+        let vm = self.vm.read().unwrap();
+        let mut session = vm.new_session(&self.ds);
 
         let (script, args, type_args, senders) = tx.into_inner();
         let mut cost_strategy =

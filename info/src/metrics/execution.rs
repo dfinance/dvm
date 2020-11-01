@@ -7,7 +7,7 @@ use std::thread::ThreadId;
 
 use once_cell::sync::Lazy;
 use serde_derive::{Deserialize, Serialize};
-use sysinfo::{System, SystemExt};
+use sysinfo::{System, SystemExt, ProcessExt};
 
 /// Live time metrics.
 /// Recorded metrics for the current countdown.
@@ -101,11 +101,11 @@ pub fn store_metric(name: &'static str, metric: ExecutionData) {
 
 /// Get metrics for the CPU and memory of the node.
 pub fn get_system_metrics() -> SystemMetrics {
-    let sys = System::default();
+    let sys = System::new_all();
     let process = sys.get_process(process::id() as i32).unwrap();
     SystemMetrics {
-        cpu_usage: process.cpu_usage,
-        memory: process.memory,
+        cpu_usage: process.cpu_usage(),
+        memory: process.memory(),
         threads_count: palaver::thread::count(),
     }
 }

@@ -104,7 +104,7 @@ async fn main_internal(options: Options) -> Result<()> {
     let ds = GrpcDataSource::new(options.ds, Some(ds_term_rx))
         .expect("Unable to instantiate GrpcDataSource.");
     let ds = ModuleCache::new(DsMeter::new(ds), options.memory_config.module_cache());
-    let mem_checker = MemoryChecker::new(options.memory_config, vec![Box::new(ds.clone())]);
+    let mem_checker = MemoryChecker::new(options.memory_config);
     // vm services
     let vm_service = VmService::new(Dvm::new(ds.clone(), Some(mem_checker)), hrm);
     // comp services
