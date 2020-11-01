@@ -889,7 +889,7 @@ checksum = "134951f4028bdadb9b84baf4232681efbf277da25144b9b0ad65df75946c422b"
 [[package]]
 name = "dvm-api"
 version = "0.1.0"
-source = "git+https://github.com/dfinance/dvm-proto.git?branch=fix-rustsec#eabc39c1f6716846c0d3cc792f8e2561df1df9f9"
+source = "git+https://github.com/dfinance/dvm-proto.git?rev=59dc05d5febde319d7e0a7f40b337d3d9ad915e8#59dc05d5febde319d7e0a7f40b337d3d9ad915e8"
 dependencies = [
  "prost",
  "tonic",
