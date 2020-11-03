@@ -2,6 +2,9 @@ address 0x1 {
 // TODO: add optional timeout for reclaiming by original publisher once we have implemented time
 module Offer {
   use 0x1::Signer;
+
+  const ERR_INSUFFICIENT_PRIVILEGES: u64 = 11;
+
   // A wrapper around value `offered` that can be claimed by the address stored in `for`.
   resource struct T<Offered> { offered: Offered, for: address }
 
@@ -19,7 +22,7 @@ module Offer {
     let T<Offered> { offered, for } = move_from<T<Offered>>(offer_address);
     let sender = Signer::address_of(account);
     // fail with INSUFFICIENT_PRIVILEGES
-    assert(sender == for || sender == offer_address, 11);
+    assert(sender == for || sender == offer_address, ERR_INSUFFICIENT_PRIVILEGES);
     offered
   }
 

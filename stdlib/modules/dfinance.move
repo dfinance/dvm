@@ -8,6 +8,12 @@ module Dfinance {
     use 0x1::Signer;
     use 0x1::Event;
 
+    const ERR_NOT_CORE_ADDRESS: u64 = 101;
+    const ERR_NOT_REGISTERED: u64 = 102;
+    const ERR_INVALID_NUMBER_OF_DECIMALS: u64 = 103;
+    const ERR_NOT_ENOUGH_DEPOSIT_AVAILABLE: u64 = 104;
+    const ERR_NON_ZERO_DEPOSIT: u64 = 105;
+
     resource struct T<Coin> {
         value: u128
     }
@@ -46,14 +52,14 @@ module Dfinance {
     }
 
     public fun withdraw<Coin>(coin: &mut T<Coin>, amount: u128): T<Coin> {
-        assert(coin.value >= amount, 10);
+        assert(coin.value >= amount, ERR_NOT_ENOUGH_DEPOSIT_AVAILABLE);
         coin.value = coin.value - amount;
         T { value: amount }
     }
 
     public fun destroy_zero<Coin>(coin: T<Coin>) {
         let T { value } = coin;
-        assert(value == 0, 11)
+        assert(value == 0, ERR_NON_ZERO_DEPOSIT)
     }
 
     /// Working with CoinInfo - coin registration procedure, 0x1 account used
@@ -105,7 +111,7 @@ module Dfinance {
 
     /// check whether sender is 0x1, helper method
     fun assert_can_register_coin(account: &signer) {
-        assert(Signer::address_of(account) == 0x1, 1);
+        assert(Signer::address_of(account) == 0x1, ERR_NOT_CORE_ADDRESS);
     }
 
     // ..... TOKEN .....
@@ -141,10 +147,10 @@ module Dfinance {
     ): T<Token<Tok>> {
 
         // check if this token has never been registered
-        assert(!exists<Info<Token<Tok>>>(0x1), 1);
+        assert(!exists<Info<Token<Tok>>>(0x1), ERR_NOT_REGISTERED);
 
         // no more than DECIMALS MAX is allowed
-        assert(decimals >= DECIMALS_MIN && decimals <= DECIMALS_MAX, 20);
+        assert(decimals >= DECIMALS_MIN && decimals <= DECIMALS_MAX, ERR_INVALID_NUMBER_OF_DECIMALS);
 
         let owner = Signer::address_of(account);
 

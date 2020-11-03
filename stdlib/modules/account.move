@@ -9,6 +9,8 @@ module Account {
     use 0x1::Signer;
     use 0x1::Event;
 
+    const ERR_ZERO_DEPOSIT: u64 = 7;
+
     /// holds account data, currently, only events
     resource struct T {}
 
@@ -123,7 +125,7 @@ module Account {
         metadata: vector<u8>
     ) acquires Balance {
         let amount = Dfinance::value(&to_deposit);
-        assert(amount > 0, 7);
+        assert(amount > 0, ERR_ZERO_DEPOSIT);
 
         let denom = Dfinance::denom<Token>();
 
