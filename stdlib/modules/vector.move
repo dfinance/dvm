@@ -3,6 +3,8 @@ address 0x1 {
 // A variable-sized container that can hold both unrestricted types and resources.
 module Vector {
 
+    const ERR_INDEX_OUT_OF_BOUNDS: u64 = 10;
+
     native public fun empty<Element>(): vector<Element>;
 
     // Return the length of the vector.
@@ -68,7 +70,7 @@ module Vector {
     public fun remove<Element>(v: &mut vector<Element>, i: u64): Element {
         let len = length(v);
         // i out of bounds; abort
-        if (i >= len) abort 10;
+        if (i >= len) abort ERR_INDEX_OUT_OF_BOUNDS;
 
         len = len - 1;
         while (i < len) swap(v, i, { i = i + 1; i });
