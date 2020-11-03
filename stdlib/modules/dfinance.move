@@ -11,7 +11,7 @@ module Dfinance {
     const ERR_NOT_CORE_ADDRESS: u64 = 101;
     const ERR_NOT_REGISTERED: u64 = 102;
     const ERR_INVALID_NUMBER_OF_DECIMALS: u64 = 103;
-    const ERR_NOT_ENOUGH_DEPOSIT_AVAILABLE: u64 = 104;
+    const ERR_AMOUNT_TOO_SMALL: u64 = 104;
     const ERR_NON_ZERO_DEPOSIT: u64 = 105;
 
     resource struct T<Coin> {
@@ -52,7 +52,7 @@ module Dfinance {
     }
 
     public fun withdraw<Coin>(coin: &mut T<Coin>, amount: u128): T<Coin> {
-        assert(coin.value >= amount, ERR_NOT_ENOUGH_DEPOSIT_AVAILABLE);
+        assert(coin.value >= amount, ERR_AMOUNT_TOO_SMALL);
         coin.value = coin.value - amount;
         T { value: amount }
     }
@@ -113,11 +113,6 @@ module Dfinance {
     fun assert_can_register_coin(account: &signer) {
         assert(Signer::address_of(account) == 0x1, ERR_NOT_CORE_ADDRESS);
     }
-
-    // ..... TOKEN .....
-    // - Everyone can register his own token by publishing custom type
-    // - Owner has control over minting of his token,
-    // total supply and optional destruction
 
     const DECIMALS_MIN : u8 = 0;
     const DECIMALS_MAX : u8 = 18;
