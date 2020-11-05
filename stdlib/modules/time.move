@@ -20,14 +20,14 @@ module Time {
     /// Find days difference between given timestamp and now()
     public fun days_from(ts: u64): u64 acquires CurrentTimestamp {
         let rn = now();
-        assert(rn > ts, ERR_INCORRECT_ARG);
+        assert(rn >= ts, ERR_INCORRECT_ARG);
         (rn - ts) / SECONDS_IN_DAY
     }
 
     /// Find minutes difference between given timestamp and now()
     public fun minutes_from(ts: u64): u64 acquires CurrentTimestamp {
         let rn = now();
-        assert(rn > ts, ERR_INCORRECT_ARG);
+        assert(rn >= ts, ERR_INCORRECT_ARG);
         (rn - ts) / SECONDS_IN_MIN
     }
 
