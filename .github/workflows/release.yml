@@ -16,8 +16,8 @@ jobs:
         - macos-latest
         - ubuntu-latest
         rust:
-        - "1.45.2"
-        # - "stable"
+        # - "1.45.2"
+        - "stable"
         # - "nightly
 
     env:
@@ -43,13 +43,13 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
 
-    - name: Restore cargo cache
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo
-        key: ${{ runner.os }}-cargo
-        restore-keys: |
-          ${{ runner.os }}-cargo
+    # - name: Restore cargo cache
+    #   uses: actions/cache@v1
+    #   with:
+    #     path: ~/.cargo
+    #     key: ${{ runner.os }}-cargo
+    #     restore-keys: |
+    #       ${{ runner.os }}-cargo
 
     - name: Tests
       shell: bash
