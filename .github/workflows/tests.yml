@@ -82,8 +82,8 @@ jobs:
     - name: Clippy
       run: cargo clippy --tests --examples -- -Dwarnings
 
-    - name: Cleanup build
-      continue-on-error: true
-      run: |
-        cargo sweep -t 7
-        cargo sweep -i
+    # - name: Cleanup build
+    #   continue-on-error: true
+    #   run: |
+    #     cargo sweep -t 7
+    #     cargo sweep -i
