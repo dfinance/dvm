@@ -20,8 +20,8 @@ jobs:
         - macos-latest
         - ubuntu-latest
         rust:
-        - "1.45.2"
-        # - "stable"
+        # - "1.45.2"
+        - "stable"
         # - "nightly
 
     env:

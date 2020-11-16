@@ -31,8 +31,8 @@ jobs:
         go:
         - "1.14.6"
         rust:
-        - "1.45.2"
-        # - "stable"
+        # - "1.45.2"
+        - "stable"
         # - "nightly
 
     env:
