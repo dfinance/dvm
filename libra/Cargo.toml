@@ -5,20 +5,20 @@ authors = [
     "Alex Koz. <alexanderkozlovskii@wings.ai>",
     "Dm. Yakushev <dmitryyakushev@wings.ai>",
     "Maxim Kurnikov <maximkurnikov@wings.ai>"
-    ]
+]
 edition = "2018"
 
 [dependencies]
-move-lang = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-libra-state-view = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-libra-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+move-lang = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+move-vm-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+move-core-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+libra-state-view = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+libra-types = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
 lcs = { git = "https://github.com/dfinance/libra.git", package = "libra-canonical-serialization", branch = "release-1.0" }
-compiler = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+compiler = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
 libra-logger = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-libra-vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-move-vm-natives = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
-bytecode-verifier = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0" }
+vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+libra-vm = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+move-vm-runtime = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+move-vm-natives = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
+bytecode-verifier = { git = "https://github.com/dfinance/libra.git", branch = "release-1.0", features = ["dfinance_address"] }
