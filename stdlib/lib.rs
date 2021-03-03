@@ -44,11 +44,11 @@ pub struct Value {
 }
 
 #[derive(Serialize)]
-pub struct WS {
+pub struct Ws {
     write_set: Vec<Value>,
 }
 
-impl From<WriteSet> for WS {
+impl From<WriteSet> for Ws {
     fn from(ws: WriteSet) -> Self {
         let write_set = ws
             .iter()
@@ -65,7 +65,7 @@ impl From<WriteSet> for WS {
                 }
             })
             .collect();
-        WS { write_set }
+        Ws { write_set }
     }
 }
 

@@ -48,8 +48,10 @@ pub(crate) mod support_sentry {
         std::env::set_var("SENTRY_DSN", format!("{}", &dsn));
 
         let client = {
-            let mut options = sentry::ClientOptions::default();
-            options.dsn = Some(dsn.to_owned());
+            let mut options = sentry::ClientOptions {
+                dsn: Some(dsn.to_owned()),
+                ..Default::default()
+            };
             if let Some(ref env) = env {
                 trace!("sentry env: {}", env);
                 options.environment = Some(env.to_owned().into());

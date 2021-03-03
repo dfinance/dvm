@@ -14,12 +14,12 @@ pub trait Log {
     ) -> Result<(), Error>;
 }
 
-pub struct CVSLog {
+pub struct CvsLog {
     wtr: csv::Writer<File>,
 }
 
-impl CVSLog {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<CVSLog, Error> {
+impl CvsLog {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<CvsLog, Error> {
         let mut wtr = csv::Writer::from_path(path)?;
 
         wtr.write_record(&[
@@ -37,11 +37,11 @@ impl CVSLog {
             "CPUUtilization",
         ])?;
         wtr.flush()?;
-        Ok(CVSLog { wtr })
+        Ok(CvsLog { wtr })
     }
 }
 
-impl Log for CVSLog {
+impl Log for CvsLog {
     fn log(
         &mut self,
         total_iterations: u64,

@@ -10,7 +10,7 @@ use std::sync::Arc;
 use dvm_net::endpoint::Endpoint;
 use std::str::FromStr;
 use load_generator::info_service::InfoService;
-use load_generator::log::CVSLog;
+use load_generator::log::CvsLog;
 
 #[derive(Clap, Debug)]
 #[clap(name = "loge.", version = "0.1.0")]
@@ -111,7 +111,7 @@ async fn main() {
         .info_service()
         .map(|uri| InfoService::new(uri).unwrap());
 
-    let logger = test_info.csv_path.map(|path| CVSLog::new(path).unwrap());
+    let logger = test_info.csv_path.map(|path| CvsLog::new(path).unwrap());
 
     let dvm = match options {
         Loge::Attach { dvm, .. } => {

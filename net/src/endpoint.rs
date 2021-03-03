@@ -76,7 +76,7 @@ impl Ipc {
     /// Create all dirs for path if not exists.
     pub(crate) async fn create_dir_all(path: &Path) -> Result<(), std::io::Error> {
         trace!("preparing ipc fs-path {:?}", &path);
-        tokio::fs::create_dir_all(path.parent().unwrap_or_else(|| path)).await?;
+        tokio::fs::create_dir_all(path.parent().unwrap_or(path)).await?;
         Ok(())
     }
 

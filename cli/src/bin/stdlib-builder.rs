@@ -5,7 +5,7 @@ use std::{
 };
 use clap::Clap;
 use serde_json::{to_string, to_string_pretty};
-use lang::stdlib::{build_external_std, Stdlib, WS};
+use lang::stdlib::{build_external_std, Stdlib, Ws};
 use anyhow::Error;
 use dvm_cli::version;
 
@@ -72,9 +72,9 @@ fn main() {
 
     // Serialize
     let ws = if opts.pretty_print {
-        to_string_pretty(&WS::from(vm_value))
+        to_string_pretty(&Ws::from(vm_value))
     } else {
-        to_string(&WS::from(vm_value))
+        to_string(&Ws::from(vm_value))
     }
     .expect("Cannot serialize results to json.");
 
