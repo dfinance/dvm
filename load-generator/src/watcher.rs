@@ -90,9 +90,9 @@ impl LoadTimer {
     }
 }
 
-impl Into<Duration> for LoadTimer {
-    fn into(self) -> Duration {
-        self.duration
+impl From<LoadTimer> for Duration {
+    fn from(lt: LoadTimer) -> Self {
+        lt.duration
     }
 }
 

@@ -19,13 +19,13 @@ struct Row {
     value: String,
 }
 
-impl Into<(AccessPath, WriteOp)> for Row {
-    fn into(self) -> (AccessPath, WriteOp) {
-        let address = AccountAddress::from_hex_literal(&format!("0x{}", self.address)).unwrap();
-        let path = hex::decode(self.path).unwrap();
+impl From<Row> for (AccessPath, WriteOp) {
+    fn from(row: Row) -> Self {
+        let address = AccountAddress::from_hex_literal(&format!("0x{}", row.address)).unwrap();
+        let path = hex::decode(row.path).unwrap();
         (
             AccessPath::new(address, path),
-            WriteOp::Value(hex::decode(self.value).unwrap()),
+            WriteOp::Value(hex::decode(row.value).unwrap()),
         )
     }
 }

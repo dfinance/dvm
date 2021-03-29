@@ -154,7 +154,7 @@ impl TryFrom<VmExecuteResponse> for ExecutionResult {
                     }
                 })
             })
-            .unwrap_or_else(|| StatusCode::EXECUTED);
+            .unwrap_or(StatusCode::EXECUTED);
 
         Ok(ExecutionResult {
             ws,

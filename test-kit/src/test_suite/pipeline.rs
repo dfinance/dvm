@@ -254,12 +254,12 @@ impl TestMeta {
         };
         TestMeta {
             senders,
-            gas: meta.gas.take().unwrap_or_else(|| 100_000_000),
+            gas: meta.gas.take().unwrap_or(100_000_000),
             expected_result: meta
                 .expected_result
                 .take()
-                .unwrap_or_else(|| ExecutionResult::Success),
-            block: meta.block.take().unwrap_or_else(|| 100),
+                .unwrap_or(ExecutionResult::Success),
+            block: meta.block.take().unwrap_or(100),
             time: meta
                 .time
                 .take()

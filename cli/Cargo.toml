@@ -26,7 +26,7 @@ clap = "3.0.0-beta.2"
 http = "0.2"
 tokio = { version = "0.2", features = [ "macros", "rt-core", "rt-threaded", "blocking", "full", "time" ] }
 futures = "0.3"
-serde = "1.0"
+serde = "=1.0.117"
 serde_json = "1.0"
 enum-iterator = "0.6.0"
 signal-notify = "0.1.3"

@@ -267,7 +267,7 @@ where
         let source_list = convert_path(&source_list)?;
         let dep_list = convert_path(&dep_list)?;
         let addr = self.address()?;
-        Ok(move_check(&source_list, &dep_list, addr, None)?)
+        move_check(&source_list, &dep_list, addr, None)
     }
 
     /// Verify and store compiled units.
@@ -281,7 +281,7 @@ where
             .into_iter()
             .partition(|u| matches!(u, CompiledUnit::Module { .. }));
 
-        fn store(units: Vec<CompiledUnit>, base_dir: &PathBuf) -> Result<()> {
+        fn store(units: Vec<CompiledUnit>, base_dir: &Path) -> Result<()> {
             for (idx, unit) in units.into_iter().enumerate() {
                 let mut path = base_dir.join(format!("{}_{}", idx, unit.name()));
                 path.set_extension("mv");
