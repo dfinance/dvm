@@ -160,6 +160,7 @@ fn test_events() {
     );
 
     #[derive(Serialize)]
+    #[allow(clippy::upper_case_acronyms)]
     struct BTC {
         value: u64,
     }
@@ -237,8 +238,8 @@ fn test_coin_info() {
         total_supply: 1024,
     };
 
-    test_kit.set_currency_info("XFI", xfi.clone());
-    test_kit.set_currency_info("BTC", btc.clone());
+    test_kit.set_currency_info("XFI", xfi);
+    test_kit.set_currency_info("BTC", btc);
 
     let res = test_kit.execute_script(
         include_str!("resources/currency_info.move"),

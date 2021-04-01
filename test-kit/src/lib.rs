@@ -156,6 +156,7 @@ impl TestKit {
     }
 
     /// Execute script.
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_script(
         &self,
         code: &str,

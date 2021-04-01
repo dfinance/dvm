@@ -81,6 +81,7 @@ impl Client {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn execute(
         &mut self,
         bytecode: Vec<u8>,

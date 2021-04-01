@@ -89,12 +89,10 @@ impl<'a, D: DataSource> RemoteCache for StateViewSession<'a, D> {
                             .ok_or_else(|| PartialVMError::new(StatusCode::INTERNAL_TYPE_ERROR))?;
                         let info = self.ds.get_currency_info(ticker);
                         match info {
-                            Ok(Some(info)) => {
-                                lcs::to_bytes(&info).map(|buf| Some(buf)).map_err(|err| {
-                                    PartialVMError::new(StatusCode::VALUE_SERIALIZATION_ERROR)
-                                        .with_message(err.to_string())
-                                })
-                            }
+                            Ok(Some(info)) => lcs::to_bytes(&info).map(Some).map_err(|err| {
+                                PartialVMError::new(StatusCode::VALUE_SERIALIZATION_ERROR)
+                                    .with_message(err.to_string())
+                            }),
                             Err(err) => Err(PartialVMError::new(StatusCode::MISSING_DEPENDENCY)
                                 .with_message(err.to_string())),
                             Ok(None) => Ok(None),
