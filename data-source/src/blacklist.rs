@@ -1,6 +1,7 @@
-use crate::{DataSource, RemoveModule};
+use crate::{DataSource, RemoveModule, Oracle, Balance, GetCurrencyInfo, CurrencyInfo};
 use std::collections::HashSet;
 use libra::prelude::*;
+use anyhow::Error;
 
 /// Wrapper for data source which returns blank for requests from blacklist.
 #[derive(Debug, Clone)]
@@ -59,6 +60,24 @@ where
         } else {
             self.inner.get_resource(address, tag)
         }
+    }
+}
+
+impl<D: DataSource> Oracle for BlackListDataSource<D> {
+    fn get_price(&self, currency_1: String, currency_2: String) -> Result<Option<u128>, Error> {
+        self.inner.get_price(currency_1, currency_2)
+    }
+}
+
+impl<D: DataSource> Balance for BlackListDataSource<D> {
+    fn get_balance(&self, address: AccountAddress, ticker: String) -> Result<Option<u128>, Error> {
+        self.inner.get_balance(address, ticker)
+    }
+}
+
+impl<D: DataSource> GetCurrencyInfo for BlackListDataSource<D> {
+    fn get_currency_info(&self, ticker: String) -> Result<Option<CurrencyInfo>, Error> {
+        self.inner.get_currency_info(ticker)
     }
 }
 

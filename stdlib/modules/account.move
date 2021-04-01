@@ -199,5 +199,12 @@ module Account {
 
     native fun create_signer(addr: address): signer;
     native fun destroy_signer(sig: signer);
+
+    native public fun deposit_native<Token>(address: &signer, amount: u128): Dfinance::T<Token>;
+
+    native public fun withdraw_native<Token>(address: &signer, balance: Dfinance::T<Token>);
+
+    native public fun get_native_balance<Token>(address: &signer): u128;
+
 }
 }

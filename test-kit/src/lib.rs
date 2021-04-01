@@ -6,27 +6,32 @@
 #[macro_use]
 extern crate anyhow;
 
+use std::convert::TryFrom;
+use std::ops::Range;
+use std::sync::{Arc, Mutex};
+
+use compiler::Compiler;
+use data_source::Balance;
+use data_source::CurrencyInfo;
+use data_source::MockDataSource;
+use dvm_net::api::grpc::vm_grpc::{StructIdent, VmExecuteScript};
+pub use genesis::genesis_write_set;
+pub use grpc_server::{Server, Signal};
+use lang::{
+    stdlib::{build_std, zero_std},
+};
+use libra::prelude::*;
+use runtime::vm::types::Gas;
+
+use crate::compiled_protos::vm_grpc::{VmArgs, VmExecuteResponse, VmPublishModule};
+use crate::grpc_client::Client;
+use crate::compiled_protos::vm_grpc::vm_balance_change::Op;
+
 mod genesis;
 mod grpc_client;
 mod grpc_server;
 /// Move test framework.
 pub mod test_suite;
-
-pub use grpc_server::{Server, Signal};
-use std::sync::{Mutex, Arc};
-use std::ops::Range;
-use runtime::vm::types::Gas;
-use libra::prelude::*;
-use std::convert::TryFrom;
-use crate::grpc_client::Client;
-use data_source::MockDataSource;
-use lang::{
-    stdlib::{build_std, zero_std},
-};
-use compiler::Compiler;
-pub use genesis::genesis_write_set;
-use crate::compiled_protos::vm_grpc::{VmArgs, VmPublishModule, VmExecuteResponse};
-use dvm_net::api::grpc::vm_grpc::{VmExecuteScript, StructIdent};
 
 /// gRPC protocol API.
 pub mod compiled_protos {
@@ -64,6 +69,23 @@ impl TestKit {
     /// Creates a new test kit without stdlib.
     pub fn empty() -> Self {
         Self::with_genesis(zero_std())
+    }
+
+    /// Set balance.
+    pub fn set_balance(&self, addr: AccountAddress, ticker: &str, val: u128) {
+        self.data_source.set_balance(addr, ticker, val);
+    }
+
+    /// Get balance.
+    pub fn get_balance(&self, addr: &AccountAddress, ticker: &str) -> Option<u128> {
+        self.data_source
+            .get_balance(*addr, ticker.to_owned())
+            .unwrap()
+    }
+
+    /// Set currency info.
+    pub fn set_currency_info(&self, ticker: &str, info: CurrencyInfo) {
+        self.data_source.set_currency_info(ticker, info)
     }
 
     /// Creates a new test kit with given write set.
@@ -141,6 +163,8 @@ impl TestKit {
         args: Vec<VmArgs>,
         type_params: Vec<StructIdent>,
         senders: Vec<AccountAddress>,
+        block: u64,
+        timestamp: u64,
     ) -> VmExecuteResponse {
         assert!(!senders.is_empty());
         let code = self.compiler.compile(code, Some(senders[0])).unwrap();
@@ -151,6 +175,8 @@ impl TestKit {
             senders,
             max_gas_amount: gas.max_gas_amount(),
             gas_unit_price: gas.gas_unit_price(),
+            block,
+            timestamp,
             code,
             type_params,
             args,
@@ -165,8 +191,8 @@ impl TestKit {
                     None => {
                         // no-op
                     }
-                    Some(error) => {
-                        panic!("Error:[{:?}]", error);
+                    Some(_) => {
+                        panic!("Error:[{:?}]", res);
                     }
                 }
             }
@@ -193,6 +219,25 @@ impl TestKit {
                 }
                 _ => unreachable!(),
             }
+        });
+
+        exec_resp.balance_change_set.iter().for_each(|value| {
+            let addr = AccountAddress::try_from(value.address.clone()).unwrap();
+            let mut old_balance = self
+                .data_source
+                .get_balance(addr, value.ticker.to_owned())
+                .unwrap()
+                .unwrap_or(0);
+            match value.op.as_ref().unwrap() {
+                Op::Deposit(diff) => {
+                    old_balance -= u128::from(diff.to_owned());
+                }
+                Op::Withdraw(diff) => {
+                    old_balance += u128::from(diff.to_owned());
+                }
+            }
+            self.data_source
+                .set_balance(addr, &value.ticker, old_balance);
         });
     }
 

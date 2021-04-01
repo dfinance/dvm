@@ -73,6 +73,9 @@ pub mod vm {
     pub use move_vm_runtime::loader::Loader;
     pub use move_vm_runtime::{data_cache::TransactionEffects, session::Session};
     pub use move_vm_runtime::logging::{NoContextLog, LogContext};
+    pub use move_vm_types::natives::balance::NativeBalance;
+    pub use move_vm_types::natives::balance::WalletId;
+    pub use move_vm_types::natives::balance::BalanceOperation;
 }
 
 pub mod gas {

@@ -1,6 +1,7 @@
 use anyhow::*;
 use std::fmt;
 use libra::{prelude::*, vm::*, gas::*};
+use std::collections::HashMap;
 
 /// Result enum for ExecutionResult
 pub type VmResult = Result<ExecutionResult, VMStatus>;
@@ -49,6 +50,8 @@ pub struct ExecutionResult {
     pub write_set: WriteSet,
     /// Emitted events.
     pub events: Vec<ContractEvent>,
+    /// Native balance operation.
+    pub wallet_ops: HashMap<WalletId, BalanceOperation>,
     /// Number of gas units used for execution.
     pub gas_used: u64,
     /// Status of execution.
@@ -72,15 +75,17 @@ impl ExecutionResult {
                     PartialVMError::new(err.status_code()).finish(Location::Undefined)
                 })
             })
-            .map(|(write_set, events)| ExecutionResult {
+            .map(|(write_set, events, wallet_ops)| ExecutionResult {
                 write_set,
                 events,
+                wallet_ops,
                 gas_used,
                 status: PartialVMError::new(StatusCode::EXECUTED).finish(Location::Undefined),
             })
             .unwrap_or_else(|status| ExecutionResult {
                 write_set: WriteSetMut::default().freeze().expect("Impossible error."),
                 events: vec![],
+                wallet_ops: Default::default(),
                 gas_used,
                 status,
             })
@@ -126,6 +131,8 @@ pub struct ScriptTx {
     args: Vec<Value>,
     type_args: Vec<TypeTag>,
     senders: Vec<AccountAddress>,
+    timestamp: u64,
+    block: u64,
 }
 
 /// Script transaction.
@@ -136,6 +143,8 @@ impl ScriptTx {
         args: Vec<Value>,
         type_args: Vec<TypeTag>,
         senders: Vec<AccountAddress>,
+        timestamp: u64,
+        block: u64,
     ) -> Result<Self> {
         ensure!(
             !senders.is_empty(),
@@ -146,6 +155,8 @@ impl ScriptTx {
             args,
             type_args,
             senders,
+            timestamp,
+            block,
         })
     }
 
@@ -160,8 +171,24 @@ impl ScriptTx {
     }
 
     /// Convert into internal data.
-    pub fn into_inner(self) -> (Vec<u8>, Vec<Value>, Vec<TypeTag>, Vec<AccountAddress>) {
-        (self.code, self.args, self.type_args, self.senders)
+    pub fn into_inner(
+        self,
+    ) -> (
+        Vec<u8>,
+        Vec<Value>,
+        Vec<TypeTag>,
+        Vec<AccountAddress>,
+        u64,
+        u64,
+    ) {
+        (
+            self.code,
+            self.args,
+            self.type_args,
+            self.senders,
+            self.timestamp,
+            self.block,
+        )
     }
 }
 

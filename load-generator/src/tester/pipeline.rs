@@ -75,6 +75,8 @@ impl Pipeline {
                 store_script,
                 MAX_GAS,
                 1,
+                0,
+                0,
                 vec![address],
                 args.clone(),
                 vec![],
@@ -102,7 +104,7 @@ impl Pipeline {
         });
         let instant = Instant::now();
         let execution_result = client
-            .execute(load_script, MAX_GAS, 1, vec![address], args, vec![])
+            .execute(load_script, MAX_GAS, 1, 0, 0, vec![address], args, vec![])
             .await?;
         self.stat
             .store(Stat::ExecuteScript(instant.elapsed().as_millis()))?;

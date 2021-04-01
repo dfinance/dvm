@@ -22,6 +22,8 @@ use tokio::runtime::Builder;
 // use tokio::sync::oneshot;
 use futures::channel::oneshot;
 use futures::future::FutureExt;
+use dvm_net::api::grpc::ds_grpc::*;
+
 #[derive(Default)]
 pub struct Fake();
 
@@ -36,6 +38,27 @@ impl DsService for Fake {
         &self,
         _: Request<DsAccessPaths>,
     ) -> Result<Response<DsRawResponses>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_oracle_price(
+        &self,
+        _: Request<OraclePriceRequest>,
+    ) -> Result<Response<OraclePriceResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_native_balance(
+        &self,
+        _: Request<NativeBalanceRequest>,
+    ) -> Result<Response<NativeBalanceResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_currency_info(
+        &self,
+        _: Request<CurrencyInfoRequest>,
+    ) -> Result<Response<CurrencyInfoResponse>, Status> {
         unimplemented!()
     }
 }

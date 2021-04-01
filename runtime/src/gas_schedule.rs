@@ -150,6 +150,9 @@ pub fn cost_table() -> CostTable {
         (N::U256_DIV, GasCost::new(10, 1)),
         (N::U256_SUB, GasCost::new(10, 1)),
         (N::U256_ADD, GasCost::new(10, 1)),
+        (N::DEPOSIT, GasCost::new(706, 1)),
+        (N::WITHDRAW, GasCost::new(706, 1)),
+        (N::GET_BALANCE, GasCost::new(353, 1)),
     ];
 
     instrs.sort_by_key(|cost| instruction_key(&cost.0));

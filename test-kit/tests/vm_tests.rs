@@ -1,8 +1,8 @@
-use libra::{prelude::*, lcs};
-use dvm_test_kit::*;
-use runtime::resources::*;
-use dvm_net::api::grpc::vm_grpc::{VmArgs, VmStatus, Message, MoveError, vm_status};
 use dvm_net::api::grpc::types::VmTypeTag;
+use dvm_net::api::grpc::vm_grpc::{Message, MoveError, vm_status, VmArgs, VmStatus};
+use dvm_test_kit::*;
+use libra::{lcs, prelude::*};
+use runtime::resources::*;
 
 #[test]
 fn test_sender_as_argument() {
@@ -24,7 +24,15 @@ fn test_sender_as_argument() {
         r#type: VmTypeTag::Address as i32,
         value: account_address.to_vec(),
     }];
-    let res = test_kit.execute_script(script, gas_meta(), args, vec![], vec![account("0x110")]);
+    let res = test_kit.execute_script(
+        script,
+        gas_meta(),
+        args,
+        vec![],
+        vec![account("0x110")],
+        0,
+        0,
+    );
     test_kit.assert_success(&res);
     let value: AddressStore = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, account_address);
@@ -57,6 +65,8 @@ fn test_senders_as_argument() {
         args,
         vec![],
         vec![account("0x110"), account("0x111")],
+        0,
+        0,
     );
     test_kit.assert_success(&res);
     let value: AddressStore = lcs::from_bytes(&res.write_set[0].value).unwrap();
@@ -85,7 +95,15 @@ fn test_vector_as_argument() {
         r#type: VmTypeTag::Vector as i32,
         value: vec.clone(),
     }];
-    let res = test_kit.execute_script(script, gas_meta(), args, vec![], vec![account("0x110")]);
+    let res = test_kit.execute_script(
+        script,
+        gas_meta(),
+        args,
+        vec![],
+        vec![account("0x110")],
+        0,
+        0,
+    );
     test_kit.assert_success(&res);
     let value: VectorU8Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, vec);
@@ -121,6 +139,8 @@ fn test_update_std_module() {
         vec![],
         vec![],
         vec![AccountAddress::random()],
+        0,
+        0,
     );
     test_kit.assert_success(&res);
     let value: U64Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
@@ -141,6 +161,8 @@ fn test_update_std_module() {
         vec![],
         vec![],
         vec![AccountAddress::random()],
+        0,
+        0,
     );
     test_kit.assert_success(&res);
     let value: U64Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
@@ -190,7 +212,7 @@ fn test_publish_module_data_format_error() {
             }),
             error: Some(vm_status::Error::MoveError(MoveError {
                 status_code: StatusCode::DATA_FORMAT_ERROR as u64
-            }))
+            })),
         })
     )
 }
@@ -209,6 +231,8 @@ fn test_execute_script_data_format_error() {
         }],
         vec![],
         vec![AccountAddress::random()],
+        0,
+        0,
     );
 
     assert_eq!(
@@ -219,7 +243,7 @@ fn test_execute_script_data_format_error() {
             }),
             error: Some(vm_status::Error::MoveError(MoveError {
                 status_code: StatusCode::DATA_FORMAT_ERROR as u64
-            }))
+            })),
         })
     )
 }

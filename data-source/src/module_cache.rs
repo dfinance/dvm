@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use libra::prelude::*;
-use crate::{RemoveModule, DataSource};
+use crate::{RemoveModule, DataSource, Oracle, Balance, GetCurrencyInfo, CurrencyInfo};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -9,6 +9,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::fmt::Formatter;
 use dvm_info::memory_check::CacheSize;
+use anyhow::Error;
 
 /// Cached `DataSource`.
 #[derive(Debug, Clone)]
@@ -62,6 +63,24 @@ where
         tag: &StructTag,
     ) -> PartialVMResult<Option<Vec<u8>>> {
         self.inner.get_resource(address, tag)
+    }
+}
+
+impl<D: DataSource> Oracle for ModuleCache<D> {
+    fn get_price(&self, currency_1: String, currency_2: String) -> Result<Option<u128>, Error> {
+        self.inner.get_price(currency_1, currency_2)
+    }
+}
+
+impl<D: DataSource> Balance for ModuleCache<D> {
+    fn get_balance(&self, address: AccountAddress, ticker: String) -> Result<Option<u128>, Error> {
+        self.inner.get_balance(address, ticker)
+    }
+}
+
+impl<D: DataSource> GetCurrencyInfo for ModuleCache<D> {
+    fn get_currency_info(&self, ticker: String) -> Result<Option<CurrencyInfo>, Error> {
+        self.inner.get_currency_info(ticker)
     }
 }
 

@@ -77,6 +77,8 @@ async fn send_ping(
         senders: vec![CORE_CODE_ADDRESS.to_vec()],
         max_gas_amount: 100,
         gas_unit_price: 1,
+        block: 0,
+        timestamp: 0,
         code: bytecode,
         type_params: vec![],
         args: vec![],
