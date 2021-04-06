@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use dvm_net::{api, tonic};
 use dvm_net::prelude::*;
 
-use api::grpc::ds_grpc::{
+use api::grpc::{
     ds_service_client::DsServiceClient,
     ds_service_server::{DsServiceServer, DsService},
     DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses,
@@ -19,10 +19,12 @@ use tonic::Request;
 use tonic::{transport::Server, Response, Status};
 use tokio::runtime::Builder;
 
-// use tokio::sync::oneshot;
 use futures::channel::oneshot;
 use futures::future::FutureExt;
-use dvm_net::api::grpc::ds_grpc::*;
+use dvm_api::grpc::{
+    OraclePriceRequest, OraclePriceResponse, NativeBalanceRequest, NativeBalanceResponse,
+    CurrencyInfoRequest, CurrencyInfoResponse,
+};
 
 #[derive(Default)]
 pub struct Fake();

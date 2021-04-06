@@ -1,5 +1,5 @@
-use dvm_net::api::grpc::types::VmTypeTag;
-use dvm_net::api::grpc::vm_grpc::{Message, MoveError, vm_status, VmArgs, VmStatus};
+use dvm_net::api::grpc::VmTypeTag;
+use dvm_net::api::grpc::{Message, MoveError, vm_status, VmArgs, VmStatus};
 use dvm_test_kit::*;
 use libra::{lcs, prelude::*};
 use runtime::resources::*;

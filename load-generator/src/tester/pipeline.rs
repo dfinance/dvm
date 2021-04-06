@@ -7,13 +7,12 @@ use std::time::Instant;
 use libra::account::AccountAddress;
 use crate::tester::mv_template::{module, store_script, load_script};
 use libra::result::StatusCode;
-use dvm_net::api::grpc::vm_grpc::VmArgs;
-use dvm_net::api::grpc::types::VmTypeTag;
 use byteorder::{LittleEndian, ByteOrder};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::task::JoinHandle;
 use crate::dvm::Dvm;
+use dvm_net::api::grpc::{VmTypeTag, VmArgs};
 
 const MAX_GAS: u64 = 400_000;
 

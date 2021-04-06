@@ -3,14 +3,14 @@ use libra::file_format::Kind;
 use lang::bytecode::metadata::{extract_bytecode_metadata, Metadata, FunctionMeta, StructMeta};
 use crate::{tonic, api};
 use tonic::{Request, Response, Status};
-use api::grpc::metadata_grpc::dvm_bytecode_metadata_server::DvmBytecodeMetadata;
+use api::grpc::dvm_bytecode_metadata_server::DvmBytecodeMetadata;
 use info::metrics::meter::ScopeMeter;
 use info::metrics::execution::ExecutionResult;
-use dvm_net::api::grpc::metadata_grpc::{
+use dvm_net::api::grpc::{
     Metadata as GrpsMetadata, Bytecode, metadata::Meta, ScriptMeta, ModuleMeta, Function, Struct,
     Field,
 };
-use dvm_net::api::grpc::types::VmTypeTag;
+use dvm_net::api::grpc::VmTypeTag;
 
 /// Metadata service.
 /// Provides a function to retrieve metadata for the script.

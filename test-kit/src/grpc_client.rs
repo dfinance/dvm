@@ -4,10 +4,10 @@ use tokio::runtime::Runtime;
 use dvm_net::tonic::transport::Channel;
 use dvm_net::tonic::Request;
 use crate::ArcMut;
-use crate::compiled_protos::vm_grpc::vm_script_executor_client::VmScriptExecutorClient;
-use crate::compiled_protos::vm_grpc::vm_module_publisher_client::VmModulePublisherClient;
-use crate::compiled_protos::vm_grpc::{VmPublishModule, VmExecuteResponse};
-use dvm_net::api::grpc::vm_grpc::VmExecuteScript;
+use crate::compiled_protos::vm_script_executor_client::VmScriptExecutorClient;
+use crate::compiled_protos::vm_module_publisher_client::VmModulePublisherClient;
+use crate::compiled_protos::{VmPublishModule, VmExecuteResponse};
+use dvm_net::api::grpc::VmExecuteScript;
 
 /// Vm Grpc client.
 pub struct Client {

@@ -1,17 +1,18 @@
 use http::Uri;
 use anyhow::{Error, anyhow};
-use dvm_net::api::grpc::vm_grpc::vm_script_executor_client::VmScriptExecutorClient;
-use dvm_net::api::grpc::vm_grpc::vm_module_publisher_client::VmModulePublisherClient;
-use dvm_net::api::grpc::compiler_grpc::dvm_compiler_client::DvmCompilerClient;
+use dvm_net::api::grpc::vm_script_executor_client::VmScriptExecutorClient;
+use dvm_net::api::grpc::vm_module_publisher_client::VmModulePublisherClient;
 use dvm_net::api::tonic::transport::Channel;
 use dvm_net::api::tonic::Request;
 use libra::account::AccountAddress;
 use libra::ds::{WriteSet, WriteSetMut, WriteOp, AccessPath};
 use libra::result::StatusCode;
-use dvm_net::api::grpc::vm_grpc::{vm_status::Error as ExcError, VmExecuteScript, VmArgs, StructIdent};
-use dvm_net::api::grpc::compiler_grpc::{SourceFiles, CompilationUnit};
-use dvm_net::api::grpc::vm_grpc::{VmPublishModule, VmExecuteResponse, VmWriteOp};
 use std::convert::TryFrom;
+use dvm_net::api::grpc::dvm_compiler_client::DvmCompilerClient;
+use dvm_net::api::grpc::{
+    vm_status::Error as ExcError, CompilationUnit, SourceFiles, StructIdent, VmArgs,
+    VmExecuteScript, VmExecuteResponse, VmPublishModule, VmWriteOp,
+};
 
 pub struct Client {
     executor: VmScriptExecutorClient<Channel>,

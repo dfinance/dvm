@@ -4,17 +4,16 @@ use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 use anyhow::Error;
-use api::grpc::ds_grpc::{ds_service_client::DsServiceClient, DsAccessPath};
+use api::grpc::{ds_service_client::DsServiceClient, DsAccessPath};
 use crossbeam::channel::{bounded, Receiver, Sender};
 use http::Uri;
 use tokio::runtime::Runtime;
 
 use dvm_net::api;
-use dvm_net::api::grpc::ds_grpc::{
+use dvm_net::api::grpc::{
     CurrencyInfoRequest as GCurrencyInfoRequest, ErrorCode, NativeBalanceRequest,
-    OraclePriceRequest,
+    OraclePriceRequest, U128,
 };
-use dvm_net::api::grpc::types::U128;
 use dvm_net::prelude::*;
 use dvm_net::tonic;
 use dvm_net::tonic::Status;

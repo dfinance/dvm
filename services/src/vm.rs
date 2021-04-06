@@ -3,15 +3,14 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use anyhow::Error;
-use api::grpc::vm_grpc::vm_script_executor_server::VmScriptExecutor;
+use api::grpc::vm_script_executor_server::VmScriptExecutor;
 use byteorder::{ByteOrder, LittleEndian};
 use tonic::{Request, Response, Status};
 
 use data_source::DataSource;
-use dvm_net::api::grpc::types::VmTypeTag;
-use dvm_net::api::grpc::vm_grpc::*;
-use dvm_net::api::grpc::vm_grpc::vm_balance_change::Op;
-use dvm_net::api::grpc::vm_grpc::vm_module_publisher_server::VmModulePublisher;
+use dvm_net::api::grpc::*;
+use dvm_net::api::grpc::vm_balance_change::Op;
+use dvm_net::api::grpc::vm_module_publisher_server::VmModulePublisher;
 use dvm_net::api::tonic::Code;
 use info::heartbeat::HeartRateMonitor;
 use info::metrics::execution::ExecutionResult as ActionResult;

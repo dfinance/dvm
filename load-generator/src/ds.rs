@@ -2,24 +2,20 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use anyhow::Error;
-use grpc::ds_grpc::{DsAccessPath, DsAccessPaths, DsRawResponse, DsRawResponses};
-use grpc::ds_grpc::ds_service_server::DsService;
-
+use crate::ds::grpc::U128;
 use dvm_net::api::grpc;
-use dvm_net::api::grpc::ds_grpc::{
+use dvm_net::api::grpc::{
     ErrorCode, NativeBalanceRequest, NativeBalanceResponse, OraclePriceRequest,
-    OraclePriceResponse, CurrencyInfo,
+    OraclePriceResponse, CurrencyInfo, DsAccessPath, DsRawResponse, DsRawResponses, DsAccessPaths,
 };
-use dvm_net::api::grpc::ds_grpc::{CurrencyInfoRequest, CurrencyInfoResponse};
-use dvm_net::api::grpc::ds_grpc::ds_service_server::DsServiceServer;
+use dvm_net::api::grpc::{CurrencyInfoRequest, CurrencyInfoResponse};
+use dvm_net::api::grpc::ds_service_server::{DsServiceServer, DsService};
 use dvm_net::api::tonic::{Request, Response, Status};
 use dvm_net::api::tonic::transport::Server;
 use dvm_net::endpoint::Endpoint;
 use dvm_net::serve::ServeWith;
 use dvm_net::tonic;
 use libra::ds::{WriteOp, WriteSet};
-
-use crate::ds::grpc::types::U128;
 
 type Resources = HashMap<Vec<u8>, Vec<u8>>;
 type Accounts = HashMap<Vec<u8>, Resources>;

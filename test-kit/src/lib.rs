@@ -14,7 +14,7 @@ use compiler::Compiler;
 use data_source::Balance;
 use data_source::CurrencyInfo;
 use data_source::MockDataSource;
-use dvm_net::api::grpc::vm_grpc::{StructIdent, VmExecuteScript};
+use dvm_net::api::grpc::{StructIdent, VmExecuteScript};
 pub use genesis::genesis_write_set;
 pub use grpc_server::{Server, Signal};
 use lang::{
@@ -23,9 +23,9 @@ use lang::{
 use libra::prelude::*;
 use runtime::vm::types::Gas;
 
-use crate::compiled_protos::vm_grpc::{VmArgs, VmExecuteResponse, VmPublishModule};
+use crate::compiled_protos::{VmArgs, VmExecuteResponse, VmPublishModule};
 use crate::grpc_client::Client;
-use crate::compiled_protos::vm_grpc::vm_balance_change::Op;
+use crate::compiled_protos::vm_balance_change::Op;
 
 mod genesis;
 mod grpc_client;

@@ -4,10 +4,10 @@ use libra::account::AccountAddress;
 use data_source::MockDataSource;
 use dvm_services::metadata::MetadataService;
 use compiler::Compiler;
-use dvm_net::api::grpc::types::VmTypeTag;
-use dvm_net::api::grpc::metadata_grpc::Bytecode;
-use dvm_net::api::grpc::metadata_grpc::dvm_bytecode_metadata_server::DvmBytecodeMetadata;
-use dvm_net::api::grpc::metadata_grpc::metadata::Meta;
+use dvm_net::api::grpc::VmTypeTag;
+use dvm_net::api::grpc::Bytecode;
+use dvm_net::api::grpc::dvm_bytecode_metadata_server::DvmBytecodeMetadata;
+use dvm_net::api::grpc::metadata::Meta;
 
 #[tokio::test]
 async fn test_no_arguments_for_script() {

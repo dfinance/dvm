@@ -3,12 +3,12 @@ use tokio::runtime::Runtime;
 use dvm_net::tonic::{self, transport::Server};
 use dvm_net::tonic::{Request, Response, Status};
 use dvm_net::api::grpc;
-use grpc::ds_grpc::ds_service_server::{DsServiceServer, DsService};
-use grpc::ds_grpc::{DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses};
+use grpc::ds_service_server::{DsServiceServer, DsService};
+use grpc::{DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses};
 use std::time::Duration;
 use dvm_data_source::GrpcDataSource;
 use libra::prelude::*;
-use dvm_net::api::grpc::ds_grpc::{
+use dvm_net::api::grpc::{
     CurrencyInfoRequest, NativeBalanceRequest, OraclePriceResponse, CurrencyInfoResponse,
     NativeBalanceResponse, OraclePriceRequest,
 };

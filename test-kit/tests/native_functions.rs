@@ -1,8 +1,8 @@
 use byteorder::{ByteOrder, LittleEndian};
 use serde_derive::Serialize;
 
-use dvm_net::api::grpc::types::VmTypeTag;
-use dvm_net::api::grpc::vm_grpc::{LcsTag, LcsType, ModuleIdent, StructIdent, VmArgs};
+use dvm_net::api::grpc::VmTypeTag;
+use dvm_net::api::grpc::{LcsTag, LcsType, ModuleIdent, StructIdent, VmArgs};
 use dvm_test_kit::*;
 use dvm_test_kit::TestKit;
 use libra::{lcs, prelude::*};
