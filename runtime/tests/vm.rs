@@ -75,6 +75,8 @@ fn test_execute_script() {
                 vec![Value::u64(test_value.val)],
                 vec![],
                 vec![CORE_CODE_ADDRESS, CORE_CODE_ADDRESS],
+                0,
+                0,
             )
             .unwrap(),
         )

@@ -1,12 +1,13 @@
-use libra::{prelude::*, lcs};
-use byteorder::{LittleEndian, ByteOrder};
-
-use dvm_net::api::grpc::vm_grpc::{VmArgs, ModuleIdent, LcsTag, StructIdent, LcsType};
-use dvm_test_kit::TestKit;
-use dvm_test_kit::*;
+use byteorder::{ByteOrder, LittleEndian};
 use serde_derive::Serialize;
+
+use dvm_net::api::grpc::VmTypeTag;
+use dvm_net::api::grpc::{LcsTag, LcsType, ModuleIdent, StructIdent, VmArgs};
+use dvm_test_kit::*;
+use dvm_test_kit::TestKit;
+use libra::{lcs, prelude::*};
 use runtime::resources::*;
-use dvm_net::api::grpc::types::VmTypeTag;
+use data_source::CurrencyInfo;
 
 #[test]
 fn test_native_function() {
@@ -25,7 +26,15 @@ fn test_native_function() {
 
     let account_address = account("0x110");
 
-    let res = test_kit.execute_script(script, gas_meta(), vec![], vec![], vec![account_address]);
+    let res = test_kit.execute_script(
+        script,
+        gas_meta(),
+        vec![],
+        vec![],
+        vec![account_address],
+        0,
+        0,
+    );
     test_kit.assert_success(&res);
     let value: AddressStore = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(value.val, account_address);
@@ -55,7 +64,7 @@ fn test_register_token_info() {
         r#type: VmTypeTag::U64 as i32,
         value: buf,
     }];
-    let res = test_kit.execute_script(script, gas_meta(), args, vec![], vec![account]);
+    let res = test_kit.execute_script(script, gas_meta(), args, vec![], vec![account], 0, 0);
     test_kit.assert_success(&res);
     let value: U64Store = lcs::from_bytes(&res.write_set[0].value).unwrap();
     assert_eq!(t_value, value.val);
@@ -93,6 +102,8 @@ fn test_events() {
             type_params: vec![],
         }],
         vec![sender],
+        0,
+        0,
     );
     test_kit.assert_success(&res);
 
@@ -149,6 +160,7 @@ fn test_events() {
     );
 
     #[derive(Serialize)]
+    #[allow(clippy::upper_case_acronyms)]
     struct BTC {
         value: u64,
     }
@@ -161,4 +173,82 @@ fn test_events() {
         proxy_event.event_data,
         lcs::to_bytes(&BTC { value: 101 }).unwrap()
     );
+}
+
+fn u128_arg(val: u128) -> VmArgs {
+    let mut buf = vec![0; 16];
+    LittleEndian::write_u128(&mut buf, val);
+    VmArgs {
+        r#type: VmTypeTag::U128 as i32,
+        value: buf,
+    }
+}
+
+#[test]
+fn test_balance() {
+    let test_kit = TestKit::new();
+
+    let addr_1 = AccountAddress::random();
+    let addr_2 = AccountAddress::random();
+    let init_usdt = 1024;
+    let init_pont = 64;
+    let init_btc = 13;
+
+    test_kit.set_balance(addr_1, "USDT", init_usdt);
+    test_kit.set_balance(addr_1, "XFI", init_pont);
+    test_kit.set_balance(addr_1, "BTC", init_btc);
+
+    let res = test_kit.execute_script(
+        include_str!("resources/balance.move"),
+        gas_meta(),
+        vec![u128_arg(init_usdt), u128_arg(init_pont), u128_arg(init_btc)],
+        vec![],
+        vec![addr_1, addr_2],
+        0,
+        0,
+    );
+    test_kit.assert_success(&res);
+    test_kit.merge_result(&res);
+
+    assert_eq!(test_kit.get_balance(&addr_1, "USDT"), Some(512));
+    assert_eq!(test_kit.get_balance(&addr_1, "XFI"), Some(61));
+    assert_eq!(test_kit.get_balance(&addr_1, "BTC"), Some(13));
+
+    assert_eq!(test_kit.get_balance(&addr_2, "USDT"), Some(512));
+    assert_eq!(test_kit.get_balance(&addr_2, "XFI"), Some(3));
+    assert_eq!(test_kit.get_balance(&addr_2, "BTC"), None);
+}
+
+#[test]
+fn test_coin_info() {
+    let test_kit = TestKit::new();
+    let xfi = CurrencyInfo {
+        denom: "XFI".as_bytes().to_vec(),
+        decimals: 2,
+        is_token: true,
+        address: CORE_CODE_ADDRESS,
+        total_supply: 42,
+    };
+
+    let btc = CurrencyInfo {
+        denom: "BTC".as_bytes().to_vec(),
+        decimals: 10,
+        is_token: true,
+        address: CORE_CODE_ADDRESS,
+        total_supply: 1024,
+    };
+
+    test_kit.set_currency_info("XFI", xfi);
+    test_kit.set_currency_info("BTC", btc);
+
+    let res = test_kit.execute_script(
+        include_str!("resources/currency_info.move"),
+        gas_meta(),
+        vec![],
+        vec![],
+        vec![CORE_CODE_ADDRESS],
+        0,
+        0,
+    );
+    test_kit.assert_success(&res);
 }

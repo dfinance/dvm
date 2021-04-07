@@ -1,17 +1,18 @@
 use http::Uri;
 use anyhow::{Error, anyhow};
-use dvm_net::api::grpc::vm_grpc::vm_script_executor_client::VmScriptExecutorClient;
-use dvm_net::api::grpc::vm_grpc::vm_module_publisher_client::VmModulePublisherClient;
-use dvm_net::api::grpc::compiler_grpc::dvm_compiler_client::DvmCompilerClient;
+use dvm_net::api::grpc::vm_script_executor_client::VmScriptExecutorClient;
+use dvm_net::api::grpc::vm_module_publisher_client::VmModulePublisherClient;
 use dvm_net::api::tonic::transport::Channel;
 use dvm_net::api::tonic::Request;
 use libra::account::AccountAddress;
 use libra::ds::{WriteSet, WriteSetMut, WriteOp, AccessPath};
 use libra::result::StatusCode;
-use dvm_net::api::grpc::vm_grpc::{vm_status::Error as ExcError, VmExecuteScript, VmArgs, StructIdent};
-use dvm_net::api::grpc::compiler_grpc::{SourceFiles, CompilationUnit};
-use dvm_net::api::grpc::vm_grpc::{VmPublishModule, VmExecuteResponse, VmWriteOp};
 use std::convert::TryFrom;
+use dvm_net::api::grpc::dvm_compiler_client::DvmCompilerClient;
+use dvm_net::api::grpc::{
+    vm_status::Error as ExcError, CompilationUnit, SourceFiles, StructIdent, VmArgs,
+    VmExecuteScript, VmExecuteResponse, VmPublishModule, VmWriteOp,
+};
 
 pub struct Client {
     executor: VmScriptExecutorClient<Channel>,
@@ -81,11 +82,14 @@ impl Client {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn execute(
         &mut self,
         bytecode: Vec<u8>,
         max_gas_amount: u64,
         gas_unit_price: u64,
+        block: u64,
+        timestamp: u64,
         senders: Vec<AccountAddress>,
         args: Vec<VmArgs>,
         type_params: Vec<StructIdent>,
@@ -94,6 +98,8 @@ impl Client {
             senders: senders.into_iter().map(|a| a.to_vec()).collect(),
             max_gas_amount,
             gas_unit_price,
+            block,
+            timestamp,
             code: bytecode,
             type_params,
             args,

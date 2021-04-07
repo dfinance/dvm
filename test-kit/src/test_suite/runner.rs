@@ -1,16 +1,17 @@
-use runtime::{
-    vm::{dvm::*, types::*},
-    resources::{
-        block_metadata, time_metadata, oracle_metadata, BlockMetadata, Price, CurrentTimestamp,
-    },
-};
-use data_source::MockDataSource;
-use libra::prelude::*;
-use libra::lcs;
-use compiler::Compiler;
-use anyhow::Result;
-use crate::test_suite::pipeline::{TestPipeline, TestStep, TestMeta, ExecutionResult};
 use std::collections::HashMap;
+
+use anyhow::Result;
+
+use compiler::Compiler;
+use data_source::MockDataSource;
+use libra::lcs;
+use libra::prelude::*;
+use runtime::{
+    resources::{block_metadata, BlockMetadata, CurrentTimestamp, time_metadata},
+    vm::{dvm::*, types::*},
+};
+
+use crate::test_suite::pipeline::{ExecutionResult, TestMeta, TestPipeline, TestStep};
 
 /// Test pipeline state.
 pub struct TestState {
@@ -73,9 +74,16 @@ impl TestState {
             TestStep::PublishModule(_) => {
                 vm.publish_module(gas, ModuleTx::new(unit, step.meta().senders[0]))
             }
-            TestStep::ExecuteScript(_) => vm.execute_script(
+            TestStep::ExecuteScript((meta, _)) => vm.execute_script(
                 gas,
-                ScriptTx::new(unit, vec![], vec![], step.meta().senders.to_owned())?,
+                ScriptTx::new(
+                    unit,
+                    vec![],
+                    vec![],
+                    step.meta().senders.to_owned(),
+                    meta.time,
+                    meta.block,
+                )?,
             ),
         };
 
@@ -89,14 +97,8 @@ impl TestState {
 
     /// Store mete resources.
     fn store_meta_resources(test_meta: &TestMeta, ds: &MockDataSource) -> Result<()> {
-        for (ticker, price) in &test_meta.oracle_price_list {
-            ds.insert(
-                AccessPath::new(
-                    CORE_CODE_ADDRESS,
-                    oracle_metadata(&ticker.0, &ticker.1).access_vector(),
-                ),
-                lcs::to_bytes(&Price { price: *price })?,
-            );
+        for ((curr_1, curr_2), price) in &test_meta.oracle_price_list {
+            ds.add_price(curr_1, curr_2, *price);
         }
 
         let block = BlockMetadata {

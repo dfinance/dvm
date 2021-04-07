@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use dvm_net::{api, tonic};
 use dvm_net::prelude::*;
 
-use api::grpc::ds_grpc::{
+use api::grpc::{
     ds_service_client::DsServiceClient,
     ds_service_server::{DsServiceServer, DsService},
     DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses,
@@ -19,9 +19,13 @@ use tonic::Request;
 use tonic::{transport::Server, Response, Status};
 use tokio::runtime::Builder;
 
-// use tokio::sync::oneshot;
 use futures::channel::oneshot;
 use futures::future::FutureExt;
+use dvm_api::grpc::{
+    OraclePriceRequest, OraclePriceResponse, NativeBalanceRequest, NativeBalanceResponse,
+    CurrencyInfoRequest, CurrencyInfoResponse,
+};
+
 #[derive(Default)]
 pub struct Fake();
 
@@ -36,6 +40,27 @@ impl DsService for Fake {
         &self,
         _: Request<DsAccessPaths>,
     ) -> Result<Response<DsRawResponses>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_oracle_price(
+        &self,
+        _: Request<OraclePriceRequest>,
+    ) -> Result<Response<OraclePriceResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_native_balance(
+        &self,
+        _: Request<NativeBalanceRequest>,
+    ) -> Result<Response<NativeBalanceResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_currency_info(
+        &self,
+        _: Request<CurrencyInfoRequest>,
+    ) -> Result<Response<CurrencyInfoResponse>, Status> {
         unimplemented!()
     }
 }

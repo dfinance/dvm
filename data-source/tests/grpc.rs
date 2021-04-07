@@ -3,11 +3,15 @@ use tokio::runtime::Runtime;
 use dvm_net::tonic::{self, transport::Server};
 use dvm_net::tonic::{Request, Response, Status};
 use dvm_net::api::grpc;
-use grpc::ds_grpc::ds_service_server::{DsServiceServer, DsService};
-use grpc::ds_grpc::{DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses};
+use grpc::ds_service_server::{DsServiceServer, DsService};
+use grpc::{DsAccessPath, DsRawResponse, DsAccessPaths, DsRawResponses};
 use std::time::Duration;
 use dvm_data_source::GrpcDataSource;
 use libra::prelude::*;
+use dvm_net::api::grpc::{
+    CurrencyInfoRequest, NativeBalanceRequest, OraclePriceResponse, CurrencyInfoResponse,
+    NativeBalanceResponse, OraclePriceRequest,
+};
 
 const ADDRESS: &str = "127.0.0.1:8080";
 
@@ -32,6 +36,27 @@ impl DsService for DataSourceService {
         _request: Request<DsAccessPaths>,
     ) -> Result<Response<DsRawResponses>, Status> {
         Err(Status::invalid_argument("method not implemented."))
+    }
+
+    async fn get_oracle_price(
+        &self,
+        _: Request<OraclePriceRequest>,
+    ) -> Result<Response<OraclePriceResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_native_balance(
+        &self,
+        _: Request<NativeBalanceRequest>,
+    ) -> Result<Response<NativeBalanceResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn get_currency_info(
+        &self,
+        _: Request<CurrencyInfoRequest>,
+    ) -> Result<Response<CurrencyInfoResponse>, Status> {
+        unimplemented!()
     }
 }
 
@@ -69,7 +94,7 @@ fn test_grpc_ds() {
                         AccountAddress::random(),
                         AccountAddress::random().to_vec(),
                     );
-                    if let Ok(Some(resp)) = ds.get(&path) {
+                    if let Ok(Some(resp)) = ds.get_sv(path.clone()) {
                         let mut response =
                             Vec::with_capacity(path.address.as_ref().len() + path.path.len());
                         response.append(&mut path.address.to_vec());

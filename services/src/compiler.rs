@@ -3,8 +3,8 @@ use libra::prelude::*;
 use crate::{tonic, api};
 use tonic::{Request, Response, Status};
 
-use api::grpc::compiler_grpc::dvm_compiler_server::DvmCompiler;
-use api::grpc::compiler_grpc::{CompilationResult, SourceFiles, CompiledUnit};
+use api::grpc::dvm_compiler_server::DvmCompiler;
+use api::grpc::{CompilationResult, SourceFiles, CompiledUnit};
 use std::convert::TryFrom;
 use compiler::Compiler;
 use info::metrics::meter::ScopeMeter;

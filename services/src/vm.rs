@@ -1,20 +1,25 @@
-use libra::{prelude::*, vm::*};
-use std::sync::Arc;
-use data_source::DataSource;
-use info::heartbeat::HeartRateMonitor;
-use crate::{tonic, api};
-use tonic::{Request, Response, Status};
-use api::grpc::vm_grpc::vm_script_executor_server::VmScriptExecutor;
-use dvm_net::api::grpc::vm_grpc::*;
-use runtime::vm::{dvm::*, types::*};
+use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::sync::Arc;
+
 use anyhow::Error;
-use byteorder::{LittleEndian, ByteOrder};
-use info::metrics::meter::ScopeMeter;
-use info::metrics::execution::ExecutionResult as ActionResult;
-use dvm_net::api::grpc::vm_grpc::vm_module_publisher_server::VmModulePublisher;
+use api::grpc::vm_script_executor_server::VmScriptExecutor;
+use byteorder::{ByteOrder, LittleEndian};
+use tonic::{Request, Response, Status};
+
+use data_source::DataSource;
+use dvm_net::api::grpc::*;
+use dvm_net::api::grpc::vm_balance_change::Op;
+use dvm_net::api::grpc::vm_module_publisher_server::VmModulePublisher;
 use dvm_net::api::tonic::Code;
-use dvm_net::api::grpc::types::VmTypeTag;
+use info::heartbeat::HeartRateMonitor;
+use info::metrics::execution::ExecutionResult as ActionResult;
+use info::metrics::meter::ScopeMeter;
+use libra::{prelude::*, vm::*};
+use runtime::vm::{dvm::*, types::*};
+use runtime::vm::session::ticker;
+
+use crate::{api, tonic};
 
 /// Virtual machine service.
 #[derive(Clone)]
@@ -76,6 +81,7 @@ fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmEx
             events: convert_events(res.events),
             write_set: convert_write_set(res.write_set),
             status: Some(convert_vm_error_status(res.status)),
+            balance_change_set: convert_wallet_ops(res.wallet_ops),
         },
         Err(err) => {
             // This is't execution error!
@@ -84,6 +90,7 @@ fn vm_result_to_execute_response(res: Result<ExecutionResult, VMStatus>) -> VmEx
                 events: vec![],
                 write_set: vec![],
                 status: Some(convert_status(err, None)),
+                balance_change_set: vec![],
             }
         }
     }
@@ -94,6 +101,7 @@ fn make_vm_error(err: Error) -> VmExecuteResponse {
     VmExecuteResponse {
         write_set: vec![],
         events: vec![],
+        balance_change_set: vec![],
         gas_used: 0,
         status: Some(VmStatus {
             message: Some(Message {
@@ -110,6 +118,26 @@ fn make_vm_error(err: Error) -> VmExecuteResponse {
 fn convert_vm_error_status(status: VMError) -> VmStatus {
     let msg = status.message().map(|m| m.to_owned());
     convert_status(status.into_vm_status(), msg)
+}
+
+fn convert_wallet_ops(wallet_ops: HashMap<WalletId, BalanceOperation>) -> Vec<VmBalanceChange> {
+    wallet_ops
+        .into_iter()
+        .filter_map(|(wallet_id, op)| {
+            ticker(&wallet_id).map(|ticker| (wallet_id.address, ticker, op))
+        })
+        .map(|(address, ticker, op)| {
+            let op = match op {
+                BalanceOperation::Deposit(amount) => Op::Deposit(amount.into()),
+                BalanceOperation::Withdraw(amount) => Op::Withdraw(amount.into()),
+            };
+            VmBalanceChange {
+                address: address.to_vec(),
+                ticker,
+                op: Some(op),
+            }
+        })
+        .collect()
 }
 
 /// Converts libra `VMStatus` into gRPC `VMStatus`.
@@ -371,7 +399,7 @@ impl TryFrom<VmExecuteScript> for ExecuteScript {
 
         Ok(ExecuteScript {
             gas: Gas::new(req.max_gas_amount, req.gas_unit_price)?,
-            script: ScriptTx::new(req.code, args, type_args, senders)?,
+            script: ScriptTx::new(req.code, args, type_args, senders, req.timestamp, req.block)?,
         })
     }
 }

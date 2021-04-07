@@ -1,20 +1,25 @@
-use libra::prelude::*;
-
 use std::convert::TryInto;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 use anyhow::Error;
-use api::grpc::ds_grpc::{ds_raw_response::ErrorCode, ds_service_client::DsServiceClient, DsAccessPath};
+use api::grpc::{ds_service_client::DsServiceClient, DsAccessPath};
 use crossbeam::channel::{bounded, Receiver, Sender};
 use http::Uri;
 use tokio::runtime::Runtime;
+
 use dvm_net::api;
+use dvm_net::api::grpc::{
+    CurrencyInfoRequest as GCurrencyInfoRequest, ErrorCode, NativeBalanceRequest,
+    OraclePriceRequest, U128,
+};
 use dvm_net::prelude::*;
 use dvm_net::tonic;
+use dvm_net::tonic::Status;
+use libra::prelude::*;
 
-use crate::{RemoveModule, DataSource};
+use crate::{Balance, CurrencyInfo, DataSource, GetCurrencyInfo, Oracle, RemoveModule};
 
 /// Receiver for a channel that handles shutdown signals.
 pub type ShutdownSig = tokio::sync::oneshot::Receiver<()>;
@@ -65,7 +70,7 @@ impl GrpcDataSource {
                             return Some(DsServiceClient::with_interceptor(channel, |req| {
                                 debug!("request DS: {:?}", req);
                                 Ok(req)
-                            }))
+                            }));
                         }
                         Err(_) => tokio::time::delay_for(Duration::from_secs(1)).await,
                     },
@@ -90,31 +95,55 @@ impl GrpcDataSource {
                     .unwrap_or(false)
                 {
                     if let Ok(request) = receiver.recv() {
-                        let grpc_request = tonic::Request::new(access_path_into_ds(request.path));
-                        let res = client.get_raw(grpc_request).await;
-                        if let Err(ref err) = res {
-                            error!(
-                                "Transport-level error received by data source ({:?}). {}",
-                                std::thread::current(),
-                                err
-                            );
-                            std::thread::sleep(Duration::from_millis(500));
-                            std::process::exit(-1);
-                        }
-                        let response = res.unwrap().into_inner();
-                        let error_code = ErrorCode::from_i32(response.error_code)
-                            .expect("Invalid ErrorCode enum value");
-
-                        let response = match error_code {
-                            // if no error code, return blob
-                            ErrorCode::None => Ok(Some(response.blob)),
-                            // if BadRequest, return Err()
-                            ErrorCode::BadRequest => Err(anyhow!(response.error_message)),
-                            // if NoData, return None
-                            ErrorCode::NoData => Ok(None),
-                        };
-                        if let Err(err) = request.sender.send(response) {
-                            error!("Internal VM-DS channel error: {:?}", err);
+                        match request {
+                            Request::StateView(StateViewRequest { request, handler }) => {
+                                let resp = unwrap_error(client.get_raw(request).await)
+                                    .await
+                                    .into_inner();
+                                handler.send(handle_response(
+                                    resp.error_code,
+                                    resp.error_message,
+                                    Some(resp.blob),
+                                ));
+                            }
+                            Request::Oracle(OracleRequest { request, handler }) => {
+                                let resp = unwrap_error(client.get_oracle_price(request).await)
+                                    .await
+                                    .into_inner();
+                                handler.send(handle_response(
+                                    resp.error_code,
+                                    resp.error_message,
+                                    resp.price.map(U128::into),
+                                ));
+                            }
+                            Request::Balance(BalanceRequest { request, handler }) => {
+                                let resp = unwrap_error(client.get_native_balance(request).await)
+                                    .await
+                                    .into_inner();
+                                handler.send(handle_response(
+                                    resp.error_code,
+                                    resp.error_message,
+                                    resp.balance.map(U128::into),
+                                ));
+                            }
+                            Request::CurrencyInfo(CurrencyInfoRequest { request, handler }) => {
+                                let resp = unwrap_error(client.get_currency_info(request).await)
+                                    .await
+                                    .into_inner();
+                                handler.send(handle_response(
+                                    resp.error_code,
+                                    resp.error_message,
+                                    resp.info.and_then(|info| {
+                                        Some(CurrencyInfo {
+                                            denom: info.denom,
+                                            decimals: info.decimals as u8,
+                                            is_token: info.is_token,
+                                            address: AccountAddress::try_from(info.address).ok()?,
+                                            total_supply: u128::from(info.total_supply?),
+                                        })
+                                    }),
+                                ));
+                            }
                         }
                     }
                 }
@@ -132,12 +161,15 @@ impl GrpcDataSource {
     }
 
     /// Returns chain data by access path.
-    pub fn get(&self, access_path: &AccessPath) -> Result<Option<Vec<u8>>, Error> {
+    pub fn get_sv(&self, path: AccessPath) -> Result<Option<Vec<u8>>, Error> {
         let (tx, rx) = bounded(0);
-        self.sender.send(Request {
-            path: access_path.clone(),
-            sender: tx,
-        })?;
+        self.sender.send(Request::StateView(StateViewRequest {
+            request: tonic::Request::new(DsAccessPath {
+                address: path.address.to_vec(),
+                path: path.path,
+            }),
+            handler: StateViewHandler(tx),
+        }))?;
         rx.recv()?
     }
 }
@@ -147,14 +179,116 @@ pub fn access_path_into_ds(ap: AccessPath) -> DsAccessPath {
     DsAccessPath::new(ap.address.to_vec(), ap.path)
 }
 
-struct Request {
-    path: AccessPath,
-    sender: Sender<Result<Option<Vec<u8>>, Error>>,
+enum Request {
+    StateView(StateViewRequest),
+    Oracle(OracleRequest),
+    Balance(BalanceRequest),
+    CurrencyInfo(CurrencyInfoRequest),
+}
+
+struct CurrencyInfoRequest {
+    request: tonic::Request<GCurrencyInfoRequest>,
+    handler: CurrencyInfoHandler,
+}
+
+struct CurrencyInfoHandler(Sender<Result<Option<CurrencyInfo>, Error>>);
+
+struct StateViewRequest {
+    request: tonic::Request<DsAccessPath>,
+    handler: StateViewHandler,
+}
+
+struct StateViewHandler(Sender<Result<Option<Vec<u8>>, Error>>);
+
+struct OracleRequest {
+    request: tonic::Request<OraclePriceRequest>,
+    handler: OracleHandler,
+}
+
+struct OracleHandler(Sender<Result<Option<u128>, Error>>);
+
+struct BalanceRequest {
+    request: tonic::Request<NativeBalanceRequest>,
+    handler: BalanceHandler,
+}
+
+struct BalanceHandler(Sender<Result<Option<u128>, Error>>);
+
+async fn unwrap_error<T>(res: Result<T, Status>) -> T {
+    match res {
+        Ok(t) => t,
+        Err(err) => {
+            error!(
+                "Transport-level error received by data source ({:?}). {}",
+                std::thread::current(),
+                err
+            );
+            std::thread::sleep(Duration::from_millis(500));
+            std::process::exit(-1);
+        }
+    }
+}
+
+fn handle_response<T>(code: i32, err_msg: String, msg: Option<T>) -> Result<Option<T>, Error> {
+    let error_code = ErrorCode::from_i32(code).expect("Invalid ErrorCode enum value");
+    match error_code {
+        // if no error code, return msg
+        ErrorCode::None => Ok(msg),
+        // if BadRequest, return Err()
+        ErrorCode::BadRequest => Err(anyhow!(err_msg)),
+        // if NoData, return None
+        ErrorCode::NoData => Ok(None),
+    }
+}
+
+trait SendResult {
+    type Resp;
+    fn send(&self, response: Result<Option<Self::Resp>, Error>);
+}
+
+impl SendResult for StateViewHandler {
+    type Resp = Vec<u8>;
+
+    fn send(&self, response: Result<Option<Self::Resp>, Error>) {
+        if let Err(err) = self.0.send(response) {
+            error!("Internal VM-DS channel error: {:?}", err);
+        }
+    }
+}
+
+impl SendResult for CurrencyInfoHandler {
+    type Resp = CurrencyInfo;
+
+    fn send(&self, response: Result<Option<Self::Resp>, Error>) {
+        if let Err(err) = self.0.send(response) {
+            error!("Internal VM-DS channel error: {:?}", err);
+        }
+    }
+}
+
+impl SendResult for OracleHandler {
+    type Resp = u128;
+
+    fn send(&self, response: Result<Option<Self::Resp>, Error>) {
+        if let Err(err) = self.0.send(response) {
+            error!("Internal VM-DS channel error: {:?}", err);
+        }
+    }
+}
+
+impl SendResult for BalanceHandler {
+    type Resp = u128;
+
+    fn send(&self, response: Result<Option<Self::Resp>, Error>) {
+        if let Err(err) = self.0.send(response) {
+            error!("Internal VM-DS channel error: {:?}", err);
+        }
+    }
 }
 
 impl RemoteCache for GrpcDataSource {
     fn get_module(&self, module_id: &ModuleId) -> VMResult<Option<Vec<u8>>> {
-        self.get(&AccessPath::from(module_id)).map_err(|e| {
+        self.get_sv(AccessPath::from(module_id)).map_err(|e| {
             PartialVMError::new(StatusCode::STORAGE_ERROR)
                 .with_message(e.to_string())
                 .finish(Location::Undefined)
@@ -169,11 +303,51 @@ impl RemoteCache for GrpcDataSource {
         let resource_tag = ResourceKey::new(*address, tag.to_owned());
         let path = AccessPath::resource_access_path(&resource_tag);
 
-        self.get(&path)
+        self.get_sv(path)
             .map_err(|e| PartialVMError::new(StatusCode::STORAGE_ERROR).with_message(e.to_string()))
     }
 }
 
 impl RemoveModule for GrpcDataSource {}
+
+impl Balance for GrpcDataSource {
+    fn get_balance(&self, address: AccountAddress, ticker: String) -> Result<Option<u128>, Error> {
+        let (tx, rx) = bounded(0);
+        self.sender.send(Request::Balance(BalanceRequest {
+            request: tonic::Request::new(NativeBalanceRequest {
+                address: address.to_vec(),
+                ticker,
+            }),
+            handler: BalanceHandler(tx),
+        }))?;
+        rx.recv()?
+    }
+}
+
+impl Oracle for GrpcDataSource {
+    fn get_price(&self, currency_1: String, currency_2: String) -> Result<Option<u128>, Error> {
+        let (tx, rx) = bounded(0);
+        self.sender.send(Request::Oracle(OracleRequest {
+            request: tonic::Request::new(OraclePriceRequest {
+                currency_1,
+                currency_2,
+            }),
+            handler: OracleHandler(tx),
+        }))?;
+        rx.recv()?
+    }
+}
+
+impl GetCurrencyInfo for GrpcDataSource {
+    fn get_currency_info(&self, ticker: String) -> Result<Option<CurrencyInfo>, Error> {
+        let (tx, rx) = bounded(0);
+        self.sender
+            .send(Request::CurrencyInfo(CurrencyInfoRequest {
+                request: tonic::Request::new(GCurrencyInfoRequest { ticker }),
+                handler: CurrencyInfoHandler(tx),
+            }))?;
+        rx.recv()?
+    }
+}
 
 impl DataSource for GrpcDataSource {}

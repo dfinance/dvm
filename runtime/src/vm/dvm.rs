@@ -1,10 +1,13 @@
-use crate::vm::types::*;
-use libra::{prelude::*, vm::*, gas::*};
 use std::fmt;
-use crate::gas_schedule;
-use ds::{DataSource, BlackListDataSource};
-use dvm_info::memory_check::MemoryChecker;
 use std::sync::RwLock;
+
+use ds::{BlackListDataSource, DataSource};
+use dvm_info::memory_check::MemoryChecker;
+use libra::{gas::*, prelude::*, vm::*};
+
+use crate::gas_schedule;
+use crate::vm::session::StateViewSession;
+use crate::vm::types::*;
 
 /// Dfinance virtual machine.
 pub struct Dvm<D: DataSource> {
@@ -66,7 +69,8 @@ where
                     let mut blacklist = BlackListDataSource::new(self.ds.clone());
                     blacklist.add_module(&module_id);
                     let vm = self.vm.read().unwrap();
-                    let mut session = vm.new_session(&blacklist);
+                    let (sv, bank) = StateViewSession::session(&blacklist, 0, 0);
+                    let mut session = vm.new_session(&sv, bank);
 
                     session
                         .publish_module(
@@ -78,7 +82,8 @@ where
                         .and_then(|_| session.finish())
                 } else {
                     let vm = self.vm.read().unwrap();
-                    let mut session = vm.new_session(&self.ds);
+                    let (sv, bank) = StateViewSession::session(&self.ds, 0, 0);
+                    let mut session = vm.new_session(&sv, bank);
                     session
                         .publish_module(
                             module.to_vec(),
@@ -111,9 +116,12 @@ where
     pub fn execute_script(&self, gas: Gas, tx: ScriptTx) -> VmResult {
         self.perform_memory_prevention();
         let vm = self.vm.read().unwrap();
-        let mut session = vm.new_session(&self.ds);
+        let (script, args, type_args, senders, timestamp, block) = tx.into_inner();
 
-        let (script, args, type_args, senders) = tx.into_inner();
+        let (sv, bank) = StateViewSession::session(&self.ds, timestamp, block);
+
+        let mut session = vm.new_session(&sv, bank);
+
         let mut cost_strategy =
             CostStrategy::transaction(&self.cost_table, GasUnits::new(gas.max_gas_amount()));
 

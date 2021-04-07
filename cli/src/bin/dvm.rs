@@ -16,9 +16,9 @@ use services::compiler::CompilerService;
 use services::metadata::MetadataService;
 
 use dvm_net::{prelude::*, api, tonic};
-use api::grpc::compiler_grpc::dvm_compiler_server::DvmCompilerServer;
-use api::grpc::metadata_grpc::dvm_bytecode_metadata_server::DvmBytecodeMetadataServer;
-use dvm_net::api::grpc::vm_grpc::{
+use api::grpc::dvm_compiler_server::DvmCompilerServer;
+use api::grpc::dvm_bytecode_metadata_server::DvmBytecodeMetadataServer;
+use dvm_net::api::grpc::{
     vm_script_executor_server::VmScriptExecutorServer,
     vm_module_publisher_server::VmModulePublisherServer,
 };

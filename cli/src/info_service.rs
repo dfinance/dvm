@@ -4,9 +4,9 @@ use futures::Future;
 use dvm_info::heartbeat::HeartRateMonitor;
 use std::time::Duration;
 use dvm_info::web::start_info_service;
-use dvm_net::api::grpc::vm_grpc::vm_script_executor_client::VmScriptExecutorClient;
+use dvm_net::api::grpc::vm_script_executor_client::VmScriptExecutorClient;
 use dvm_net::api::tonic::Request;
-use dvm_net::api::grpc::vm_grpc::{VmExecuteScript};
+use dvm_net::api::grpc::VmExecuteScript;
 use tokio::time::delay_for;
 use libra::prelude::*;
 
@@ -77,6 +77,8 @@ async fn send_ping(
         senders: vec![CORE_CODE_ADDRESS.to_vec()],
         max_gas_amount: 100,
         gas_unit_price: 1,
+        block: 0,
+        timestamp: 0,
         code: bytecode,
         type_params: vec![],
         args: vec![],

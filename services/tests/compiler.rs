@@ -5,7 +5,7 @@ use lang::{stdlib::build_std};
 use compiler::Compiler;
 use data_source::MockDataSource;
 use dvm_services::compiler::CompilerService;
-use dvm_net::api::grpc::compiler_grpc::{SourceFiles, CompilationUnit, CompiledUnit as Unit};
+use dvm_net::api::grpc::{SourceFiles, CompilationUnit, CompiledUnit as Unit};
 
 fn new_source_file(source: &str, address: &AccountAddress) -> SourceFiles {
     SourceFiles {
