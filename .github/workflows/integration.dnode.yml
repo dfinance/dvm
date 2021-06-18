@@ -1,4 +1,4 @@
-name: Dnode Integration Tests
+name: Dstation Integration Tests
 on:
   push:
     branches:
@@ -49,14 +49,14 @@ jobs:
       id: VARS
       run: |
         echo ::set-output name=DVM_BIN::${{ github.workspace }}/target/debug
-        echo ::set-output name=NODE_REPO::dfinance/dnode
+        echo ::set-output name=NODE_REPO::dfinance/dstation
         echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dstation
         echo ::set-output name=GOPATH::${{ github.workspace }}/go
 
     # usage:
-    # ${{ steps.dnode_ref.outputs.value }}
-    - name: Extract the dnode repo ref from tag
-      id: dnode_ref
+    # ${{ steps.dstation_ref.outputs.value }}
+    - name: Extract the dstation repo ref from tag
+      id: dstation_ref
       run: |
         TAG_KIND=$(echo $GITHUB_REF | cut -d / -f 2)
         TAG_FIRST=$(echo $GITHUB_REF | cut -d / -f 3)
@@ -127,12 +127,12 @@ jobs:
     #
     # Node (Go)
     #
-    - name: Checkout DNode (${{ steps.dnode_ref.outputs.value }})
+    - name: Checkout Dstation (${{ steps.dstation_ref.outputs.value }})
       uses: actions/checkout@v2
       with:
         repository: ${{ steps.VARS.outputs.NODE_REPO }}
         submodules: true
-        ref: ${{ steps.dnode_ref.outputs.value }}
+        ref: ${{ steps.dstation_ref.outputs.value }}
         path: ${{ steps.VARS.outputs.NODE_REPO_PATH }}
 
     - name: Set GOPATH
@@ -169,7 +169,7 @@ jobs:
         rustc -V
         dvm -V
         go version
-        dnode version
+        dstation version
 
 
     - name: Tests
