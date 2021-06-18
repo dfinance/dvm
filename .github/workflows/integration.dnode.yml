@@ -50,7 +50,7 @@ jobs:
       run: |
         echo ::set-output name=DVM_BIN::${{ github.workspace }}/target/debug
         echo ::set-output name=NODE_REPO::dfinance/dnode
-        echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dnode
+        echo ::set-output name=NODE_REPO_PATH::${{ github.workspace }}/go/src/github.com/dfinance/dstation
         echo ::set-output name=GOPATH::${{ github.workspace }}/go
 
     # usage:
