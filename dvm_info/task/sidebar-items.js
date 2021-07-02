@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Daemon","Background process. Code executed with `spawn()` will be executed once and exit."],["PeriodicBackgroundTask","Signal thread task executed periodically with provided `period`."]]});

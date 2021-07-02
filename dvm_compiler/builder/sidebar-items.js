@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["convert_path","Converts paths buffers into strings."],["report_errors","Prints errors to stdout."]],"struct":[["Builder","Move builder."]]});

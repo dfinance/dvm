@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["cost_table","Specific gas per instruction configuration for dvm. INITIAL_GAS_SCHEDULE from libra with dfinance update."]]});

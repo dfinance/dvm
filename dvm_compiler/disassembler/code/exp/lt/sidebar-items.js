@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Let","Assign local variable expression."]]});

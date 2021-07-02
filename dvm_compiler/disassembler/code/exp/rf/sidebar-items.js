@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Deref","Dereference expressions."],["FieldRef","Field reference."],["Ref","Reference."],["WriteRef","Write reference representation."]]});

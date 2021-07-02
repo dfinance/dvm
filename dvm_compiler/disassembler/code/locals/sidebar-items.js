@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Local","Local variable."]],"struct":[["Locals","Local variable representation."],["Var","Variable."]]});

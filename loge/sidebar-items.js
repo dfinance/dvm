@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Loge",""]],"fn":[["main",""]],"struct":[["TestInfo",""]]});

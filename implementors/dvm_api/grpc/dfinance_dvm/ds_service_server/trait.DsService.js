@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["load_generator"] = [{"text":"impl DsService for <a class=\"struct\" href=\"load_generator/ds/struct.InMemoryDataSource.html\" title=\"struct load_generator::ds::InMemoryDataSource\">InMemoryDataSource</a>","synthetic":false,"types":["load_generator::ds::InMemoryDataSource"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

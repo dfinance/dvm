@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["dvm","dvm_cli","dvm_compiler","dvm_data_source","dvm_info","dvm_lang","dvm_libra_deps","dvm_net","dvm_runtime","dvm_services","dvm_test_kit","load_generator","loge","move_decompiler","movec","status_table","stdlib","stdlib_builder"];

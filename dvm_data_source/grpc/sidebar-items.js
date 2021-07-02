@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["access_path_into_ds","Convert Libra’s `AccessPath` into gRPC `DsAccessPath`."]],"struct":[["GrpcDataSource","Wrapper around gRPC-based interface to dnode. Used for the resource resolution inside the VM."]],"type":[["ShutdownSig","Receiver for a channel that handles shutdown signals."]]});

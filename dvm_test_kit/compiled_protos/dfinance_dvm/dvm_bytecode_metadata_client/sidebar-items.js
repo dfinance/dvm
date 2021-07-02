@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DvmBytecodeMetadataClient","Returns bytecode metadata."]]});

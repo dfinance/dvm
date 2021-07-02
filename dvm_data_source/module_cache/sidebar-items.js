@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Lru","Modules lru cache."],["ModuleCache","Cached `DataSource`."]],"trait":[["BinarySize","Provides a binary size info."]]});

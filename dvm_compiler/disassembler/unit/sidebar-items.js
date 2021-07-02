@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["CompiledUnit","Undefined bytecode abstraction."],["SourceUnit","Restored move ast."]],"trait":[["UnitAccess","Undefined bytecode accessor."]]});

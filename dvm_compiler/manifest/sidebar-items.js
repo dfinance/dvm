@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["MANIFEST","Movec manifest name."]],"fn":[["read_manifest","Reads the manifest by path."],["store_manifest","Stores the manifest by path."]],"struct":[["Layout","Project layout."],["MoveToml","Movec manifest."],["Package","Project info."]]});

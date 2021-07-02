@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["TryFrom","Simple and safe type conversions that may fail in a controlled way under some circumstances. It is the reciprocal of [`TryInto`]."],["TryInto","An attempted conversion that consumes `self`, which may or may not be expensive."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["body","Function body representation."],["exp","Code expression."],["iter","Bytecode iterator."],["locals","Local variables."],["translator","Bytecode translator."]]});

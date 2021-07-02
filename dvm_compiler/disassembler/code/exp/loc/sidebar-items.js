@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["LocAccess","Access type."]],"struct":[["Loc","Local variable assignment."]]});

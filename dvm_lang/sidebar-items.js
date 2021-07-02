@@ -1,0 +1,1 @@
+initSidebarItems({"externcrate":[["stdlib",""]],"mod":[["bytecode","Procedures to work with bytecode."]]});

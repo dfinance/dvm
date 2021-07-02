@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HeartRateMonitor","Heart rate monitor."]]});

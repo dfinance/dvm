@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["VmService","Virtual machine service."]]});

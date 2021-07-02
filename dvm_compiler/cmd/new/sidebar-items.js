@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["execute","Execute create project command."]]});

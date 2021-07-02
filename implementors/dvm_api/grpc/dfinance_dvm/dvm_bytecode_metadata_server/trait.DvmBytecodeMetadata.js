@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["dvm_services"] = [{"text":"impl DvmBytecodeMetadata for <a class=\"struct\" href=\"dvm_services/metadata/struct.MetadataService.html\" title=\"struct dvm_services::metadata::MetadataService\">MetadataService</a>","synthetic":false,"types":["dvm_services::metadata::MetadataService"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

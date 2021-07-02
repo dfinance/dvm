@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MemoryChecker","Dvm memory limits checker."]],"trait":[["CacheSize","Provide cache size function."]]});

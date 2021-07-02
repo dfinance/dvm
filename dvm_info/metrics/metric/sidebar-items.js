@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Average","Average."],["ExecutionMetric","Aggregate for the executions metrics."],["Metrics","Application metrics;"],["Percentiles","Time to process different chunks of executions."]]});

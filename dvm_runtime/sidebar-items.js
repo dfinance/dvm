@@ -1,0 +1,1 @@
+initSidebarItems({"externcrate":[["log",""]],"mod":[["gas_schedule","Defines dvm `CostTable`."],["resources","Chain resources."],["vm","Defines structures for script execution inside VM."]]});

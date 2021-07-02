@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["GenericPrefix","Generics prefix."]],"fn":[["extract_type_params","Extract type parameters."],["write_type_parameters","Write type parameters to writer."]],"struct":[["Generic","Generic representation."],["GenericName","Generic name."],["Generics","Generics template."]]});

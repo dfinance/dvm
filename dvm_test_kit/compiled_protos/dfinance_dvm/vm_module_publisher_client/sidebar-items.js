@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["VmModulePublisherClient","GRPC service"]]});

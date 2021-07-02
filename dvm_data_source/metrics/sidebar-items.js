@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DsMeter","Wrapper for data source which collects metrics queries."]]});

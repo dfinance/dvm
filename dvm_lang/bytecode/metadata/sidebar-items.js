@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Metadata","Bytecode metadata."]],"fn":[["extract_bytecode_metadata","Extract bytecode metadata."]],"struct":[["FieldMeta","Field metadata."],["FunctionMeta","Function metadata."],["StructMeta","Struct metadata."]]});

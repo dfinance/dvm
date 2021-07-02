@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Endpoint",""]],"fn":[["from_uri",""]],"struct":[["Http","Create Endpoint with inner URI. Supports http and https. Can `TryInto` into `std::net::SocketAddr` without IP resolving."],["Ipc",""]]});

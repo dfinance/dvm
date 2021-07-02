@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["loge"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/clap/3.0.0-beta.2/clap/derive/trait.Subcommand.html\" title=\"trait clap::derive::Subcommand\">Subcommand</a> for <a class=\"enum\" href=\"loge/enum.Loge.html\" title=\"enum loge::Loge\">Loge</a>","synthetic":false,"types":["loge::Loge"]}];
+implementors["movec"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/clap/3.0.0-beta.2/clap/derive/trait.Subcommand.html\" title=\"trait clap::derive::Subcommand\">Subcommand</a> for <a class=\"enum\" href=\"movec/enum.Opt.html\" title=\"enum movec::Opt\">Opt</a>","synthetic":false,"types":["movec::Opt"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

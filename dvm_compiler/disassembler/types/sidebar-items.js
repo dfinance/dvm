@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["FType","Type."]],"fn":[["extract_struct_name","Extract struct name."],["extract_type_signature","Extract type signature."]],"struct":[["FullStructName","Full structure name."]]});

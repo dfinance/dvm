@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MockDataSource","`StateView` implementation to be used in test_kit."]]});

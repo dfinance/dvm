@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DvmBytecodeMetadataServer","Returns bytecode metadata."]],"trait":[["DvmBytecodeMetadata","Generated trait containing gRPC methods that should be implemented for use with DvmBytecodeMetadataServer."]]});

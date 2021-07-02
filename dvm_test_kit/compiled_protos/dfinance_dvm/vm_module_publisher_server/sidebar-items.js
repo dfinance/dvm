@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["VmModulePublisherServer","GRPC service"]],"trait":[["VmModulePublisher","Generated trait containing gRPC methods that should be implemented for use with VmModulePublisherServer."]]});

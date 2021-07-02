@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["CORE_CODE_ADDRESS",""]],"struct":[["AccountAddress","A struct that represents an account address."],["Identifier","An owned identifier."]]});

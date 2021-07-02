@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MetadataService","Metadata service. Provides a function to retrieve metadata for the script."]]});

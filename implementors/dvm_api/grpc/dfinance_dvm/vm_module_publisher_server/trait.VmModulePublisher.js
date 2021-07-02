@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["dvm_services"] = [{"text":"impl&lt;D&gt; VmModulePublisher for <a class=\"struct\" href=\"dvm_services/vm/struct.VmService.html\" title=\"struct dvm_services::vm::VmService\">VmService</a>&lt;D&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;D: <a class=\"trait\" href=\"dvm_data_source/trait.DataSource.html\" title=\"trait dvm_data_source::DataSource\">DataSource</a>,&nbsp;</span>","synthetic":false,"types":["dvm_services::vm::VmService"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

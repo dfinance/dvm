@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["validate_bytecode_instructions","Validate that script contains only allowed bytecode instructions (load variables, move, copy and method calls)."]],"struct":[["WhitelistVerifier","Restricts set of modules allowed to use in script."]]});

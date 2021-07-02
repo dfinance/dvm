@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["start_info_service","Starts a new information service."]],"struct":[["InfoService","Instruction web service."],["ServiceMaker","Info service maker."]]});

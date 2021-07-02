@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Pack","Struct pack."],["PackField","Pack field."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["extract_from_bytecode","Extract dependencies from bytecode."],["extract_from_source","Extract dependencies from source code."]],"struct":[["BytecodeUses","Bytecode dependencies extractor."],["DefinitionUses","Source definition dependencies extractor."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ExecutionResult","Result of transaction execution."],["Gas","Stores gas metadata for vm execution."],["ModuleTx","Module transaction."],["ScriptTx","Script bytecode + passed arguments and type parameters."]],"type":[["VmResult","Result enum for ExecutionResult"]]});

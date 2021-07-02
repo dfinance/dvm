@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["drain_action_metrics","Drain live metrics."],["get_system_metrics","Get metrics for the CPU and memory of the node."],["store_metric","Stores metric."]],"struct":[["ExecutionData","Execution data."],["ExecutionResult","Result of the action."],["SystemMetrics","Metrics for the running process."]]});
